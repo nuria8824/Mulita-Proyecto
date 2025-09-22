@@ -23,8 +23,9 @@ export async function POST(req: Request) {
     }
 
     const user = authData.user;
-    if (!user) {
-      throw new Error("No se encontró el usuario");
+    const session = authData.session;
+    if (!user || !session) {
+      throw new Error("No se pudo obtener usuario o sesión");
     }
 
     // 2. Buscar datos adicionales en tabla usuario
@@ -48,14 +49,13 @@ export async function POST(req: Request) {
         .single();
 
       if (docenteError && docenteError.code !== "PGRST116") {
-        // PGRST116 = not found (sin registro)
         throw new Error(docenteError.message);
       }
       docente = docenteData;
     }
 
-    // 4. Devolver todo junto
-    return NextResponse.json({
+    // 4. Guardar tokens en cookies HTTP-only para persistencia de sesión
+    const res = NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -66,9 +66,28 @@ export async function POST(req: Request) {
         telefono: usuario.telefono,
         docente,
       },
-      session: authData.session, // incluye access_token y refresh_token
     });
+
+    res.cookies.set("sb-access-token", session.access_token, {
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30, // 30 días
+    });
+
+    res.cookies.set("sb-refresh-token", session.refresh_token, {
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30, // 30 días
+    });
+
+    return res;
+
   } catch (error: any) {
+    console.error("Login error:", error);
     return NextResponse.json({ success: false, message: error.message }, { status: 400 });
   }
 }

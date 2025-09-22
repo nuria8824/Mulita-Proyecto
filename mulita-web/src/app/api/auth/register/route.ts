@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { z } from "zod";
+import { success, z } from "zod";
 
 const registerSchema = z.object({
   nombre: z.string(),
@@ -72,10 +72,28 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       user: { id: userId, email: data.email, rol: data.rol },
     });
+
+    res.cookies.set("sb-access-token", authData.session?.access_token!, {
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30, // 30 días
+    });
+
+    res.cookies.set("sb-refresh-token", authData.session?.refresh_token!, {
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+
+    return res;
   } catch (error: any) {
     console.error("Error en register:", error)
     return NextResponse.json({ success: false, message: error.message }, { status: 400 });
