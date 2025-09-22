@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+/* === Theme tokens === */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #151515;
+  --primary: #003C71;   /* Azul UAP */
+  --secondary: #FEDD00; /* Amarillo UAP */
+}
+
+:root {
+  /* ... tus otros colores ... */
+  --border-light: #e5e7eb; /* gris claro */
+}
+
+.border-light {
+  border-color: var(--border-light);
+}
+
+
+/* Base */
+@layer base {
+  body { @apply bg-background text-foreground; }
+}
+
+/* === Fuente Inter para .font-inter === */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: local('Inter'), url('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_s.woff2') format('woff2');
+}
+.font-inter {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol";
+}
+
+/* === Paleta UAP === */
+:root {
+  --uap-blue:   #003C71; /* Azul institucional */
+  --uap-blue-100:#1b4f86;
+  --uap-yellow: #FEDD00;
+  --uap-gray:   #706F6F;
+  --ghostwhite: #F8F8FF;
+  --whitesmoke: #F5F5F5;
+  --gainsboro:  #DCDCDC;
+  --lightsteelblue: #B0C4DE;
+  --slategray:  #708090;
+  --dimgray:    #696969;
+}
+
+/* === Textos === */
+.text-darkslateblue-200 { color: var(--uap-blue); }
+.text-darkslateblue-100 { color: var(--uap-blue-100); }
+.text-slategray         { color: var(--slategray); }
+.text-lightsteelblue    { color: var(--lightsteelblue); }
+.text-dimgray           { color: var(--dimgray); }
+.text-gold              { color: var(--uap-yellow); }
+
+/* === Fondos === */
+.bg-darkslateblue-200 { background-color: var(--uap-blue); }
+.bg-darkslateblue-100 { background-color: var(--uap-blue-100); }
+.bg-gold              { background-color: var(--uap-yellow); }
+.bg-ghostwhite        { background-color: var(--ghostwhite); }
+.bg-whitesmoke        { background-color: var(--whitesmoke); }
+.bg-white             { background-color: #fff; }
+
+/* === Bordes === */
+.border-gold       { border-color: var(--uap-yellow); }
+.border-gainsboro  { border-color: var(--gainsboro); }
+.border-slategray  { border-color: var(--slategray); }
+.border-darkslateblue-200 { border-color: var(--uap-blue); }
+
+/* === Utilidades mínimas === */
+.leading-9  { line-height: 2.25rem; }
+.leading-10 { line-height: 2.5rem; }
+.text-5xl   { font-size: 3rem; line-height: 1; }
+.text-4xl   { font-size: 2.25rem; line-height: 2.5rem; }
+.text-lg    { font-size: 1.125rem; line-height: 1.75rem; }
+.text-base  { font-size: 1rem; line-height: 1.5rem; }
+.text-sm    { font-size: .875rem; line-height: 1.25rem; }
+.text-xs    { font-size: .75rem; line-height: 1rem; }
+
+.font-extrabold { font-weight: 800; }
+.font-semibold  { font-weight: 600; }
+.font-medium    { font-weight: 500; }
+.font-inter     { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+
+/* === Efectos === */
+.drop-shadow-uap { text-shadow: 0 4px 4px var(--uap-yellow); }
+.textstroke-primary { -webkit-text-stroke: 0.5px var(--uap-blue); paint-order: stroke fill; }
+.textstroke-white   { -webkit-text-stroke: 0.5px #fff; paint-order: stroke fill; }
+
+/* === Reset suave === */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+body { margin: 0; color: #111; }
+img { display:block; max-width:100%; height:auto; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; }
+
+/* ===========================================================
+   BOTONES UAP
+   =========================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .375rem;
+  padding: .5rem 1rem;       /* py-2 px-4 */
+  border-radius: .5rem;      /* rounded-md */
+  font-weight: 600;          /* font-semibold */
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  line-height: 1.25rem;
+  transition: background-color .15s ease, color .15s ease,
+              box-shadow .15s ease, border-color .15s ease;
+  border: 1px solid transparent;
+}
+
+/* Azul sólido */
+.btn--blue {
+  background: var(--uap-blue);
+  color: #fff;
+}
+.btn--blue:hover   { background: #053261; }
+.btn--blue:active  { background: #062748; }
+.btn--blue:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(0,60,113,.35);
+}
+
+/* Amarillo sólido */
+.btn--yellow {
+  background: var(--uap-yellow);
+  color: var(--uap-blue);
+  font-weight: 700;
+}
+.btn--yellow:hover  { background: #ffe533; }
+.btn--yellow:active { background: #f2cd00; }
+.btn--yellow:focus-visible {
+  outline: 2px solid var(--uap-blue);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(254,221,0,.45);
+}
+
+/* Blanco con borde amarillo */
+.btn--outline {
+  background: #fff;
+  color: var(--uap-blue);
+  border-color: var(--uap-yellow);
+}
+.btn--outline:hover  { background: #fffbea; }
+.btn--outline:active { background: #fff3c4; }
+.btn--outline:focus-visible {
+  outline: 2px solid var(--uap-yellow);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(254,221,0,.35);
+}
+
+/* Tamaños */
+.btn-sm { padding: .375rem .75rem; font-size: .875rem; }
+.btn-lg { padding: .625rem 1.25rem; font-size: 1rem; }

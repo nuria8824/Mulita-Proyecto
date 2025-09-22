@@ -1,0 +1,74 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Usuario {
+  id          String   @id @default(cuid())
+  nombre      String
+  apellido    String
+  email       String   @unique
+  telefono    String
+  contrasena  String
+  rol         Rol      @default(usuario)
+  createdAt   DateTime @default(now())
+  docente     Docente?
+  imagen      String?
+
+  actividades Actividad[]
+}
+
+model Docente {
+  id          String  @id @default(cuid())
+  usuarioId   String  @unique
+  institucion String?
+  pais        String?
+  provincia   String?
+  ciudad      String?
+
+  usuario     Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+enum Rol {
+  superAdmin
+  admin
+  docente
+  usuario
+}
+
+model Noticia {
+  id                Int      @id @default(autoincrement())
+  titulo            String
+  autor             String
+  introduccion      String
+  imagenPrincipal   String
+  descripcion       String
+  archivo           String?
+  createdAt         DateTime @default(now())
+}
+
+model Actividad {
+  id            Int         @id @default(autoincrement())
+  titulo        String
+  descripcion   String
+  fecha         DateTime    @default(now())
+  usuarioId     String
+  archivo       String?
+  categoriaId   Int?
+
+  usuario       Usuario     @relation(fields: [usuarioId], references: [id])
+  categoria     Categoria?  @relation(fields: [categoriaId], references: [id])
+}
+
+model Categoria {
+  id           Int          @id @default(autoincrement())
+  nombre       String       @unique
+
+  actividades  Actividad[]
+}
+
