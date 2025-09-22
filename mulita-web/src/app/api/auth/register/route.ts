@@ -1,51 +1,83 @@
-import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+import { z } from "zod";
 
-export async function POST(req: NextRequest) {
+const registerSchema = z.object({
+  nombre: z.string(),
+  apellido: z.string(),
+  email: z.email(),
+  telefono: z.string().min(7).max(15),
+  contrasena: z.string().min(6),
+  rol: z.enum(["usuario", "docente"]),
+  institucion: z.string().optional(),
+  pais: z.string().optional(),
+  provincia: z.string().optional(),
+  ciudad: z.string().optional(),
+});
+
+export async function POST(req: Request) {
   try {
-    const data = await req.json();
+    const body = await req.json();
+    const data = registerSchema.parse(body);
 
-    // 1️⃣ Crear usuario en Auth
-    const { user, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    // 1. Crear usuario en Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.contrasena,
-      email_confirm: false, // false = envía mail de confirmación
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      console.error("Supabase auth error:", authError)
+      console.log("Payload:", data);
+      console.log("Auth result:", authData, authError);
+      throw new Error(authError.message);
+    }
 
-    // 2️⃣ Insertar en tabla usuario
-    const { error: dbError } = await supabaseAdmin
-      .from("usuario")
-      .insert({
-        id: user.id,
+    const userId = authData.user?.id;
+    if (!userId) {
+      throw new Error("No se pudo obtener el ID del usuario de Supabase Auth");
+    }
+
+    // 2. Insertar en tabla usuario
+    const { error: userError } = await supabase.from("usuario").update([
+      {
+        id: userId,
         nombre: data.nombre,
         apellido: data.apellido,
         email: data.email,
         telefono: data.telefono,
         rol: data.rol,
-      });
+      },
+    ])
+    .eq("id", userId);
 
-    if (dbError) throw dbError;
-
-    // 3️⃣ Si es docente, insertar en tabla docentes
-    if (data.rol === "docente") {
-      const { error: docenteError } = await supabaseAdmin
-        .from("docentes")
-        .insert({
-          usuario_id: user.id,
-          institucion: data.institucion,
-          pais: data.pais,
-          provincia: data.provincia,
-          ciudad: data.ciudad,
-        });
-      if (docenteError) throw docenteError;
+    if (userError) {
+      throw new Error(userError.message);
     }
 
-    return NextResponse.json({ success: true, userId: user.id });
+    // 3. Si es docente, insertar en tabla docente
+    if (data.rol === "docente") {
+      const { error: docenteError } = await supabase.from("docente").insert([
+        {
+          id_usuario: userId,
+          institucion: data.institucion || "",
+          pais: data.pais || "",
+          provincia: data.provincia || "",
+          ciudad: data.ciudad || "",
+        },
+      ]);
 
-  } catch (err: any) {
-    console.error("Register error:", err);
-    return NextResponse.json({ success: false, message: err.message });
+      if (docenteError) {
+        throw new Error(docenteError.message);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: { id: userId, email: data.email, rol: data.rol },
+    });
+  } catch (error: any) {
+    console.error("Error en register:", error)
+    return NextResponse.json({ success: false, message: error.message }, { status: 400 });
   }
 }
