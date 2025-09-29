@@ -13,10 +13,11 @@ export async function POST(req: Request) {
     const data = loginSchema.parse(body);
 
     // 1. Intentar login con Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.contrasena,
-    });
+    const { data: authData, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.contrasena,
+      });
 
     if (authError) {
       throw new Error(authError.message);
@@ -85,9 +86,11 @@ export async function POST(req: Request) {
     });
 
     return res;
-
   } catch (error: any) {
     console.error("Login error:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 400 });
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 400 }
+    );
   }
 }

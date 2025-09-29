@@ -26,7 +26,7 @@ export default function NoticiasPage() {
       try {
         const res = await fetch("/api/noticias");
         const data = await res.json();
-        setNoticias((data.noticias ?? []).reverse()); // Las más recientes primero
+        setNoticias((data ?? []).reverse()); // Las más recientes primero
       } catch (err) {
         console.error("Error fetching noticias:", err);
       } finally {
@@ -94,12 +94,14 @@ export default function NoticiasPage() {
                 </button>
               </div>
             )}
-            {/* Imagen principal */}
-            <img
-              src={noticia.imagen_principal}
-              alt={noticia.titulo}
-              className="w-full h-48 object-cover"
-            />
+            <div className="w-full h-48 overflow-hidden rounded-t-lg">
+              {/* Imagen principal */}
+              <img
+                src={noticia.imagen_principal}
+                alt={noticia.titulo}
+                className="w-full h-48 object-cover"
+              />
+            </div>
             <div className="p-4 flex flex-col gap-2">
               <h2 className="text-xl font-bold text-[#003c71]">{noticia.titulo}</h2>
               <p className="text-sm text-gray-600">{noticia.introduccion}</p>

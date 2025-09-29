@@ -1,52 +1,65 @@
-import { NextRequest, NextResponse } from "next/server";
-import { fetchNoticiaById, actualizarNoticia, eliminarNoticia } from "@/lib/apiNoticias";
-import { useUser } from "@/context/UserContext";
+import { NextResponse, NextRequest } from "next/server";
+import { supabase } from "@/lib/supabase";
 
-// GET: traer una noticia por ID
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const id = parseInt(params.id, 10);
-    if (Number.isNaN(id)) {
-      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
-    }
+// GET: obtener una noticia
+export async function GET(_: Request, { params }: { params: { id: string } }) {
+  const { data, error } = await supabase
+    .from("noticia")
+    .select("*")
+    .eq("id", params.id)
+    .single();
 
-    const noticia = await fetchNoticiaById(id);
-    return NextResponse.json({ noticia });
-  } catch (err: any) {
-    console.error("API proxy GET /api/noticias/[id]:", err);
-    return NextResponse.json({ error: err.message || "Error fetching noticia" }, { status: 500 });
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 404 });
   }
+
+  return NextResponse.json(data);
 }
 
-// PUT /api/noticias/:id
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
-  try {
-    const token = req.cookies.get("supabase_token")?.value;
-    if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+// PUT: editar noticia
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const access_token = req.cookies.get("sb-access-token")?.value;
+  if (!access_token) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-    const id = parseInt(context.params.id);
-    const formData = await req.formData();
-    const noticia = await actualizarNoticia(id, formData, token);
+  const { data: { user } } = await supabase.auth.getUser(access_token);
+  if (!user) return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-    return NextResponse.json({ noticia });
-  } catch (err: any) {
-    console.error(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  const { data: usuario } = await supabase.from("usuario").select("rol").eq("id", user.id).single();
+  if (!usuario || (usuario.rol !== "admin" && usuario.rol !== "super_admin")) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
+
+  const body = await req.json();
+  const { titulo, autor, introduccion, imagen_principal, descripcion, archivo } = body;
+
+  const { data, error } = await supabase
+    .from("noticia")
+    .update({ titulo, autor, introduccion, imagen_principal, descripcion, archivo })
+    .eq("id", params.id)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json(data);
 }
 
-// DELETE /api/noticias/:id
-export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
-  try {
-    const token = req.cookies.get("supabase_token")?.value;
-    if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+// DELETE: borrar noticia
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const access_token = req.cookies.get("sb-access-token")?.value;
+  if (!access_token) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-    const id = parseInt(context.params.id);
-    await eliminarNoticia(id, token);
+  const { data: { user } } = await supabase.auth.getUser(access_token);
+  if (!user) return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-    return NextResponse.json({ deleted: true });
-  } catch (err: any) {
-    console.error(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  const { data: usuario } = await supabase.from("usuario").select("rol").eq("id", user.id).single();
+  if (!usuario || (usuario.rol !== "admin" && usuario.rol !== "super_admin")) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
+
+  const { error } = await supabase.from("noticia").delete().eq("id", params.id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ message: "Noticia eliminada" });
 }
+

@@ -72,6 +72,7 @@ export async function POST(req: Request) {
       }
     }
 
+    // 4. Guardar tokens en cookies HTTP-only
     const res = NextResponse.json({
       success: true,
       user: { id: userId, email: data.email, rol: data.rol },
