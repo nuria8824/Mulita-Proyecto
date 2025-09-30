@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
+import MenuAcciones from "@/components/ui/MenuAcciones";
 
 interface Noticia {
   id: number;
@@ -80,18 +81,7 @@ export default function NoticiasPage() {
             {/* Botones de editar/eliminar */}
             {(user?.rol === "admin" || user?.rol === "superAdmin") && (
               <div className="absolute top-2 right-2 flex gap-2 z-10">
-                <Link
-                  href={`/noticias/editar/${noticia.id}`}
-                  className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                >
-                  ✏️
-                </Link>
-                <button
-                  onClick={() => handleEliminar(noticia.id)}
-                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  🗑️
-                </button>
+                <MenuAcciones noticiaId={noticia.id} onEliminar={handleEliminar} />
               </div>
             )}
             <div className="w-full h-48 overflow-hidden rounded-t-lg">
