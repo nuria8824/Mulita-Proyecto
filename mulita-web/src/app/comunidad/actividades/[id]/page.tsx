@@ -3,10 +3,11 @@ import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 
 interface ActividadPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export default async function ActividadPage({ params }: ActividadPageProps) {
+export default async function ActividadPage(props: ActividadPageProps) {
+  const params = await props.params;
   const actividad = await prisma.actividad.findUnique({
     where: { id: Number(params.id) },
     include: {

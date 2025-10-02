@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
+import MenuAcciones from "@/components/ui/MenuAcciones";
 
 interface Noticia {
   id: number;
@@ -26,7 +27,7 @@ export default function NoticiasPage() {
       try {
         const res = await fetch("/api/noticias");
         const data = await res.json();
-        setNoticias((data.noticias ?? []).reverse()); // Las más recientes primero
+        setNoticias((data ?? []).reverse()); // Las más recientes primero
       } catch (err) {
         console.error("Error fetching noticias:", err);
       } finally {
@@ -80,26 +81,17 @@ export default function NoticiasPage() {
             {/* Botones de editar/eliminar */}
             {(user?.rol === "admin" || user?.rol === "superAdmin") && (
               <div className="absolute top-2 right-2 flex gap-2 z-10">
-                <Link
-                  href={`/noticias/editar/${noticia.id}`}
-                  className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                >
-                  ✏️
-                </Link>
-                <button
-                  onClick={() => handleEliminar(noticia.id)}
-                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  🗑️
-                </button>
+                <MenuAcciones noticiaId={noticia.id} onEliminar={handleEliminar} />
               </div>
             )}
-            {/* Imagen principal */}
-            <img
-              src={noticia.imagen_principal}
-              alt={noticia.titulo}
-              className="w-full h-48 object-cover"
-            />
+            <div className="w-full h-48 overflow-hidden rounded-t-lg">
+              {/* Imagen principal */}
+              <img
+                src={noticia.imagen_principal}
+                alt={noticia.titulo}
+                className="w-full h-48 object-cover"
+              />
+            </div>
             <div className="p-4 flex flex-col gap-2">
               <h2 className="text-xl font-bold text-[#003c71]">{noticia.titulo}</h2>
               <p className="text-sm text-gray-600">{noticia.introduccion}</p>

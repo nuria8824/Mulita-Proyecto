@@ -43,6 +43,9 @@ export default function Perfil() {
       <p>
         <span className="font-semibold">Apellido:</span> {user.apellido}
       </p>
+      <p>
+        <span className="font-semibold">Rol:</span> {user.rol}
+      </p>
 
       <button
         onClick={async () => {

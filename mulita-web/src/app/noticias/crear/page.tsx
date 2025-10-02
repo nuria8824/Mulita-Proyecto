@@ -1,7 +1,8 @@
-"use client";
+"use client"
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function CrearNoticiaPage() {
   const router = useRouter();
@@ -12,35 +13,40 @@ export default function CrearNoticiaPage() {
   const [imagen_principal, setImagenPrincipal] = useState<File | null>(null);
   const [archivo, setArchivo] = useState<File | null>(null);
 
-  const token = localStorage.getItem("sb-access-token");
-
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("Llegue a /noticias/crear/page");
     e.preventDefault();
+
+    if (!imagen_principal) {
+      alert("La imagen principal es obligatoria.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("titulo", titulo);
     formData.append("autor", autor);
     formData.append("introduccion", introduccion);
     formData.append("descripcion", descripcion);
+    formData.append("imagen_principal", imagen_principal);
     if (archivo) formData.append("archivo", archivo);
 
-    if (!imagen_principal) {
-      alert("La imagen principal es obligatoria.");
-      return;
-    }
-    formData.append("imagen_principal", imagen_principal);
+    try {
+      const res = await fetch("/api/noticias", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
 
-    const res = await fetch("/api/noticias/", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+      if (!res.ok) {
+        const error = await res.json();
+        console.log(error.detail);
+        alert("Error creando noticia");
+        return;
+      }
 
-    if (res.ok) {
       router.push("/noticias");
-    } else {
+    } catch (err) {
+      console.log("Error en fetch:", err);
       alert("Error creando noticia");
     }
   };

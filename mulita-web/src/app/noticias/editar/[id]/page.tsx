@@ -23,13 +23,12 @@ export default function EditarNoticiaPage() {
         const res = await fetch(`/api/noticias/${params.id}`);
         if (!res.ok) throw new Error("Noticia no encontrada");
         const data = await res.json();
-        const n = data.noticia;
 
-        setTitulo(n.titulo);
-        setAutor(n.autor);
-        setIntroduccion(n.introduccion);
-        setDescripcion(n.descripcion);
-        setImagenPrincipal(n.imagen_principal);
+        setTitulo(data.titulo);
+        setAutor(data.autor);
+        setIntroduccion(data.introduccion);
+        setDescripcion(data.descripcion);
+        setImagenPrincipal(data.imagen_principal);
         setArchivo(null);
       } catch (err) {
         console.error(err);

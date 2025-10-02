@@ -28,5 +28,6 @@ export const registerUser = async (data: RegisterData) => {
   // Guardamos temporalmente los datos en localStorage
   localStorage.setItem("pendingUser", JSON.stringify(data));
 
-  return authData.user;
+  const user = authData.user;
+  return user
 };
