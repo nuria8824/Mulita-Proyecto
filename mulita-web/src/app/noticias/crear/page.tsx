@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
 export default function CrearNoticiaPage() {
   const router = useRouter();
@@ -44,12 +43,16 @@ export default function CrearNoticiaPage() {
         return;
       }
 
-      router.push("/noticias");
+      router.push("/dashboard/gestionLanding/gestionNoticias");
     } catch (err) {
       console.log("Error en fetch:", err);
       alert("Error creando noticia");
     }
   };
+
+  const handleCancel = () => {
+    router.push("/dashboard/gestionLanding/gestionNoticias");
+  }
 
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">
@@ -144,13 +147,23 @@ export default function CrearNoticiaPage() {
             {archivo && <p className="text-sm text-gray-600 mt-1">Archivo seleccionado: {archivo.name}</p>}
           </div>
 
-          {/* Botón */}
-          <button
-            type="submit"
-            className="w-full h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
-          >
-            Continuar
-          </button>
+          {/* Botones de acción */}
+          <div className="flex w-full gap-4">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="w-1/2 h-12 bg-gray-300 text-[#003c71] font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              className="w-1/2 h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
+            >
+              Continuar
+            </button>
+          </div>
         </form>
       </div>
     </div>

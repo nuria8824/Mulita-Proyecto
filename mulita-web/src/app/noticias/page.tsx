@@ -59,16 +59,6 @@ export default function NoticiasPage() {
         <h1 className="text-4xl font-extrabold text-[#003c71] py-1">Noticias</h1>
         <p className="text-sm leading-[22px] py-2">Últimas noticias y novedades</p>
         <div className="w-[87px] mx-auto border-t-[4px] border-[#fedd00]" />
-
-        {/* Botón solo para admin/SuperAdmin */}
-        {(user?.rol === "admin" || user?.rol === "superAdmin") && (
-          <Link
-            href="/noticias/crear"
-            className="absolute top-5 right-0 shadow-md rounded-sm bg-[#f8faff] border border-[#e0e0e0] h-8 px-3 flex items-center justify-center cursor-pointer text-sm text-black font-semibold hover:bg-[#eef2ff]"
-          >
-            + Agregar
-          </Link>
-        )}
       </div>
 
       {/* Grid de noticias */}
@@ -78,12 +68,6 @@ export default function NoticiasPage() {
             key={noticia.id}
             className="relative shadow-lg rounded-lg border border-[#e1e4ed] overflow-hidden flex flex-col"
           >
-            {/* Botones de editar/eliminar */}
-            {(user?.rol === "admin" || user?.rol === "superAdmin") && (
-              <div className="absolute top-2 right-2 flex gap-2 z-10">
-                <MenuAcciones noticiaId={noticia.id} onEliminar={handleEliminar} />
-              </div>
-            )}
             <div className="w-full h-48 overflow-hidden rounded-t-lg">
               {/* Imagen principal */}
               <img

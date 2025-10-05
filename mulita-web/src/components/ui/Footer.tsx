@@ -6,7 +6,13 @@ import { usePathname } from "next/navigation";
 export function Footer() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/dashboard")) return null;
+  if (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/noticias/crear") ||
+    pathname.startsWith("/noticias/editar")
+  ) {
+    return null;
+  }
 
   return (
     <footer className="mt-24 bg-primary text-white">

@@ -62,7 +62,7 @@ export default function EditarNoticiaPage() {
 
       if (!res.ok) throw new Error("Error actualizando noticia");
 
-      router.push(`/noticias/${params.id}`);
+      router.push(`/dashboard/gestionLanding/gestionNoticias`);
     } catch (err) {
       console.error(err);
       alert("Error actualizando noticia");
@@ -70,6 +70,11 @@ export default function EditarNoticiaPage() {
       setSubmitting(false);
     }
   };
+
+  const handleCancel = () => {
+    router.push("/dashboard/gestionLanding/gestionNoticias");
+  }
+
 
   if (loading) return <p className="text-center mt-10">Cargando noticia...</p>;
 
@@ -162,14 +167,24 @@ export default function EditarNoticiaPage() {
             />
           </div>
 
-          {/* Botón */}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
-          >
-            {submitting ? "Guardando..." : "Guardar cambios"}
-          </button>
+          {/* Botones de acción */}
+          <div className="flex w-full gap-4">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="w-1/2 h-12 bg-gray-300 text-[#003c71] font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-1/2 h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
+            >
+              {submitting ? "Guardando..." : "Guardar cambios"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

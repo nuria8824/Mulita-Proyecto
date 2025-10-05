@@ -11,7 +11,13 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
 
-  if (pathname.startsWith("/dashboard")) return null;
+  if (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/noticias/crear") ||
+    pathname.startsWith("/noticias/editar")
+  ) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-light">
