@@ -46,6 +46,13 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
   let imagen_principal_url = formData.get("imagen_principal");
   let archivo_url = formData.get("archivo");
 
+  // Obtener imagen actual
+  const { data: noticiActual } = await supabase
+    .from("noticia")
+    .select("imagen_principal")
+    .eq("id", params.id)
+    .single();
+
   // Subir imagen_principal si es un File
   if (imagen_principal_url instanceof File) {
     const file = imagen_principal_url;
@@ -56,6 +63,8 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     imagen_principal_url = supabase.storage.from("mulita-files").getPublicUrl(data.path).data.publicUrl;
+  } else {
+    imagen_principal_url = noticiActual?.imagen_principal;
   }
 
   // Subir archivo extra si es un File
@@ -78,12 +87,12 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       autor,
       introduccion,
       descripcion,
-      imagen_principal: typeof imagen_principal_url === "string" ? imagen_principal_url : null,
+      imagen_principal: imagen_principal_url,
       archivo: typeof archivo_url === "string" ? archivo_url : null,
     })
     .eq("id", params.id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

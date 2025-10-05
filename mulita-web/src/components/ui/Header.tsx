@@ -3,19 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Header() {
   const { user, logout } = useUser();
   const [dropDownOpen, setDropDownOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/dashboard")) return null;
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-light">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img
-            src="/Logo Mulita-13.svg"
+            src="/images/logosMulita/Logo Mulita-13.svg"
             alt="LogoMulita13"
             className="h-8 w-8 rounded-full object-contain"
           />
@@ -30,6 +33,18 @@ export default function Header() {
           <li><Link href="/comunidad">Comunidad</Link></li>
           <li><Link href="/tienda">Tienda</Link></li>
           <li><Link href="/sobre-nosotros">Sobre nosotros</Link></li>
+
+          {/* Boton Dashboard solo para admins */}
+          {(user?.rol === "admin" || user?.rol === "superAdmin") && (
+            <li>
+              <Link
+                href="/dashboard"
+                className="btn btn--yellow"
+              >
+                Dashboard
+              </Link>
+            </li>
+          )}
         </ul>
 
         <div className="flex items-center gap-3">
