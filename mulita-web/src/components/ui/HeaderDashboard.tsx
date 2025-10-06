@@ -2,32 +2,33 @@
 
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
+import { Menu } from "lucide-react";
 
-export default function HeaderDashboard() {
+export default function HeaderDashboard({
+  onMenuClick,
+}: {
+  onMenuClick: () => void;
+}) {
   const { user } = useUser();
 
   return (
-    <header className="w-full relative bg-white h-[79px] text-gray-600 font-inter text-base shadow">
+    <header className="w-full relative bg-white h-[79px] text-gray-600 font-inter text-base shadow flex items-center justify-between px-4">
+      {/* Botón hamburguesa solo móvil */}
+      <button
+        onClick={onMenuClick}
+        className="block md:hidden p-2 rounded hover:bg-gray-100"
+        aria-label="boton-hamburguesa"      >
+        <Menu className="w-6 h-6 text-gray-700" />
+      </button>
+
       {/* Logo */}
-      <Image
-        src="/images/logosMulita/Logo Mulita-13.svg"
-        alt="Logo Mulita"
-        width={134}
-        height={34}
-        className="absolute top-[22.5px] left-[-462px]"
-      />
+      <div className="flex items-center gap-3">
+        <b className="text-black text-[15px] leading-[36px]">Dashboard</b>
+      </div>
 
-      {/* Título Dashboard */}
-      <b className="absolute top-[24.1px] left-[20px] text-black text-[15px] leading-[36px]">
-        Dashboard
-      </b>
-
-      {/* Barra de navegación */}
-      <div className="absolute top-[28px] left-[251px] w-[799px] h-[23px] flex items-center justify-end gap-[30px]">
-        <div className="w-[58px] h-[18px] hidden"></div>
-
-        {/* Avatar */}
-        <div className="flex items-center pl-[159px] gap-2">
+      {/* Barra de navegación derecha */}
+      <div className="flex items-center gap-[30px]">
+        <div className="flex items-center gap-2">
           <Image
             src={user?.imagen || "/default-avatar.png"}
             alt="Avatar"
@@ -37,7 +38,6 @@ export default function HeaderDashboard() {
           />
         </div>
 
-        {/* Language */}
         <div className="w-[59px] flex items-center gap-2 overflow-hidden">
           <div className="relative w-6 h-6 flex-shrink-0">
             <Image src="/icons/vector1.svg" alt="" fill />
