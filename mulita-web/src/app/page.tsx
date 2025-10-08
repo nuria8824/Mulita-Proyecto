@@ -14,7 +14,7 @@ export default function HomePage() {
       <Hero />
 
       {/* BLOQUE INFO - público general */}
-      <InfoGeneral />
+      {/* <InfoGeneral /> */}
 
       {/* NOTICIAS */}
       <SeccionNoticias />

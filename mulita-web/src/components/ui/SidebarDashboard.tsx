@@ -23,30 +23,36 @@ export default function SidebarDashboard({
       label: "Landing",
       icon: "/images/icons/dashboard/landing.svg",
       iconActive: "/images/icons/dashboard/landing.svg",
+      isActive: () => pathname === "/",
     },
     {
       href: "/dashboard",
       label: "Dashboard",
       icon: "/images/icons/dashboard/dashboard.svg",
       iconActive: "/images/icons/dashboard/dashboard azul.svg",
+      isActive: () => pathname === "/dashboard",
     },
     {
       href: "/dashboard/gestionLanding",
       label: "Gestión de Landing",
       icon: "/images/icons/dashboard/gestion landing.svg",
       iconActive: "/images/icons/dashboard/gestion landing azul.svg",
+      // 🔹 activo si la ruta actual empieza con /dashboard/gestionLanding
+      isActive: () => pathname.startsWith("/dashboard/gestionLanding"),
     },
     {
       href: "/dashboard/usuarios",
       label: "Usuarios",
       icon: "/images/icons/dashboard/usuarios.svg",
       iconActive: "/images/icons/dashboard/usuarios azul.svg",
+      isActive: () => pathname === "/dashboard/usuarios",
     },
     {
       href: "/dashboard/configuracion",
       label: "Configuración",
       icon: "/images/icons/dashboard/configuracion.svg",
       iconActive: "/images/icons/dashboard/configuracion azul.svg",
+      isActive: () => pathname === "/dashboard/configuracion",
     },
   ];
 
@@ -87,32 +93,24 @@ export default function SidebarDashboard({
 
         {/* Links */}
         <nav className="flex flex-col gap-2 p-3 text-sm">
-          {links.map(({ href, label, icon, iconActive }) => {
-            const isActive = pathname === href;
+          {links.map(({ href, label, icon, iconActive, isActive }) => {
+            const active = isActive();
             return (
               <Link
                 key={href}
                 href={href}
                 onClick={handleLinkClick}
                 className={`rounded-md px-4 py-3 flex items-center gap-2 transition-colors ${
-                  isActive
-                    ? "bg-[#fedd00] font-bold"
-                    : "bg-[#003c71] hover:bg-[#002a50]"
+                  active ? "bg-[#fedd00] font-bold" : "bg-[#003c71] hover:bg-[#002a50]"
                 }`}
               >
                 <Image
-                  src={isActive ? iconActive : icon}
+                  src={active ? iconActive : icon}
                   width={20}
                   height={20}
                   alt={label}
                 />
-                <span
-                  className={
-                    isActive ? "text-[#003c71]" : "text-white"
-                  }
-                >
-                  {label}
-                </span>
+                <span className={active ? "text-[#003c71]" : "text-white"}>{label}</span>
               </Link>
             );
           })}

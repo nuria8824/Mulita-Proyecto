@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
-import MenuAcciones from "@/components/ui/MenuAcciones";
 
 interface Noticia {
   id: number;
@@ -37,16 +36,6 @@ export default function NoticiasPage() {
     fetchNoticias();
   }, []);
 
-  const handleEliminar = async (id: number) => {
-    if (!confirm("¿Seguro que quieres eliminar esta noticia?")) return;
-
-    try {
-      await fetch(`/api/noticias/${id}`, { method: "DELETE" });
-      setNoticias((prev) => prev.filter((n) => n.id !== id));
-    } catch (err) {
-      console.error("Error eliminando noticia:", err);
-    }
-  };
 
   if (userLoading || loadingNoticias) {
     return <p className="text-center mt-10">Cargando noticias...</p>;

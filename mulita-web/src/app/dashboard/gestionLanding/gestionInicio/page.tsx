@@ -3,16 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function GestionLandingPage() {
+export default function GestionInicioPage() {
   return (
     <div className="w-full max-w-[1103px] mx-auto relative overflow-hidden flex flex-col items-center px-4 sm:px-6 pb-10 box-border text-center text-xs text-[#6d758f] font-inter">
       {/* Headings */}
       <div className="w-full flex flex-col items-start text-[28px] sm:text-[32px] md:text-[36px]">
         <h1 className="leading-tight font-extrabold text-black">
-          Gestión de Landing
+          Gestión de Inicio
         </h1>
         <p className="mt-2 text-left text-sm sm:text-base leading-6 text-[#6d758f]">
-          Gestión de las diferentes secciones de la página
+          Gestión de las diferentes secciones de la página de Inicio
         </p>
       </div>
 
@@ -47,28 +47,28 @@ export default function GestionLandingPage() {
 
 const cards = [
   {
-    href: "/dashboard/gestionLanding/gestionInicio",
-    title: "Gestión Inicio",
-    desc: "Configura la página principal",
+    href: "/dashboard/gestionLanding/gestionInicio/gestionHero",
+    title: "Gestión Hero",
+    desc: "Configura la sección principal de la página de inicio",
   },
   {
-    href: "/dashboard/gestionLanding/gestionNoticias",
+    href: "/dashboard/gestionLanding/gestionInicio/gestionInfoGeneral",
+    title: "Gestión Información General",
+    desc: "Administra el contenido informativo de la página",
+  },
+  {
+    href: "/dashboard/gestionLanding/gestionInicio/gestionNoticias",
     title: "Gestión Noticias",
-    desc: "Administra las noticias publicadas",
+    desc: "Gestiona las noticias visibles en la página de inicio",
   },
   {
-    href: "/dashboard/gestionLanding/gestionCategorias",
-    title: "Gestión Categorías",
-    desc: "Organiza categorías de productos o noticias",
-  },
-  {
-    href: "/dashboard/gestionLanding/gestionProductos",
+    href: "/dashboard/gestionLanding/gestionInicio/gestionProductos",
     title: "Gestión Productos",
-    desc: "Controla y edita los productos",
+    desc: "Gestiona los productos visibles en la página de inicio",
   },
   {
-    href: "/dashboard/gestionLanding/gestionSobreNosotros",
-    title: "Gestión Sobre Nosotros",
-    desc: "Edita la información de la empresa",
+    href: "/dashboard/gestionLanding/gestionInicio/gestionPreguntasFrecuentes",
+    title: "Gestión Preguntas Frecuentes",
+    desc: "Administra el contenido de las preguntas frecuentes",
   },
 ];

@@ -7,6 +7,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("noticia")
     .select("*")
+    .eq("eliminado", false)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 403 });
     }
 
-    if (usuario.rol !== "admin" && usuario.rol !== "super_admin") {
+    if (usuario.rol !== "admin" && usuario.rol !== "superAdmin") {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
