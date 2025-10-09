@@ -52,11 +52,6 @@ const cards = [
     desc: "Configura la sección principal de la página de inicio",
   },
   {
-    href: "/dashboard/gestionLanding/gestionInicio/gestionInfoGeneral",
-    title: "Gestión Información General",
-    desc: "Administra el contenido informativo de la página",
-  },
-  {
     href: "/dashboard/gestionLanding/gestionInicio/gestionNoticias",
     title: "Gestión Noticias",
     desc: "Gestiona las noticias visibles en la página de inicio",
@@ -65,10 +60,5 @@ const cards = [
     href: "/dashboard/gestionLanding/gestionInicio/gestionProductos",
     title: "Gestión Productos",
     desc: "Gestiona los productos visibles en la página de inicio",
-  },
-  {
-    href: "/dashboard/gestionLanding/gestionInicio/gestionPreguntasFrecuentes",
-    title: "Gestión Preguntas Frecuentes",
-    desc: "Administra el contenido de las preguntas frecuentes",
-  },
+  }
 ];

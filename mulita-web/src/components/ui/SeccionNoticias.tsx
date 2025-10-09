@@ -1,40 +1,39 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Noticia } from "@/lib/types";
+
+interface Noticia {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  imagen_principal: string;
+}
 
 export function SeccionNoticias() {
-  const posts: Noticia[] = [
-    {
-      id: 1,
-      titulo: "¿Qué es Mulita?",
-      autor: "Equipo Mulita",
-      fecha: new Date("2024-01-15"),
-      descripcion:
-        "Un robot educativo impreso en 3D para aprender robótica en primaria y secundaria, dentro de una plataforma web con info, comunidad y tienda.",
-      introduccion: "Aprendé robótica con Mulita",
-      imagen_principal: "/imagenes/noticias/mulita.jpg",
-    },
-    {
-      id: 2,
-      titulo: "Comunidad docente",
-      autor: "Equipo Mulita",
-      fecha: new Date("2024-02-10"),
-      descripcion:
-        "Registrate para subir actividades, organizar recursos por materias y niveles, comentar y dar “me gusta”. Colaboramos entre escuelas.",
-      introduccion: "Participá en la comunidad docente",
-      imagen_principal: "/imagenes/noticias/comunidad.jpg",
-    },
-    {
-      id: 3,
-      titulo: "Multilenguaje",
-      autor: "Equipo Mulita",
-      fecha: new Date("2024-03-05"),
-      descripcion:
-        "La web está pensada para Argentina, Brasil y EE. UU.: disponible en español, portugués e inglés para una comunidad internacional.",
-      introduccion: "Mulita en varios idiomas",
-      imagen_principal: "/imagenes/noticias/multilenguaje.jpg",
-    },
-  ];
+  const [noticias, setNoticias] = useState<Noticia[]>([]);
+
+  useEffect(() => {
+    const fetchNoticias = async () => {
+      try {
+        const res = await fetch("/api/inicio/noticias");
+        const data = await res.json();
+        setNoticias(data ?? []);
+      } catch (err) {
+        console.error("Error al obtener noticias destacadas:", err);
+      }
+    };
+    fetchNoticias();
+  }, []);
+
+  if (noticias.length === 0) {
+    return (
+      <section className="mt-24 text-center">
+        <p className="text-muted-foreground">No hay noticias destacadas por el momento.</p>
+      </section>
+    );
+  }
 
   return (
     <section className="mt-24">
@@ -45,28 +44,29 @@ export function SeccionNoticias() {
         </p>
 
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((p) => (
+          {noticias.map((noticia) => (
             <article
-              key={p.id}
+              key={noticia.id}
               className="rounded-xl border border-light bg-card p-5 hover:shadow-sm transition relative"
             >
-              {p.imagen_principal && (
+              {noticia.imagen_principal && (
                 <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                  <Image
-                    src={p.imagen_principal}
-                    alt={p.titulo}
-                    fill
-                    className="object-cover"
+                  <img
+                    src={noticia.imagen_principal}
+                    alt={noticia.titulo}
+                    className="absolute top-0 left-0 w-full h-full object-cover"
                   />
                 </div>
               )}
 
-              <h3 className="mt-4 text-lg font-extrabold text-primary">{p.titulo}</h3>
-              <p className="mt-2 text-sm text-muted-foreground line-clamp-3">{p.descripcion}</p>
+              <h3 className="mt-4 text-lg font-extrabold text-primary">{noticia.titulo}</h3>
+              <p className="mt-2 text-sm text-muted-foreground line-clamp-3">
+                {noticia.descripcion}
+              </p>
 
               <div className="mt-4">
                 <Link
-                  href={`/noticias/${p.id}`}
+                  href={`/noticias/${noticia.id}`}
                   className="inline-block text-[#003C71] font-semibold text-sm"
                 >
                   Leer más →

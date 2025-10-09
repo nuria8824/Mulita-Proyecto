@@ -15,7 +15,7 @@ export async function GET() {
 }
 
 // PATCH: actualizar
-export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: NextRequest) {
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 

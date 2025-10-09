@@ -23,7 +23,7 @@ export default function HomePage() {
       <SeccionProductos />
 
       {/* FAQ breve / CTA final */}
-      <PreguntasFrecuentes />
+      {/* <PreguntasFrecuentes /> */}
     </>
   );
 }
