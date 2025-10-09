@@ -3,6 +3,7 @@ import { supabase } from "./supabase";
 // Utilidad para guardar archivos en Supabase Storage
 export async function uploadFile(file: File, folder: string) {
   try {
+    console.log("Llegue a subirArchivos");
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -25,6 +26,7 @@ export async function uploadFile(file: File, folder: string) {
       .from("mulita-files")
       .getPublicUrl(`${folder}/${fileName}`);
 
+    console.log("publicURL: ", publicData.publicUrl)
     return publicData.publicUrl;
   } catch (err: any) {
     console.error("Error subiendo archivo:", err.message);

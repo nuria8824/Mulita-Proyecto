@@ -47,6 +47,11 @@ export default function GestionInicioPage() {
 
 const cards = [
   {
+    href: "/dashboard/gestionLanding/gestionInicio/gestionSecciones",
+    title: "Gestión Secciones",
+    desc: "Configura el orden de las secciones de la página de inicio",
+  },
+  {
     href: "/dashboard/gestionLanding/gestionInicio/gestionHero",
     title: "Gestión Hero",
     desc: "Configura la sección principal de la página de inicio",

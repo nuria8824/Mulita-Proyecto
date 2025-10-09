@@ -1,29 +1,31 @@
 "use client";
 
 import { Hero } from "@/components/ui/Hero";
-import { InfoGeneral } from "@/components/ui/InfoGeneral";
 import { SeccionNoticias } from "@/components/ui/SeccionNoticias";
 import { SeccionProductos } from "@/components/ui/SeccionProductos";
-import { PreguntasFrecuentes } from "@/components/ui/PreguntasFrecuentes";
+import { useEffect, useState } from "react";
+
+const COMPONENTS_MAP: Record<string, React.FC> = {
+  Hero,
+  SeccionNoticias,
+  SeccionProductos,
+};
 
 export default function HomePage() {
+  const [secciones, setSecciones] = useState<{nombre: string}[]>([]);
+
+  useEffect(() => {
+    fetch("/api/inicio/secciones")
+      .then(res => res.json())
+      .then(data => setSecciones(data.secciones));
+  }, []);
 
   return (
     <>
-      {/* HERO */}
-      <Hero />
-
-      {/* BLOQUE INFO - público general */}
-      {/* <InfoGeneral /> */}
-
-      {/* NOTICIAS */}
-      <SeccionNoticias />
-
-      {/* PRODUCTOS DESTACADOS */}
-      <SeccionProductos />
-
-      {/* FAQ breve / CTA final */}
-      {/* <PreguntasFrecuentes /> */}
+      {secciones.map(sec => {
+        const Component = COMPONENTS_MAP[sec.nombre];
+        return Component ? <Component key={sec.nombre} /> : null;
+      })}
     </>
   );
 }
