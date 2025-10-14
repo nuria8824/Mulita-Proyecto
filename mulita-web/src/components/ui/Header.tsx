@@ -38,7 +38,7 @@ export default function Header() {
           <li><Link href="/noticias">Noticias</Link></li>
           <li><Link href="/comunidad">Comunidad</Link></li>
           <li><Link href="/tienda">Tienda</Link></li>
-          <li><Link href="/sobre-nosotros">Sobre nosotros</Link></li>
+          <li><Link href="/sobreNosotros">Sobre nosotros</Link></li>
 
           {/* Boton Dashboard solo para admins */}
           {(user?.rol === "admin" || user?.rol === "superAdmin") && (
