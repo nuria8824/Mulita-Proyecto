@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { success, z } from "zod";
+import { z } from "zod";
 
 const registerSchema = z.object({
   nombre: z.string(),

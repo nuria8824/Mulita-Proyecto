@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
-import { registerUser } from "@/lib/auth";
 
 export default function RegisterPage() {
   const [esDocente, setEsDocente] = useState(false);

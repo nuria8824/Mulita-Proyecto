@@ -41,7 +41,7 @@ export default function SidebarDashboard({
       isActive: () => pathname.startsWith("/dashboard/gestionLanding"),
     },
     {
-      href: "/dashboard/usuarios",
+      href: "/dashboard/gestionUsuarios",
       label: "Usuarios",
       icon: "/images/icons/dashboard/usuarios.svg",
       iconActive: "/images/icons/dashboard/usuarios azul.svg",
