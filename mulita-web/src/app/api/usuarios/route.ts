@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   let query = supabase
     .from("usuario")
     .select("*", { count: "exact" })
+    .eq("eliminado", false)
     .order("created_at", { ascending: false })
     .range(from, to);
 
