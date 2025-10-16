@@ -4,11 +4,15 @@ import { useState, useRef, useEffect } from "react";
 import EditRolModal from "./EditRolModal";
 import EditPermissionsModal from "./EditPermisosModal";
 import Link from "next/link";
+import { useUser } from "../../context/UserContext";
 
 interface Usuario {
   id: string;
   nombre: string;
+  apellido: string;
   email: string;
+  telefono: string;
+  imagen?: string;
   rol: string;
   acceso_comunidad: boolean;
 }
@@ -22,6 +26,8 @@ export default function MenuAccionesUsuarios({ user, onUpdate }: Props) {
   const [open, setOpen] = useState(false);
   const [modal, setModal] = useState<null | "perfil" | "rol" | "permisos">(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const { isSuperAdmin, user: currentUser, loading } = useUser();
 
   // Cierra el menú al hacer clic afuera
   useEffect(() => {
@@ -47,6 +53,8 @@ export default function MenuAccionesUsuarios({ user, onUpdate }: Props) {
     }
   };
 
+  const canEditOrDelete = isSuperAdmin() && currentUser?.id !== user.id;
+
   return (
     <div className="relative inline-block text-left" ref={menuRef}>
       <button
@@ -64,15 +72,19 @@ export default function MenuAccionesUsuarios({ user, onUpdate }: Props) {
           >
             Ver perfil
           </Link>
+
           <button
             onClick={() => {
+              if (!canEditOrDelete) return;
               setModal("rol");
               setOpen(false);
             }}
-            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+            disabled={!canEditOrDelete}
+            className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${!canEditOrDelete ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             Editar rol
           </button>
+          
           <button
             onClick={() => {
               setModal("permisos");
@@ -82,9 +94,14 @@ export default function MenuAccionesUsuarios({ user, onUpdate }: Props) {
           >
             Editar permisos
           </button>
+
           <button
-            onClick={handleDelete}
-            className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+            onClick={ () => {
+              if (!canEditOrDelete) return;
+              handleDelete
+            }}
+            disabled={!canEditOrDelete}
+            className={`block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 ${!canEditOrDelete ? "opacity-50 cursor-not-allowed " : ""}`}
           >
             Eliminar usuario
           </button>

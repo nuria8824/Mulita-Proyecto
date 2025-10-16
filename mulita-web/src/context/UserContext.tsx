@@ -6,8 +6,10 @@ interface User {
   id: string;
   email: string;
   rol: string;
-  nombre?: string;
-  apellido?: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  acceso_comunidad: boolean;
   imagen?: string;
 }
 
@@ -16,6 +18,7 @@ interface UserContextType {
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
   loading: boolean;
+  isSuperAdmin: () => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -29,7 +32,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch("/api/auth/me", {
         method: "GET",
-        credentials: "include", // Importante para cookies HttpOnly
+        credentials: "include",
       });
 
       if (res.ok) {
@@ -53,7 +56,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ Cerrar sesión
+  // Cerrar sesión
   const logout = async () => {
     try {
       const res = await fetch("/api/auth/logout", {
@@ -69,8 +72,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const isSuperAdmin = () => user?.rol === "superAdmin";
+
   return (
-    <UserContext.Provider value={{ user, setUser, logout, loading }}>
+    <UserContext.Provider value={{ user, setUser, logout, loading, isSuperAdmin }}>
       {children}
     </UserContext.Provider>
   );
