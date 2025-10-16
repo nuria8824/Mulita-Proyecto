@@ -75,7 +75,7 @@ export default function Header() {
 
               {dropDownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-50">
-                  <Link href="/perfil" className="block px-4 py-2 text-sm hover:bg-muted">Perfil</Link>
+                  <Link href={`/perfil/${user.id}`} className="block px-4 py-2 text-sm hover:bg-muted">Perfil</Link>
                   <Link href="/configuracion" className="block px-4 py-2 text-sm hover:bg-muted">Configuración</Link>
                   <button
                     type="button"
