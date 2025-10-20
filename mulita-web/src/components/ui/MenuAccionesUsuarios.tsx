@@ -54,6 +54,8 @@ export default function MenuAccionesUsuarios({ user, onUpdate }: Props) {
   };
 
   const canEditOrDelete = isSuperAdmin() && currentUser?.id !== user.id;
+  console.log("canEditOrDelete:", canEditOrDelete);
+  console.log("currentUser ID:", currentUser?.id, "User ID:", user.id);
 
   return (
     <div className="relative inline-block text-left" ref={menuRef}>

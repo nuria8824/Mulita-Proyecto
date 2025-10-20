@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 
 interface Usuario {
   id: string;
@@ -20,81 +21,152 @@ interface Perfil {
 
 export default function PerfilPage() {
   const { id } = useParams();
+  const { user, logout } = useUser();
+  const router = useRouter();
+
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPerfil = async () => {
-      setLoading(true);
-      const res = await fetch(`/api/perfil/${id}`);
-      if (res.ok) {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/perfil/${id}`);
+        if (!res.ok) throw new Error("Perfil no encontrado");
         const data = await res.json();
         setPerfil(data.perfil);
+      } catch (err) {
+        console.error(err);
+        setPerfil(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchPerfil();
   }, [id]);
 
-  if (loading) return <div className="text-center py-20">Cargando...</div>;
-  if (!perfil) return <div className="text-center py-20">Perfil no encontrado</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-screen text-gray-500">
+        Cargando perfil...
+      </div>
+    );
+
+  if (!perfil)
+    return (
+      <div className="flex justify-center items-center min-h-screen text-gray-600 text-lg">
+        Perfil no encontrado
+      </div>
+    );
+
+  const esPropietario = user?.id === perfil.usuario.id;
 
   return (
-    <div className="w-full min-h-screen bg-white flex flex-col items-center text-center text-gray-600 font-inter">
-      <div className="flex items-center justify-center gap-10 p-16 text-left w-full max-w-6xl">
+    <div className="w-full min-h-screen bg-white flex flex-col items-center text-center text-xs text-[#6d758f] font-inter">
+      {/* Sección superior */}
+      <div className="w-full flex items-center justify-center gap-10 p-[60px_170px] relative text-left text-2xl text-black font-roboto">
+        {/* Avatar */}
         <Image
           src={perfil.imagen || "/default-avatar.png"}
-          alt={`${perfil.usuario.nombre} ${perfil.usuario.apellido}`}
           width={100}
           height={100}
-          className="rounded-full object-cover"
+          alt="Avatar"
+          className="h-[100px] w-[100px] rounded-full object-cover"
         />
+
+        {/* Info usuario */}
         <div className="flex-1 flex flex-col items-center gap-3">
-          <b className="text-2xl">{perfil.usuario.nombre} {perfil.usuario.apellido}</b>
-          <div className="text-base">{perfil.biografia}</div>
+          <b className="w-full leading-8 text-center text-black text-2xl">
+            {perfil.usuario.nombre} {perfil.usuario.apellido}
+          </b>
+          <div className="w-full text-base leading-6 text-[#6d758f] text-center">
+            {perfil.usuario.email}
+          </div>
+          {perfil.biografia && (
+            <p className="text-sm max-w-xl text-[#6d758f] mt-2">
+              {perfil.biografia}
+            </p>
+          )}
         </div>
-        <div className="flex flex-col gap-3">
-          <button
-            className="w-40 px-3 py-2 rounded border border-yellow-400 text-yellow-600"
-          >
-            Cerrar sesión
-          </button>
-          <button
-            className="w-40 px-3 py-2 rounded bg-blue-900 text-white"
-          >
-            Editar perfil
-          </button>
-        </div>
+
+        {/* Botones (solo si es su perfil) */}
+        {esPropietario && (
+          <div className="flex flex-col items-start gap-3 text-base text-[#003c71]">
+            <button
+              onClick={logout}
+              className="w-[160px] rounded-lg border border-[#fedd00] flex items-center justify-center py-3 cursor-pointer"
+            >
+              <span className="leading-6 font-medium">Cerrar sesión</span>
+            </button>
+
+            <button
+              onClick={() => router.push(`/perfil/editar/${perfil.usuario.id}`)}
+              className="w-[160px] rounded-lg bg-[#003c71] text-white flex items-center justify-center py-3 cursor-pointer"
+            >
+              <span className="leading-6 font-medium">Editar perfil</span>
+            </button>
+          </div>
+        )}
+
+        {/* Línea divisoria */}
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gray-200" />
       </div>
 
-      {/* Badges / actividades */}
-      <div className="w-full max-w-4xl flex justify-between items-center py-8 text-white text-2xl font-bold">
-        <div>Mis Actividades</div>
-        <div>Favoritos</div>
-        <div className="bg-blue-900 px-4 py-2 rounded">Colecciones</div>
-        <div className="border border-yellow-400 px-4 py-2 rounded text-yellow-600 cursor-pointer">
-          Nueva colección
+      {/* Secciones */}
+      <div className="w-full max-w-[1200px] flex justify-end py-8 pr-[90px] text-left text-4xl text-white font-extrabold">
+        <div className="flex items-center gap-4 text-center text-base text-[#6d758f]">
+          <div className="shadow-sm rounded bg-[#f8faff] border border-[#f1f3f7] px-3 py-2 cursor-pointer">
+            <span className="font-semibold text-[#003c71]">Mis Actividades</span>
+          </div>
+
+          <div className="shadow-sm rounded bg-[#f8faff] border border-[#f1f3f7] px-3 py-2 cursor-pointer">
+            <span className="font-semibold text-[#003c71]">Favoritos</span>
+          </div>
+
+          <div className="rounded bg-[#003c71] px-3 py-2 text-white">
+            <span className="font-semibold">Colecciones</span>
+          </div>
+
+          {esPropietario && (
+            <div className="rounded border border-[#fedd00] px-3 py-2 text-[#003c71] cursor-pointer">
+              <span className="font-semibold">Nueva colección</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Cards de ejemplo */}
-      <div className="flex flex-wrap gap-6 justify-center">
-        <div className="w-[500px] h-40 bg-white border shadow rounded flex flex-col p-6 cursor-pointer">
-          <div className="flex justify-between text-gray-500 text-sm">
-            <span>Jan 22, 2024</span>
-            <span>24</span>
+      <div className="flex flex-wrap justify-center gap-6 py-1">
+        {[
+          { titulo: "Actividades de Física", fecha: "Jan 22, 2024" },
+          { titulo: "Ideas de Programación 💻", fecha: "Jan 22, 2024" },
+          { titulo: "Matemática 🧮", fecha: "Jan 22, 2024" },
+          { titulo: "Actividades de Robótica", fecha: "Jan 22, 2024" },
+        ].map((card, i) => (
+          <div
+            key={i}
+            className="w-[500px] h-[156px] shadow-sm border border-[#e1e4ed] rounded-lg bg-white flex flex-col justify-center relative p-6 text-left cursor-pointer hover:shadow-md transition"
+          >
+            <div className="flex flex-col justify-between h-full">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold text-[#6d758f]">
+                  {card.fecha}
+                </span>
+                <Image
+                  src="/menu-icon.svg"
+                  alt="menu"
+                  width={24}
+                  height={24}
+                  className="cursor-pointer"
+                />
+              </div>
+              <h3 className="text-2xl font-semibold text-[#003c71]">
+                {card.titulo}
+              </h3>
+            </div>
           </div>
-          <div className="text-blue-900 font-semibold text-xl mt-2">Actividades de Física</div>
-        </div>
-
-        <div className="w-[500px] h-40 bg-white border shadow rounded flex flex-col p-6 cursor-pointer">
-          <div className="flex justify-between text-gray-500 text-sm">
-            <span>Jan 22, 2024</span>
-            <span>24</span>
-          </div>
-          <div className="text-blue-900 font-semibold text-xl mt-2">Ideas de actividades de Programación 💻</div>
-        </div>
+        ))}
       </div>
     </div>
   );

@@ -110,8 +110,12 @@ export default function GestionHeroPage() {
             <button type="button" onClick={handleCancel} className="w-1/2 h-12 bg-gray-300 text-[#003c71] font-semibold rounded-md shadow-md hover:bg-gray-400 transition">
               Cancelar
             </button>
-            <button type="submit" className="w-1/2 h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition">
-              Guardar
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-1/2 h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
+            >
+              {submitting ? "Guardando..." : "Guardar"}
             </button>
           </div>
         </form>

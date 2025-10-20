@@ -73,6 +73,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   const isSuperAdmin = () => user?.rol === "superAdmin";
+  console.log("isSuperAdmin check:", isSuperAdmin());
 
   return (
     <UserContext.Provider value={{ user, setUser, logout, loading, isSuperAdmin }}>
