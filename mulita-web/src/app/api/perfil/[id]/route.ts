@@ -19,7 +19,9 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
 }
 
 // PATCH: actualizar el perfil (solo el propietario)
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  console.log("PATCH /api/perfil/[id] called");
+  const params = await props.params;
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
@@ -36,6 +38,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const biografia = formData.get("biografia")?.toString() || "";
 
   let imagen_url = formData.get("imagen");
+
+  console.log("Datos recibidos para actualizar perfil:");
+  console.log("biografia:", biografia);
+  console.log("imagen_url:", imagen_url);
 
   // Obtener imagen actual
   const { data: perfilActual } = await supabase
@@ -59,6 +65,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     imagen_url = perfilActual?.imagen;
   }
 
+  console.log("imagen_url final para actualizar:", imagen_url);
+
   const { data: perfil, error } = await supabase
     .from("perfil")
     .update({
@@ -70,6 +78,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .select()
     .single();
 
+  console.log("Perfil actualizado:", perfil);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json(perfil);

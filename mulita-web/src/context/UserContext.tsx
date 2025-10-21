@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface User {
   id: string;
@@ -26,6 +27,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Recuperar sesión desde la API al montar
   const fetchUser = async () => {
@@ -66,6 +68,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       const data = await res.json();
       setUser(data.user);
+      router.push("/");
     } catch (err) {
       console.error("Error cerrando sesión:", err);
       setUser(null);
