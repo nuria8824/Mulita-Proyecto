@@ -37,7 +37,7 @@ export default function SidebarDashboard({
       label: "Gestión de Landing",
       icon: "/images/icons/dashboard/gestion landing.svg",
       iconActive: "/images/icons/dashboard/gestion landing azul.svg",
-      // 🔹 activo si la ruta actual empieza con /dashboard/gestionLanding
+      // activo si la ruta actual empieza con /dashboard/gestionLanding
       isActive: () => pathname.startsWith("/dashboard/gestionLanding"),
     },
     {
@@ -45,7 +45,7 @@ export default function SidebarDashboard({
       label: "Usuarios",
       icon: "/images/icons/dashboard/usuarios.svg",
       iconActive: "/images/icons/dashboard/usuarios azul.svg",
-      isActive: () => pathname === "/dashboard/usuarios",
+      isActive: () => pathname === "/dashboard/gestionUsuarios",
     },
     {
       href: "/dashboard/configuracion",
@@ -61,7 +61,7 @@ export default function SidebarDashboard({
       {/* Overlay en mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
+          className="fixed inset-0 backdrop-blur-sm bg-white/10 z-40 md:hidden"
           onClick={onClose}
         ></div>
       )}
