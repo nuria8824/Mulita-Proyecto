@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 
@@ -67,10 +66,8 @@ export default function PerfilPage() {
       {/* Sección superior */}
       <div className="w-full flex items-center justify-center gap-10 p-[60px_170px] relative text-left text-2xl text-black font-roboto">
         {/* Avatar */}
-        <Image
+        <img
           src={perfil.imagen || "/default-avatar.png"}
-          width={100}
-          height={100}
           alt="Avatar"
           className="h-[100px] w-[100px] rounded-full object-cover"
         />
@@ -153,12 +150,10 @@ export default function PerfilPage() {
                 <span className="text-sm font-semibold text-[#6d758f]">
                   {card.fecha}
                 </span>
-                <Image
+                <img
                   src="/menu-icon.svg"
                   alt="menu"
-                  width={24}
-                  height={24}
-                  className="cursor-pointer"
+                  className="cursor-pointer w-6 h-6"
                 />
               </div>
               <h3 className="text-2xl font-semibold text-[#003c71]">

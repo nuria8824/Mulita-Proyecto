@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 export default function EditarPerfilPage() {
+  console.log("Rendering EditarPerfilPage");
   const params = useParams();
   const router = useRouter();
 
@@ -20,8 +21,8 @@ export default function EditarPerfilPage() {
         if (!res.ok) throw new Error("Perfil no encontrado");
         const data = await res.json();
 
-        setBiografia(data.biografia || "");
-        setImagen(data.imagen || null);
+        setBiografia(data.perfil.biografia || "");
+        setImagen(data.perfil.imagen || null);
       } catch (err) {
         console.error(err);
       } finally {
@@ -96,8 +97,8 @@ export default function EditarPerfilPage() {
               />
             )}
             <input
-              aria-label="imagen"
               type="file"
+              placeholder="Imagen de Perfil"
               onChange={(e) => setImagen(e.target.files?.[0] || null)}
               className="w-full border border-gray-300 rounded-md px-4 py-2 cursor-pointer text-gray-600"
               accept="image/*"
