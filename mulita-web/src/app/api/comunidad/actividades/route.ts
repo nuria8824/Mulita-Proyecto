@@ -1,86 +1,84 @@
-// import { NextResponse, NextRequest } from "next/server";
-// import { prisma } from "@/lib/prisma";
-// import { getUserFromRequest } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
-// // GET: traer todas las actividades
-// export async function GET() {
-//   try {
-//     const actividades = await prisma.actividad.findMany({
-//       include: {
-//         categoria: true, // ahora es solo una categoría
-//         usuario: {
-//           select: { id: true, nombre: true, apellido: true },
-//         },
-//       },
-//       orderBy: {
-//         fecha: "desc",
-//       },
-//     });
+export async function POST(req: NextRequest) {
+  const formData = await req.formData();
 
-//     return NextResponse.json({ actividades });
-//   } catch (error) {
-//     console.error("Error al obtener actividades:", error);
-//     return NextResponse.json(
-//       { error: "Error al obtener actividades" },
-//       { status: 500 }
-//     );
-//   }
-// }
+  const titulo = formData.get("titulo") as string;
+  const descripcion = formData.get("descripcion") as string;
+  const fecha = formData.get("fecha") as string;
+  const categorias = JSON.parse(formData.get("categorias") as string) as string[];
+  const archivos = formData.getAll("archivos") as File[];
 
-// // POST: crear nueva actividad
-// export async function POST(req: NextRequest) {
-//   try {
-//     const user = getUserFromRequest(req);
+  // Verificá si el usuario está logueado
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-//     if (!user) {
-//       return NextResponse.json(
-//         { error: "Usuario no autenticado" },
-//         { status: 401 }
-//       );
-//     }
+  if (userError || !user) {
+    return NextResponse.json({ error: "Usuario no autenticado" }, { status: 401 });
+  }
 
-//     const formData = await req.formData();
-//     const titulo = formData.get("titulo")?.toString() || "";
-//     const descripcion = formData.get("descripcion")?.toString() || "";
-//     const archivoFile = formData.get("archivo") as File | null;
-//     const categoriaId = Number(formData.get("categoriaId"));
+  // Crear la actividad
+  const { data: actividad, error: actividadError } = await supabase
+    .from("actividades")
+    .insert({
+      titulo,
+      descripcion,
+      fecha,
+      usuario_id: user.id,
+    })
+    .select()
+    .single();
 
-//     if (!titulo || !descripcion) {
-//       return NextResponse.json(
-//         { error: "Faltan campos obligatorios" },
-//         { status: 400 }
-//       );
-//     }
+  if (actividadError) {
+    return NextResponse.json({ error: actividadError.message }, { status: 400 });
+  }
 
-//     if (!categoriaId) {
-//       return NextResponse.json(
-//         { error: "Debe seleccionar una categoría" },
-//         { status: 400 }
-//       );
-//     }
+  // Subir archivos (si hay)
+  const uploadedUrls: string[] = [];
 
-//     const archivo = archivoFile?.name || null;
+  for (const archivo of archivos) {
+    const filePath = `${actividad.id}/${archivo.name}`;
+    const { data, error } = await supabase.storage
+      .from("actividades")
+      .upload(filePath, archivo, { upsert: true });
 
-//     const actividad = await prisma.actividad.create({
-//       data: {
-//         titulo,
-//         descripcion,
-//         archivo,
-//         usuario: { connect: { id: user.id } },
-//         categoria: { connect: { id: categoriaId } },
-//       },
-//       include: {
-//         usuario: true,
-//         categoria: true,
-//       },
-//     });
+    if (error) continue;
 
-//     return NextResponse.json({ actividad }, { status: 201 });
-//   } catch (error) {
-//     console.error("Error creando actividad:", error);
-//     return NextResponse.json(
-//       { error: "Error al crear actividad" },
-//       { status: 500 }
-//     );
-//   }
-// }
+    const { data: publicUrl } = supabase.storage
+      .from("actividades")
+      .getPublicUrl(filePath);
+
+    uploadedUrls.push(publicUrl.publicUrl);
+  }
+
+  if (uploadedUrls.length) {
+    await supabase.from("actividad_archivos").insert(
+      uploadedUrls.map((url) => ({
+        actividad_id: actividad.id,
+        archivo_url: url,
+      }))
+    );
+  }
+
+  // Asociar categorías
+  if (categorias.length) {
+    // Asegura que existan o créalas
+    for (const nombre of categorias) {
+      const { data: cat } = await supabase
+        .from("categorias")
+        .upsert({ nombre })
+        .select()
+        .single();
+
+      await supabase.from("actividad_categorias").insert({
+        actividad_id: actividad.id,
+        categoria_id: cat.id,
+      });
+    }
+  }
+
+  return NextResponse.json({ message: "Actividad creada", actividad });
+}
