@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+// GET: obtener cualquier perfil (visible para todos los autenticados)
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const { id } = params;
 
   const { data, error } = await supabase
     .from("perfil")
-    .select("*, usuario:usuario_id(id,nombre,apellido,email,rol)")
-    .eq("usuario_id", id)
+    .select("*, usuario(id,nombre,apellido,email,rol)")
+    .eq("id", id)
     .single();
+
+  console.log("data perfil obtenido:", data);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
@@ -36,18 +39,15 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
 
   const formData = await req.formData();
   const biografia = formData.get("biografia")?.toString() || "";
-
   let imagen_url = formData.get("imagen");
 
-  console.log("Datos recibidos para actualizar perfil:");
-  console.log("biografia:", biografia);
-  console.log("imagen_url:", imagen_url);
+  console.log("Datos recibidos para actualizar perfil:", { biografia, imagen_url });
 
   // Obtener imagen actual
   const { data: perfilActual } = await supabase
     .from("perfil")
     .select("imagen")
-    .eq("usuario_id", user.id)
+    .eq("id", user.id)
     .single();
 
   if (imagen_url instanceof File) {
@@ -74,7 +74,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       imagen: imagen_url,
       updated_at: new Date(),
     })
-    .eq("usuario_id", user.id)
+    .eq("id", user.id)
     .select()
     .single();
 
