@@ -52,6 +52,7 @@ export async function POST(req: Request) {
     .eq("id", userId);
 
     if (userError) {
+      console.log("Error inserting into usuario table:", userError);
       throw new Error(userError.message);
     }
 
