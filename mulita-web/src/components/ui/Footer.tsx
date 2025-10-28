@@ -9,7 +9,9 @@ export function Footer() {
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/noticias/crear") ||
-    pathname.startsWith("/noticias/editar")
+    pathname.startsWith("/noticias/editar") ||
+    pathname.startsWith("/comunidad") ||
+    pathname.startsWith("/perfil")
   ) {
     return null;
   }
@@ -23,28 +25,28 @@ export function Footer() {
             Un lugar para aprender, compartir y construir. Sé parte de la comunidad.
           </p>
           <Link
-            href="/comunidad"
+            href="/auth/register"
             className="btn btn--yellow mt-4"
           >
             ¡Únete!
           </Link>
         </div>
         <div className="flex flex-col items-start justify-start gap-6">
-          <div className="relative leading-[22px] font-semibold">Sobre nosotros</div>
-          <div className="flex flex-col items-start justify-start gap-4 text-[#b4b9c9]">
-            <Link href="/about-us" className="cursor-pointer">¿Quiénes somos?</Link>
-            <Link href="/about-us" className="cursor-pointer">Misión</Link>
-            <Link href="/about-us" className="cursor-pointer">Visión</Link>
-            <Link href="/about-us" className="cursor-pointer">¿Dónde estamos?</Link>
-          </div>
-        </div>
-        <div className="flex flex-col items-start justify-start gap-6">
           <div className="relative leading-[22px] font-semibold">Enlaces</div>
           <div className="flex flex-col items-start justify-start gap-4 text-[#b4b9c9]">
             <Link href="/" className="cursor-pointer">Inicio</Link>
-            <Link href="/news" className="cursor-pointer">Noticias</Link>
-            <Link href="/community" className="cursor-pointer">Comunidad</Link>
-            <Link href="/store" className="cursor-pointer">Tienda</Link>
+            <Link href="/noticias" className="cursor-pointer">Noticias</Link>
+            <Link href="/comunidad" className="cursor-pointer">Comunidad</Link>
+            <Link href="/tienda" className="cursor-pointer">Tienda</Link>
+          </div>
+        </div>
+        <div className="flex flex-col items-start justify-start gap-6">
+          <div className="relative leading-[22px] font-semibold">Sobre nosotros</div>
+          <div className="flex flex-col items-start justify-start gap-4 text-[#b4b9c9]">
+            <Link href="/sobreNosotros#quienes-somos" className="cursor-pointer">¿Quiénes somos?</Link>
+            <Link href="/sobreNosotros#mision-vision" className="cursor-pointer">Misión</Link>
+            <Link href="/sobreNosotros#mision-vision" className="cursor-pointer">Visión</Link>
+            <Link href="/sobreNosotros#donde-estamos" className="cursor-pointer">¿Dónde estamos?</Link>
           </div>
         </div>
         <div className="flex flex-col items-start justify-start gap-6">

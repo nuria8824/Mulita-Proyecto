@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 type Actividad = {
   id: string;
@@ -13,6 +13,7 @@ type AccionesMenuProps = {
 
 export default function MenuAccionesActividades({ actividad }: AccionesMenuProps) {
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleMenu = () => setOpen(!open);
 
@@ -27,8 +28,23 @@ export default function MenuAccionesActividades({ actividad }: AccionesMenuProps
     setOpen(false);
   };
 
+  // Cerrar menú al hacer click afuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       <button
         onClick={toggleMenu}
         className="text-gray-600 hover:text-gray-900 text-xl leading-none px-2"

@@ -14,25 +14,54 @@ export async function GET(req: NextRequest) {
   if (userError || !user)
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-  const { data, error } = await supabase
+  // Obtener actividades
+  const { data: actividades, error: actividadError } = await supabase
     .from("actividad")
     .select(`
-      id,
-      titulo,
-      descripcion,
-      fecha,
-      eliminado,
-      usuario_id,
-      actividad_archivos(id, archivo_url, nombre, tipo),
-      actividad_categoria(categoria_id, categoria(nombre))
+      *,
+      actividad_archivos (archivo_url, tipo, nombre),
+      actividad_categoria (categoria(nombre))
     `)
     .eq("eliminado", false)
     .order("fecha", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (actividadError)
+    return NextResponse.json({ error: actividadError.message }, { status: 500 });
 
-  return NextResponse.json(data);
+  // Obtener usuarios y perfiles de manera manual
+  const usuarioIds = [...new Set(actividades.map((a: any) => a.usuario_id))];
+  const { data: usuarios, error: usuarioError } = await supabase
+    .from("usuario")
+    .select("id, nombre, apellido")
+    .in("id", usuarioIds);
+
+  const { data: perfiles, error: perfilError } = await supabase
+    .from("perfil")
+    .select("id, imagen")
+    .in("id", usuarioIds);
+
+  if (usuarioError || perfilError)
+    return NextResponse.json(
+      { error: "Error obteniendo usuarios o perfiles" },
+      { status: 500 }
+    );
+
+  // Mapear usuario y perfil dentro de cada actividad
+  const actividadesConUsuario = actividades.map((act: any) => {
+    const usuario = usuarios.find((u: any) => u.id === act.usuario_id) || {};
+    const perfil = perfiles.find((p: any) => p.id === act.usuario_id) || {};
+    return {
+      ...act,
+      usuario: {
+        ...usuario,
+        perfil,
+      },
+    };
+  });
+
+  return NextResponse.json(actividadesConUsuario);
 }
+
 
 // Función para limpiar nombres de archivo
 function sanitizeFileName(fileName: string) {
