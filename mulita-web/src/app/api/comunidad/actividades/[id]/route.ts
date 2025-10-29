@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
 
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token)
@@ -19,27 +19,20 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     .select(`
       *,
       actividad_archivos (archivo_url, tipo, nombre),
-      actividad_categoria (categoria_id, categoria (nombre)),
-      usuario:usuario_id (id, nombre, apellido, perfil (imagen))
+      actividad_categoria (categoria(nombre))
     `)
-    .eq("id", id)
+    .eq("id", params.id)
     .eq("eliminado", false)
     .single();
+
+    console.log("ID solicitado:", params.id);
+    console.log("Actividad de Supabase:", actividad);
+    console.log("Error de Supabase:", actividadError);
 
   if (actividadError || !actividad)
     return NextResponse.json({ error: "Actividad no encontrada" }, { status: 404 });
 
-  // Extraer IDs de categorías
-  const categoriaIds = actividad.actividad_categoria?.map(
-    (ac: any) => ac.categoria_id
-  ) ?? [];
-
-  const actividadConCategorias = {
-    ...actividad,
-    categorias_ids: categoriaIds,
-  };
-
-  return NextResponse.json(actividadConCategorias);
+  return NextResponse.json(actividad);
 }
 
 
@@ -51,7 +44,8 @@ function sanitizeFileName(fileName: string) {
     .replace(/[^a-zA-Z0-9.\-_]/g, "_");
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { id } = params;
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token)
@@ -60,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { data: { user }, error: userError } = await supabase.auth.getUser(access_token);
   if (userError || !user) return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-// Obtener la actividad
+  // Obtener la actividad
   const { data: actividad, error: actError } = await supabase
     .from("actividad")
     .select("*")
@@ -127,7 +121,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ message: "Actividad actualizada", data });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { id } = params;
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token)

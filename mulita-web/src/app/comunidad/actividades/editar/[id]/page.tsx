@@ -24,6 +24,7 @@ interface ErroresFormulario {
 export default function EditarActividadPage() {
   const router = useRouter();
   const params = useParams();
+  console.log("Params ID:", params.id);
 
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
