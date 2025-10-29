@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
-export default function MenuAcciones({
+export default function MenuAccionesNoticias({
   noticiaId,
   onEliminar,
 }: {
@@ -45,6 +45,7 @@ export default function MenuAcciones({
         <div className="absolute right-0 mt-2 w-28 bg-white border rounded-md shadow-lg z-20">
           <Link
             href={`/noticias/editar/${noticiaId}`}
+            onClick={() => setOpen(false)}
             className="block px-3 py-2 text-sm hover:bg-gray-100 rounded-md"
           >
             Editar

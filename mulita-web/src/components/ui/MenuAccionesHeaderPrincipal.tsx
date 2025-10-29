@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
+import { set } from "zod";
 
 export default function MenuAccionesHeaderPrincipal() {
   const { user, logout } = useUser();
@@ -42,12 +43,14 @@ export default function MenuAccionesHeaderPrincipal() {
         <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-50">
           <Link
             href={`/perfil/${user.id}`}
+            onClick={() => setOpen(false)}
             className="block px-4 py-2 text-sm hover:bg-muted"
           >
             Perfil
           </Link>
           <Link
             href="/configuracion"
+            onClick={() => setOpen(false)}
             className="block px-4 py-2 text-sm hover:bg-muted"
           >
             Configuración
@@ -56,6 +59,7 @@ export default function MenuAccionesHeaderPrincipal() {
             type="button"
             onClick={async () => {
               await logout();
+              setOpen(false);
               router.push("/");
             }}
             className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"

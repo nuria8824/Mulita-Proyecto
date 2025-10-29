@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useUser } from "@/context/UserContext";
 
 interface Noticia {

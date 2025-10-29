@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
-import MenuAcciones from "@/components/ui/MenuAcciones";
+import MenuAccionesNoticias from "@/components/ui/MenuAccionesNoticias";
 
 interface Noticia {
   id: number;
@@ -86,7 +86,7 @@ export default function GestionNoticiasPage() {
 
               {(user?.rol === "admin" || user?.rol === "superAdmin") && (
                 <div className="self-end sm:self-auto">
-                  <MenuAcciones
+                  <MenuAccionesNoticias
                     noticiaId={noticia.id}
                     onEliminar={handleEliminar}
                   />
