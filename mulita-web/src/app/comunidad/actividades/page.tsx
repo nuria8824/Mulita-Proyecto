@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import MenuAccionesActividades from "@/components/ui/MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/ModalImagenActividades";
+import { useUser } from "@/context/UserContext";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
 type Categoria = { categoria: { nombre: string } };
@@ -20,6 +21,8 @@ type Actividad = {
 };
 
 export default function Actividades() {
+  const { user } = useUser();
+
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
@@ -65,8 +68,16 @@ export default function Actividades() {
 
   if (error)
     return (
-      <div className="text-center text-red-600 font-medium mt-10">{error}</div>
+      <div className=" text-red-text-center600 font-medium mt-10">{error}</div>
     );
+
+  if (!user) {
+    return (
+      <div className="text-center text-gray-600 mt-10">
+        Debes iniciar sesión para ver las actividades.
+      </div>
+    );
+  }
 
   if (actividades.length === 0)
     return (
@@ -127,7 +138,11 @@ export default function Actividades() {
                       {cat}
                     </span>
                   ))}
-                  <MenuAccionesActividades actividad={{ id: act.id, usuario_id: act.usuario.id }} />
+                  <MenuAccionesActividades 
+                    actividad={{ id: act.id, usuario_id: act.usuario.id }}
+                    userId={user.id}
+                    rol={user.rol}
+                  />
                 </div>
               </div>
               
