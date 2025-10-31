@@ -13,6 +13,7 @@ interface ArchivoExistente {
   archivo_url: string;
   nombre: string;
   tipo: string;
+  eliminado?: boolean;
 }
 
 interface ErroresFormulario {
@@ -24,22 +25,20 @@ interface ErroresFormulario {
 export default function EditarActividadPage() {
   const router = useRouter();
   const params = useParams();
-  console.log("Params ID:", params.id);
 
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
-  const [archivos, setArchivos] = useState<File[]>([]);
+  const [archivosNuevos, setArchivosNuevos] = useState<File[]>([]);
   const [archivosExistentes, setArchivosExistentes] = useState<ArchivoExistente[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [errores, setErrores] = useState<ErroresFormulario>({});
 
-  // Cargar datos iniciales
+  // 🔹 Cargar datos iniciales
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        // Obtener actividad
         const res = await fetch(`/api/comunidad/actividades/${params.id}`, {
           credentials: "include",
         });
@@ -57,10 +56,10 @@ export default function EditarActividadPage() {
         setArchivosExistentes(data.actividad_archivos || []);
         setCategoriasSeleccionadas(data.categorias_ids);
 
-        // Obtener categorías
         const { data: categoriasData, error: categoriasError } = await supabase
           .from("categoria")
           .select("id, nombre");
+
         if (!categoriasError && categoriasData) setCategorias(categoriasData);
       } catch (err) {
         console.error("Error al cargar datos:", err);
@@ -72,25 +71,32 @@ export default function EditarActividadPage() {
     fetchDatos();
   }, [params.id, router]);
 
+  // 🔹 Manejo de categorías
   const handleCategoriaChange = (id: string) => {
     setCategoriasSeleccionadas((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
   };
 
+  // 🔹 Manejo de archivos
   const handleArchivosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nuevosArchivos = e.target.files ? Array.from(e.target.files) : [];
-    setArchivos((prev) => [...prev, ...nuevosArchivos]);
+    const nuevos = e.target.files ? Array.from(e.target.files) : [];
+    setArchivosNuevos((prev) => [...prev, ...nuevos]);
   };
 
   const handleEliminarArchivoNuevo = (index: number) => {
-    setArchivos((prev) => prev.filter((_, i) => i !== index));
+    setArchivosNuevos((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleEliminarArchivoExistente = (nombre: string) => {
-    setArchivosExistentes((prev) => prev.filter((a) => a.nombre !== nombre));
+    setArchivosExistentes((prev) =>
+      prev.map((a) =>
+        a.nombre === nombre ? { ...a, eliminado: true } : a
+      )
+    );
   };
 
+  // 🔹 Envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -103,13 +109,18 @@ export default function EditarActividadPage() {
     setErrores(nuevosErrores);
     if (Object.keys(nuevosErrores).length > 0) return;
 
+    // 🔹 Filtramos los archivos que el usuario decidió mantener
+    const urlsExistentes = archivosExistentes
+      .filter((a) => !a.eliminado)
+      .map((a) => a.archivo_url);
+
     const formData = new FormData();
     formData.append("titulo", titulo);
     formData.append("descripcion", descripcion);
     formData.append("categorias", JSON.stringify(categoriasSeleccionadas));
-    formData.append("archivos_existentes", JSON.stringify(archivosExistentes));
+    formData.append("archivosExistentes", JSON.stringify(urlsExistentes));
 
-    archivos.forEach((archivo) => formData.append("archivos", archivo));
+    archivosNuevos.forEach((archivo) => formData.append("archivos", archivo));
 
     try {
       const res = await fetch(`/api/comunidad/actividades/${params.id}`, {
@@ -227,32 +238,34 @@ export default function EditarActividadPage() {
           </div>
 
           {/* Archivos existentes */}
-          {archivosExistentes.length > 0 && (
+          {archivosExistentes.some((a) => !a.eliminado) && (
             <div>
               <label className="block text-lg font-semibold mb-2">Archivos actuales</label>
               <ul className="space-y-1 text-sm">
-                {archivosExistentes.map((archivo) => (
-                  <li
-                    key={archivo.nombre}
-                    className="flex justify-between items-center border rounded-md px-3 py-1 bg-gray-50"
-                  >
-                    <a
-                      href={archivo.archivo_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="truncate text-blue-600 hover:underline"
+                {archivosExistentes
+                  .filter((a) => !a.eliminado)
+                  .map((archivo) => (
+                    <li
+                      key={archivo.nombre}
+                      className="flex justify-between items-center border rounded-md px-3 py-1 bg-gray-50"
                     >
-                      {archivo.nombre}
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => handleEliminarArchivoExistente(archivo.nombre)}
-                      className="text-red-500 hover:text-red-700 text-sm font-semibold"
-                    >
-                      ✕
-                    </button>
-                  </li>
-                ))}
+                      <a
+                        href={archivo.archivo_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="truncate text-blue-600 hover:underline"
+                      >
+                        {archivo.nombre}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleEliminarArchivoExistente(archivo.nombre)}
+                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  ))}
               </ul>
             </div>
           )}
@@ -270,9 +283,9 @@ export default function EditarActividadPage() {
               />
             </label>
 
-            {archivos.length > 0 && (
+            {archivosNuevos.length > 0 && (
               <ul className="mt-2 space-y-1 text-sm">
-                {archivos.map((archivo, index) => (
+                {archivosNuevos.map((archivo, index) => (
                   <li
                     key={index}
                     className="flex justify-between items-center border rounded-md px-3 py-1 bg-gray-50"

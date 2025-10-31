@@ -48,7 +48,6 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   return NextResponse.json(respuesta);
 }
 
-
 // Función para limpiar nombres de archivo
 function sanitizeFileName(fileName: string) {
   return fileName
@@ -57,64 +56,123 @@ function sanitizeFileName(fileName: string) {
     .replace(/[^a-zA-Z0-9.\-_]/g, "_");
 }
 
-export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   const { id } = params;
+
+  // --- Autenticación ---
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token)
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser(access_token);
-  if (userError || !user) return NextResponse.json({ error: "Token inválido" }, { status: 401 });
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(access_token);
 
-  // Obtener la actividad
+  if (userError || !user)
+    return NextResponse.json({ error: "Token inválido" }, { status: 401 });
+
+  // --- Obtener la actividad ---
   const { data: actividad, error: actError } = await supabase
     .from("actividad")
-    .select("*")
+    .select("usuario_id")
     .eq("id", id)
     .single();
 
-  if (actError || !actividad) return NextResponse.json({ error: "Actividad no encontrada" }, { status: 404 });
+  if (actError || !actividad)
+    return NextResponse.json(
+      { error: "Actividad no encontrada" },
+      { status: 404 }
+    );
 
-  // Comprobar que el usuario es el autor
+  // --- Verificar permisos ---
   if (actividad.usuario_id !== user.id)
-    return NextResponse.json({ error: "No tienes permisos para editar esta actividad" }, { status: 403 });
+    return NextResponse.json(
+      { error: "No tienes permisos para editar esta actividad" },
+      { status: 403 }
+    );
 
+  // --- Procesar FormData ---
   const formData = await req.formData();
   const titulo = formData.get("titulo") as string;
   const descripcion = formData.get("descripcion") as string;
   const categorias = JSON.parse(formData.get("categorias") as string) as string[];
-  const archivos = formData.getAll("archivos") as File[];
 
-  // Actualizar la actividad
+  // Archivos nuevos subidos
+  const archivosNuevos = formData.getAll("archivos") as File[];
+
+  // Archivos que el usuario decidió mantener (URLs)
+  const archivosExistentes = JSON.parse(
+    (formData.get("archivosExistentes") as string) || "[]"
+  ) as string[];
+
+  // --- Actualizar actividad ---
   const { data, error: actividadError } = await supabase
     .from("actividad")
     .update({ titulo, descripcion })
     .eq("id", id)
-    .eq("usuario_id", user.id)
     .select()
     .single();
 
   if (actividadError)
-    return NextResponse.json({ error: actividadError.message }, { status: 400 });
+    return NextResponse.json(
+      { error: actividadError.message },
+      { status: 400 }
+    );
 
-  // Manejo de archivos nuevos
+  // --- Actualizar archivos ---
+  // 1️⃣ Obtener los archivos actuales de la actividad
+  const { data: archivosActuales } = await supabase
+    .from("actividad_archivos")
+    .select("archivo_url")
+    .eq("actividad_id", id);
+
+  const actualesUrls = archivosActuales?.map((a) => a.archivo_url) || [];
+
+  // 2️⃣ Determinar cuáles eliminar
+  const archivosAEliminar = actualesUrls.filter(
+    (url) => !archivosExistentes.includes(url)
+  );
+
+  if (archivosAEliminar.length > 0) {
+    await supabase
+      .from("actividad_archivos")
+      .delete()
+      .in("archivo_url", archivosAEliminar);
+  }
+
+  // 3️⃣ Subir y registrar los nuevos archivos
   const uploadedFiles: { url: string; name: string; type: string }[] = [];
-  for (const archivo of archivos) {
+  for (const archivo of archivosNuevos) {
     const sanitizedFileName = sanitizeFileName(archivo.name);
     const filePath = `comunidad/actividades/${id}/${Date.now()}_${sanitizedFileName}`;
     const { error: uploadError } = await supabase.storage
       .from("mulita-files")
-      .upload(filePath, archivo, { contentType: archivo.type, upsert: false });
+      .upload(filePath, archivo, {
+        contentType: archivo.type,
+        upsert: false,
+      });
+
     if (uploadError) continue;
 
-    const { data: { publicUrl } } = supabase.storage.from("mulita-files").getPublicUrl(filePath);
-    uploadedFiles.push({ url: publicUrl, name: archivo.name, type: archivo.type });
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("mulita-files").getPublicUrl(filePath);
+
+    uploadedFiles.push({
+      url: publicUrl,
+      name: archivo.name,
+      type: archivo.type,
+    });
   }
 
   if (uploadedFiles.length) {
     await supabase.from("actividad_archivos").insert(
-      uploadedFiles.map(f => ({
+      uploadedFiles.map((f) => ({
         actividad_id: id,
         archivo_url: f.url,
         nombre: f.name,
@@ -123,16 +181,20 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     );
   }
 
-  // Actualizar categorías
+  // --- Actualizar categorías ---
   if (categorias.length) {
     await supabase.from("actividad_categoria").delete().eq("actividad_id", id);
     await supabase.from("actividad_categoria").insert(
-      categorias.map(categoriaId => ({ actividad_id: id, categoria_id: categoriaId }))
+      categorias.map((categoriaId) => ({
+        actividad_id: id,
+        categoria_id: categoriaId,
+      }))
     );
   }
 
   return NextResponse.json({ message: "Actividad actualizada", data });
 }
+
 
 export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
