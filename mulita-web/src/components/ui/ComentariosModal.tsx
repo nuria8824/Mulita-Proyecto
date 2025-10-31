@@ -6,7 +6,7 @@ import ModalImagenActividades from "./ModalImagenActividades";
 import MenuAccionesActividades from "./MenuAccionesActividades";
 import { useUser } from "@/context/UserContext";
 
-export default function ComentariosModal({ actividad, onClose }: any) {
+export default function ComentariosModal({ actividad, onClose, onActualizarComentarios }: any) {
   const [comentarios, setComentarios] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
   const [modalImagenes, setModalImagenes] = useState(false);
@@ -40,7 +40,6 @@ export default function ComentariosModal({ actividad, onClose }: any) {
     };
   }, []);
 
-
   if (!user) {
     return (
       <div className="text-center text-gray-600 mt-10">
@@ -54,7 +53,10 @@ export default function ComentariosModal({ actividad, onClose }: any) {
       const res = await fetch(`/api/comunidad/comentarios/${comentarioId}`, {
         method: "DELETE",
       });
-      if (res.ok) cargarComentarios();
+      if (res.ok) {
+        await cargarComentarios();
+        if (onActualizarComentarios) onActualizarComentarios();
+      }
     } catch (err) {
       console.error("Error eliminando comentario:", err);
     }
@@ -204,7 +206,6 @@ export default function ComentariosModal({ actividad, onClose }: any) {
           </button>
         </div>
 
-
         {/* COMENTARIOS */}
         <div className="border-t border-gray-200 pt-3">
           <h3 className="text-sm font-medium mb-2">Comentarios</h3>
@@ -259,7 +260,10 @@ export default function ComentariosModal({ actividad, onClose }: any) {
 
           <ComentarioInput
             actividadId={actividad.id}
-            onNuevoComentario={cargarComentarios}
+            onNuevoComentario={async () => {
+              await cargarComentarios();
+              if (onActualizarComentarios) onActualizarComentarios();
+            }}
           />
         </div>
       </div>

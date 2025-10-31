@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import MenuAccionesActividades from "@/components/ui/MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/ModalImagenActividades";
+import ComentarioInput from "@/components/ui/ComentarioInput";
+import ComentariosModal from "@/components/ui/ComentariosModal";
 import { useUser } from "@/context/UserContext";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
@@ -33,6 +35,30 @@ export default function Actividades() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [imagenes, setImagenes] = useState<Archivo[]>([]);
 
+  // Modal de comentarios
+  const [actividadSeleccionada, setActividadSeleccionada] = useState<Actividad | null>(null);
+
+  // Comentarios por actividad
+  const [comentariosPorActividad, setComentariosPorActividad] = useState<Record<string, number>>({});
+
+  // Función para obtener la cantidad de comentarios
+  const fetchComentariosCount = async (actividadId: string) => {
+    try {
+      const res = await fetch(`/api/comunidad/comentarios/${actividadId}`);
+      if (!res.ok) throw new Error("Error al obtener comentarios");
+      const data = await res.json();
+      return data.length;
+    } catch (err) {
+      console.error(err);
+      return 0;
+    }
+  };
+
+  // Actualiza el contador de comentarios de una actividad específica
+  const actualizarComentarios = (actividadId: string, nuevoCount: number) => {
+    setComentariosPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
+  };
+
   useEffect(() => {
     const fetchActividades = async () => {
       try {
@@ -40,6 +66,16 @@ export default function Actividades() {
         if (!res.ok) throw new Error("Error al obtener las actividades");
         const data = await res.json();
         setActividades(data);
+
+        // Cargar número de comentarios para cada actividad
+        const counts: Record<string, number> = {};
+        await Promise.all(
+          data.map(async (act: Actividad) => {
+            counts[act.id] = await fetchComentariosCount(act.id);
+          })
+        );
+        setComentariosPorActividad(counts);
+
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -68,7 +104,7 @@ export default function Actividades() {
 
   if (error)
     return (
-      <div className=" text-red-text-center600 font-medium mt-10">{error}</div>
+      <div className="text-red-text-center600 font-medium mt-10">{error}</div>
     );
 
   if (!user) {
@@ -94,7 +130,7 @@ export default function Actividades() {
 
       <div className="flex flex-col gap-8 max-w-xl w-full">
         {actividades.map((act) => {
-          const imagenes = act.actividad_archivos.filter((a) =>
+          const imagenesAct = act.actividad_archivos.filter((a) =>
             a.tipo.startsWith("image/")
           );
           const otrosArchivos = act.actividad_archivos.filter(
@@ -187,12 +223,12 @@ export default function Actividades() {
               )}
 
               {/* GALERÍA DE IMÁGENES */}
-              {imagenes.length > 0 && (
+              {imagenesAct.length > 0 && (
                 <div className="px-4 pb-4 grid grid-cols-3 gap-2">
-                  {imagenes.map((img, i) => (
+                  {imagenesAct.map((img, i) => (
                     <button
                       key={i}
-                      onClick={() => toggleModal(imagenes, i)}
+                      onClick={() => toggleModal(imagenesAct, i)}
                       className="w-full aspect-square overflow-hidden rounded-md"
                     >
                       <img
@@ -206,11 +242,48 @@ export default function Actividades() {
               )}
 
               {/* BOTONES DE ACCIÓN */}
-              <div className="flex justify-between text-gray-600 pt-3 border-t border-gray-200 text-sm">
-                <button className="hover:text-[#003c71]">👍 Me gusta</button>
-                <button className="hover:text-[#003c71]">💬 Comentar</button>
-                <button className="hover:text-[#003c71]">📁 Guardar</button>
+              <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
+                <button className="hover:opacity-75 transition">
+                  <img
+                    src="/images/icons/comunidad/favoritos.svg"
+                    alt="Me gusta"
+                    className="w-6 h-6"
+                  />
+                </button>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    className="hover:opacity-75 transition"
+                    onClick={() => setActividadSeleccionada(act)}
+                  >
+                    <img
+                      src="/images/icons/comunidad/comentarios.svg"
+                      alt="Comentarios"
+                      className="w-6 h-6"
+                    />
+                  </button>
+                  <span className="text-sm text-gray-700 font-semibold">
+                    {comentariosPorActividad[act.id] ?? 0}
+                  </span>
+                </div>
+
+                <button className="hover:opacity-75 transition">
+                  <img
+                    src="/images/icons/comunidad/colecciones.svg"
+                    alt="Guardar"
+                    className="w-6 h-6"
+                  />
+                </button>
               </div>
+
+              {/* INPUT PEQUEÑO PARA COMENTARIOS */}
+              <ComentarioInput 
+                actividadId={act.id} 
+                onNuevoComentario={async () => {
+                  const count = await fetchComentariosCount(act.id);
+                  actualizarComentarios(act.id, count);
+                }}
+              />
             </div>
           );
         })}
@@ -222,6 +295,18 @@ export default function Actividades() {
           images={imagenes.map((img) => img.archivo_url)}
           initialIndex={currentIndex}
           onClose={() => setModalOpen(false)}
+        />
+      )}
+
+      {/* MODAL DE COMENTARIOS */}
+      {actividadSeleccionada && (
+        <ComentariosModal
+          actividad={actividadSeleccionada}
+          onClose={() => setActividadSeleccionada(null)}
+          onActualizarComentarios={async () => {
+            const count = await fetchComentariosCount(actividadSeleccionada.id);
+            actualizarComentarios(actividadSeleccionada.id, count);
+          }}
         />
       )}
     </div>
