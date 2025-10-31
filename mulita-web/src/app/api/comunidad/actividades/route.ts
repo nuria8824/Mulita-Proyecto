@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+
 export async function GET(req: NextRequest) {
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token)
@@ -23,10 +24,12 @@ export async function GET(req: NextRequest) {
       actividad_categoria (categoria(nombre))
     `)
     .eq("eliminado", false)
-    .order("fecha", { ascending: false });
+    .order("created_at", { ascending: false });
 
+  console.log("Actividades de Supabase:", actividades);
   if (actividadError)
     return NextResponse.json({ error: actividadError.message }, { status: 500 });
+
 
   // Obtener usuarios y perfiles de manera manual
   const usuarioIds = [...new Set(actividades.map((a: any) => a.usuario_id))];
@@ -75,7 +78,7 @@ export async function POST(req: NextRequest) {
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token)
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-
+  
   // Obtener usuario autenticado
   const {
     data: { user },

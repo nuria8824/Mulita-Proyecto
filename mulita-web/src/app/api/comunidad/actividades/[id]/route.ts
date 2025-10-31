@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     .select(`
       *,
       actividad_archivos (archivo_url, tipo, nombre),
-      actividad_categoria (categoria(nombre))
+      actividad_categoria (categoria_id, categoria(nombre))
     `)
     .eq("id", params.id)
     .eq("eliminado", false)
@@ -32,7 +32,20 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   if (actividadError || !actividad)
     return NextResponse.json({ error: "Actividad no encontrada" }, { status: 404 });
 
-  return NextResponse.json(actividad);
+  // Extraer los IDs de categorías
+  const categorias_ids = actividad.actividad_categoria?.map(
+    (ac: any) => ac.categoria_id
+  ) || [];
+
+  console.log("IDs de categorías:", categorias_ids);
+
+  // Transformar la respuesta para el frontend
+  const respuesta = {
+    ...actividad,
+    categorias_ids,
+  };
+
+  return NextResponse.json(respuesta);
 }
 
 

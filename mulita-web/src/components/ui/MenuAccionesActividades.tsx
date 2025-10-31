@@ -39,7 +39,7 @@ export default function MenuAccionesActividades({ actividad, userId, rol }: Acci
     if (!confirm("¿Seguro que deseas eliminar esta actividad?")) return;
 
     try {
-      const res = await fetch(`/api/actividades/${actividad.id}`, {
+      const res = await fetch(`/api/comunidad/actividades/${actividad.id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +51,7 @@ export default function MenuAccionesActividades({ actividad, userId, rol }: Acci
       // Opcional: actualizar UI localmente
       console.log("Actividad eliminada correctamente:", actividad.id);
       setOpen(false);
-      router.refresh();
+      router.push("/comunidad");
     } catch (err: any) {
       console.error(err);
       alert("No se pudo eliminar la actividad");
