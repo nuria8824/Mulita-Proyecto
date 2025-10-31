@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 interface Categoria {
   id: string;
   nombre: string;
+}
+
+interface ArchivoExistente {
+  archivo_url: string;
+  nombre: string;
+  tipo: string;
 }
 
 interface ErroresFormulario {
@@ -15,25 +21,56 @@ interface ErroresFormulario {
   categorias?: string;
 }
 
-export default function CrearActividadPage() {
+export default function EditarActividadPage() {
   const router = useRouter();
+  const params = useParams();
+  console.log("Params ID:", params.id);
+
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [archivos, setArchivos] = useState<File[]>([]);
+  const [archivosExistentes, setArchivosExistentes] = useState<ArchivoExistente[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
-  const [cargandoCategorias, setCargandoCategorias] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [errores, setErrores] = useState<ErroresFormulario>({});
 
-  // Cargar categorías desde Supabase
+  // Cargar datos iniciales
   useEffect(() => {
-    const fetchCategorias = async () => {
-      const { data, error } = await supabase.from("categoria").select("id, nombre");
-      if (!error && data) setCategorias(data);
-      setCargandoCategorias(false);
+    const fetchDatos = async () => {
+      try {
+        // Obtener actividad
+        const res = await fetch(`/api/comunidad/actividades/${params.id}`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error("Error al obtener la actividad", data.error);
+          alert("No se pudo cargar la actividad.");
+          router.push("/comunidad");
+          return;
+        }
+
+        setTitulo(data.titulo);
+        setDescripcion(data.descripcion);
+        setArchivosExistentes(data.actividad_archivos || []);
+        setCategoriasSeleccionadas(data.categorias_ids);
+
+        // Obtener categorías
+        const { data: categoriasData, error: categoriasError } = await supabase
+          .from("categoria")
+          .select("id, nombre");
+        if (!categoriasError && categoriasData) setCategorias(categoriasData);
+      } catch (err) {
+        console.error("Error al cargar datos:", err);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchCategorias();
-  }, []);
+
+    fetchDatos();
+  }, [params.id, router]);
 
   const handleCategoriaChange = (id: string) => {
     setCategoriasSeleccionadas((prev) =>
@@ -41,17 +78,19 @@ export default function CrearActividadPage() {
     );
   };
 
-  // Manejo de archivos
   const handleArchivosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nuevosArchivos = e.target.files ? Array.from(e.target.files) : [];
     setArchivos((prev) => [...prev, ...nuevosArchivos]);
   };
 
-  const handleEliminarArchivo = (index: number) => {
+  const handleEliminarArchivoNuevo = (index: number) => {
     setArchivos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Enviar formulario
+  const handleEliminarArchivoExistente = (nombre: string) => {
+    setArchivosExistentes((prev) => prev.filter((a) => a.nombre !== nombre));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -62,19 +101,19 @@ export default function CrearActividadPage() {
       nuevosErrores.categorias = "Debes seleccionar al menos una categoría.";
 
     setErrores(nuevosErrores);
-
     if (Object.keys(nuevosErrores).length > 0) return;
 
     const formData = new FormData();
     formData.append("titulo", titulo);
     formData.append("descripcion", descripcion);
     formData.append("categorias", JSON.stringify(categoriasSeleccionadas));
+    formData.append("archivos_existentes", JSON.stringify(archivosExistentes));
 
     archivos.forEach((archivo) => formData.append("archivos", archivo));
 
     try {
-      const res = await fetch("/api/comunidad/actividades", {
-        method: "POST",
+      const res = await fetch(`/api/comunidad/actividades/${params.id}`, {
+        method: "PATCH",
         body: formData,
         credentials: "include",
       });
@@ -82,29 +121,34 @@ export default function CrearActividadPage() {
       if (!res.ok) {
         const error = await res.json();
         console.error(error.detail || error.message);
-        alert("Error creando actividad");
+        alert("Error actualizando actividad");
         return;
       }
 
       router.push("/comunidad");
     } catch (err) {
       console.error("Error en fetch:", err);
-      alert("Error creando actividad");
+      alert("Error actualizando actividad");
     }
   };
 
   const handleCancel = () => router.push("/comunidad");
 
+  if (loading)
+    return (
+      <div className="w-full h-screen flex items-center justify-center text-[#003c71]">
+        Cargando actividad...
+      </div>
+    );
+
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">
       <div className="w-full max-w-3xl flex flex-col gap-6">
-        {/* Encabezado */}
         <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-semibold text-black">Crear Nueva Actividad</h1>
-          <p className="text-base text-[#003c71]">Introduce los datos</p>
+          <h1 className="text-2xl font-semibold text-black">Editar Actividad</h1>
+          <p className="text-base text-[#003c71]">Modifica los datos de la actividad</p>
         </div>
 
-        {/* Formulario */}
         <form
           onSubmit={handleSubmit}
           className="flex flex-col gap-6 bg-white p-6 rounded-lg shadow-md border border-gray-200"
@@ -149,49 +193,73 @@ export default function CrearActividadPage() {
           {/* Categorías */}
           <div>
             <label className="block text-lg font-semibold mb-2">Categorías *</label>
-            {cargandoCategorias ? (
-              <p className="text-gray-500">Cargando categorías...</p>
-            ) : categorias.length === 0 ? (
-              <p className="text-gray-500">No hay categorías disponibles.</p>
-            ) : (
-              <div
-                className={`flex flex-wrap gap-3 p-2 rounded-md border ${
-                  errores.categorias ? "border-red-500" : "border-gray-200"
-                }`}
-              >
-                {categorias.map((cat) => (
-                  <label
-                    key={cat.id}
-                    className={`flex items-center gap-2 border px-4 py-2 rounded-md cursor-pointer transition ${
-                      categoriasSeleccionadas.includes(cat.id)
-                        ? "bg-blue-100 border-blue-500"
-                        : "bg-gray-50 hover:bg-gray-100"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={categoriasSeleccionadas.includes(cat.id)}
-                      onChange={() => {
-                        handleCategoriaChange(cat.id);
-                        if (errores.categorias)
-                          setErrores({ ...errores, categorias: undefined });
-                      }}
-                      className="accent-blue-600"
-                    />
-                    {cat.nombre}
-                  </label>
-                ))}
-              </div>
-            )}
+            <div
+              className={`flex flex-wrap gap-3 p-2 rounded-md border ${
+                errores.categorias ? "border-red-500" : "border-gray-200"
+              }`}
+            >
+              {categorias.map((cat) => (
+                <label
+                  key={cat.id}
+                  className={`flex items-center gap-2 border px-4 py-2 rounded-md cursor-pointer transition ${
+                    categoriasSeleccionadas.includes(cat.id)
+                      ? "bg-blue-100 border-blue-500"
+                      : "bg-gray-50 hover:bg-gray-100"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={categoriasSeleccionadas.includes(cat.id)}
+                    onChange={() => {
+                      handleCategoriaChange(cat.id);
+                      if (errores.categorias)
+                        setErrores({ ...errores, categorias: undefined });
+                    }}
+                    className="accent-blue-600"
+                  />
+                  {cat.nombre}
+                </label>
+              ))}
+            </div>
             {errores.categorias && (
               <p className="text-red-500 text-sm mt-1">{errores.categorias}</p>
             )}
           </div>
 
-          {/* Archivos */}
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold text-lg">Archivos (opcional)</label>
+          {/* Archivos existentes */}
+          {archivosExistentes.length > 0 && (
+            <div>
+              <label className="block text-lg font-semibold mb-2">Archivos actuales</label>
+              <ul className="space-y-1 text-sm">
+                {archivosExistentes.map((archivo) => (
+                  <li
+                    key={archivo.nombre}
+                    className="flex justify-between items-center border rounded-md px-3 py-1 bg-gray-50"
+                  >
+                    <a
+                      href={archivo.archivo_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="truncate text-blue-600 hover:underline"
+                    >
+                      {archivo.nombre}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleEliminarArchivoExistente(archivo.nombre)}
+                      className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
+          {/* Subir nuevos archivos */}
+          <div className="flex flex-col gap-2">
+            <label className="font-semibold text-lg">Agregar nuevos archivos</label>
             <label className="w-full h-32 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition">
               <span className="text-gray-500">Sube uno o varios archivos</span>
               <input
@@ -212,7 +280,7 @@ export default function CrearActividadPage() {
                     <span className="truncate">{archivo.name}</span>
                     <button
                       type="button"
-                      onClick={() => handleEliminarArchivo(index)}
+                      onClick={() => handleEliminarArchivoNuevo(index)}
                       className="text-red-500 hover:text-red-700 text-sm font-semibold"
                     >
                       ✕
@@ -237,7 +305,7 @@ export default function CrearActividadPage() {
               type="submit"
               className="w-1/2 h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
             >
-              Continuar
+              Guardar cambios
             </button>
           </div>
         </form>

@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
+import MenuAccionesHeaderPrincipal from "./MenuAccionesHeaderPrincipal";
 
 export default function Header() {
-  const { user, logout } = useUser();
-  const [dropDownOpen, setDropDownOpen] = useState(false);
-  const router = useRouter();
+  const { user } = useUser();
   const pathname = usePathname();
 
   if (
@@ -60,36 +58,7 @@ export default function Header() {
               <Link href="/auth/login" className="btn btn--blue">Log In</Link>
             </>
           ) : (
-            <div className="relative">
-              <button
-                onClick={() => setDropDownOpen(prev => !prev)}
-                className="flex items-center gap-2 rounded-full border px-2 py-1 hover:bg-muted"
-              >
-                <img
-                  src={user.imagen || "/default-avatar.png"}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-                <span className="i-lucide-chevron-down" />
-              </button>
-
-              {dropDownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-50">
-                  <Link href={`/perfil/${user.id}`} className="block px-4 py-2 text-sm hover:bg-muted">Perfil</Link>
-                  <Link href="/configuracion" className="block px-4 py-2 text-sm hover:bg-muted">Configuración</Link>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      await logout();
-                      router.push("/");
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
-                  >
-                    Salir
-                  </button>
-                </div>
-              )}
-            </div>
+            <MenuAccionesHeaderPrincipal />
           )}
         </div>
       </nav>

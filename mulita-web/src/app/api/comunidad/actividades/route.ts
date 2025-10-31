@@ -1,86 +1,186 @@
-// import { NextResponse, NextRequest } from "next/server";
-// import { prisma } from "@/lib/prisma";
-// import { getUserFromRequest } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
-// // GET: traer todas las actividades
-// export async function GET() {
-//   try {
-//     const actividades = await prisma.actividad.findMany({
-//       include: {
-//         categoria: true, // ahora es solo una categoría
-//         usuario: {
-//           select: { id: true, nombre: true, apellido: true },
-//         },
-//       },
-//       orderBy: {
-//         fecha: "desc",
-//       },
-//     });
+export async function GET(req: NextRequest) {
+  const access_token = req.cookies.get("sb-access-token")?.value;
+  if (!access_token)
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-//     return NextResponse.json({ actividades });
-//   } catch (error) {
-//     console.error("Error al obtener actividades:", error);
-//     return NextResponse.json(
-//       { error: "Error al obtener actividades" },
-//       { status: 500 }
-//     );
-//   }
-// }
+  // Obtener usuario autenticado
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(access_token);
+  if (userError || !user)
+    return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-// // POST: crear nueva actividad
-// export async function POST(req: NextRequest) {
-//   try {
-//     const user = getUserFromRequest(req);
+  // Obtener actividades
+  const { data: actividades, error: actividadError } = await supabase
+    .from("actividad")
+    .select(`
+      *,
+      actividad_archivos (archivo_url, tipo, nombre),
+      actividad_categoria (categoria(nombre))
+    `)
+    .eq("eliminado", false)
+    .order("fecha", { ascending: false });
 
-//     if (!user) {
-//       return NextResponse.json(
-//         { error: "Usuario no autenticado" },
-//         { status: 401 }
-//       );
-//     }
+  if (actividadError)
+    return NextResponse.json({ error: actividadError.message }, { status: 500 });
 
-//     const formData = await req.formData();
-//     const titulo = formData.get("titulo")?.toString() || "";
-//     const descripcion = formData.get("descripcion")?.toString() || "";
-//     const archivoFile = formData.get("archivo") as File | null;
-//     const categoriaId = Number(formData.get("categoriaId"));
+  // Obtener usuarios y perfiles de manera manual
+  const usuarioIds = [...new Set(actividades.map((a: any) => a.usuario_id))];
+  const { data: usuarios, error: usuarioError } = await supabase
+    .from("usuario")
+    .select("id, nombre, apellido")
+    .in("id", usuarioIds);
 
-//     if (!titulo || !descripcion) {
-//       return NextResponse.json(
-//         { error: "Faltan campos obligatorios" },
-//         { status: 400 }
-//       );
-//     }
+  const { data: perfiles, error: perfilError } = await supabase
+    .from("perfil")
+    .select("id, imagen")
+    .in("id", usuarioIds);
 
-//     if (!categoriaId) {
-//       return NextResponse.json(
-//         { error: "Debe seleccionar una categoría" },
-//         { status: 400 }
-//       );
-//     }
+  if (usuarioError || perfilError)
+    return NextResponse.json(
+      { error: "Error obteniendo usuarios o perfiles" },
+      { status: 500 }
+    );
 
-//     const archivo = archivoFile?.name || null;
+  // Mapear usuario y perfil dentro de cada actividad
+  const actividadesConUsuario = actividades.map((act: any) => {
+    const usuario = usuarios.find((u: any) => u.id === act.usuario_id) || {};
+    const perfil = perfiles.find((p: any) => p.id === act.usuario_id) || {};
+    return {
+      ...act,
+      usuario: {
+        ...usuario,
+        perfil,
+      },
+    };
+  });
 
-//     const actividad = await prisma.actividad.create({
-//       data: {
-//         titulo,
-//         descripcion,
-//         archivo,
-//         usuario: { connect: { id: user.id } },
-//         categoria: { connect: { id: categoriaId } },
-//       },
-//       include: {
-//         usuario: true,
-//         categoria: true,
-//       },
-//     });
+  return NextResponse.json(actividadesConUsuario);
+}
 
-//     return NextResponse.json({ actividad }, { status: 201 });
-//   } catch (error) {
-//     console.error("Error creando actividad:", error);
-//     return NextResponse.json(
-//       { error: "Error al crear actividad" },
-//       { status: 500 }
-//     );
-//   }
-// }
+
+// Función para limpiar nombres de archivo
+function sanitizeFileName(fileName: string) {
+  return fileName
+    .normalize("NFD") // separa letras y acentos
+    .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+    .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // reemplaza cualquier caracter no válido
+}
+
+export async function POST(req: NextRequest) {
+  const access_token = req.cookies.get("sb-access-token")?.value;
+  if (!access_token)
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+  // Obtener usuario autenticado
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(access_token);
+  if (userError || !user)
+    return NextResponse.json({ error: "Token inválido" }, { status: 401 });
+
+  // Leer formData
+  const formData = await req.formData();
+  const titulo = formData.get("titulo") as string;
+  const descripcion = formData.get("descripcion") as string;
+  const categorias = JSON.parse(formData.get("categorias") as string) as string[];
+  const archivos = formData.getAll("archivos") as File[];
+
+  // Crear la actividad
+  const { data: actividad, error: actividadError } = await supabase
+    .from("actividad")
+    .insert({
+      titulo,
+      descripcion,
+      fecha: new Date().toISOString(),
+      usuario_id: user.id,
+    })
+    .select()
+    .single();
+
+  if (actividadError) {
+    console.error("Error creando actividad:", actividadError.message);
+    return NextResponse.json({ error: actividadError.message }, { status: 400 });
+  }
+
+  // Subir archivos al bucket
+  const uploadedFiles: { url: string; name: string; type: string }[] = [];
+
+  for (const archivo of archivos) {
+    const sanitizedFileName = sanitizeFileName(archivo.name);
+    const filePath = `comunidad/actividades/${actividad.id}/${Date.now()}_${sanitizedFileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("mulita-files")
+      .upload(filePath, archivo, {
+        contentType: archivo.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error(`Error subiendo ${archivo.name}:`, uploadError.message);
+      continue;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("mulita-files").getPublicUrl(filePath);
+
+    uploadedFiles.push({
+      url: publicUrl,
+      name: archivo.name,
+      type: archivo.type,
+    });
+  }
+
+  // Guardar las URLs, nombres y tipos en actividad_archivos
+  if (uploadedFiles.length) {
+    const { error: insertArchivosError } = await supabase
+      .from("actividad_archivos")
+      .insert(
+        uploadedFiles.map((file) => ({
+          actividad_id: actividad.id,
+          archivo_url: file.url,
+          nombre: file.name,
+          tipo: file.type,
+        }))
+      );
+
+    if (insertArchivosError)
+      console.error("Error guardando archivos:", insertArchivosError.message);
+  }
+
+  // Asociar categorías existentes
+  if (categorias.length) {
+    const { data: categoriasExistentes, error: catError } = await supabase
+      .from("categoria")
+      .select("id, nombre")
+      .in("id", categorias);
+
+    if (catError) console.error("Error obteniendo categorías:", catError.message);
+
+    if (categoriasExistentes?.length) {
+      const { error: insertCategoriasError } = await supabase
+        .from("actividad_categoria")
+        .insert(
+          categoriasExistentes.map((c) => ({
+            actividad_id: actividad.id,
+            categoria_id: c.id,
+          }))
+        );
+
+      if (insertCategoriasError)
+        console.error("Error asociando categorías:", insertCategoriasError.message);
+    }
+  }
+
+  return NextResponse.json({
+    message: "Actividad creada con éxito",
+    actividad,
+  });
+}
