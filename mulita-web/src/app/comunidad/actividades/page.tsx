@@ -188,7 +188,7 @@ export default function Actividades() {
               </h3>
 
               {/* DESCRIPCIÓN */}
-              <div className="text-gray-700 text-sm leading-relaxed">
+              <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
                 {expanded[act.id]
                   ? act.descripcion
                   : act.descripcion.length > 200
