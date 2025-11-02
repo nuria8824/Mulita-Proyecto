@@ -24,24 +24,17 @@ type Actividad = {
 
 export default function Actividades() {
   const { user } = useUser();
-
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Modal de imágenes
   const [modalOpen, setModalOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [imagenes, setImagenes] = useState<Archivo[]>([]);
-
-  // Modal de comentarios
   const [actividadSeleccionada, setActividadSeleccionada] = useState<Actividad | null>(null);
-
-  // Comentarios por actividad
   const [comentariosPorActividad, setComentariosPorActividad] = useState<Record<string, number>>({});
 
-  // Función para obtener la cantidad de comentarios
   const fetchComentariosCount = async (actividadId: string) => {
     try {
       const res = await fetch(`/api/comunidad/comentarios/${actividadId}`);
@@ -54,7 +47,6 @@ export default function Actividades() {
     }
   };
 
-  // Actualiza el contador de comentarios de una actividad específica
   const actualizarComentarios = (actividadId: string, nuevoCount: number) => {
     setComentariosPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
   };
@@ -67,7 +59,6 @@ export default function Actividades() {
         const data = await res.json();
         setActividades(data);
 
-        // Cargar número de comentarios para cada actividad
         const counts: Record<string, number> = {};
         await Promise.all(
           data.map(async (act: Actividad) => {
@@ -75,7 +66,6 @@ export default function Actividades() {
           })
         );
         setComentariosPorActividad(counts);
-
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -123,28 +113,20 @@ export default function Actividades() {
     );
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center py-10 px-4">
+    <div className="w-full flex flex-col items-center py-10 px-4">
       <h1 className="text-3xl font-bold mb-10 text-[#003c71] text-center">
         Actividades Mulita
       </h1>
 
       <div className="flex flex-col gap-8 max-w-xl w-full">
         {actividades.map((act) => {
-          const imagenesAct = act.actividad_archivos.filter((a) =>
-            a.tipo.startsWith("image/")
-          );
-          const otrosArchivos = act.actividad_archivos.filter(
-            (a) => !a.tipo.startsWith("image/")
-          );
-          const categorias = act.actividad_categoria?.map(
-            (c) => c.categoria.nombre
-          );
+          const imagenesAct = act.actividad_archivos.filter((a) => a.tipo.startsWith("image/"));
+          const otrosArchivos = act.actividad_archivos.filter((a) => !a.tipo.startsWith("image/"));
+          const categorias = act.actividad_categoria?.map((c) => c.categoria.nombre);
 
           return (
-            <div
-              key={act.id}
-              className="w-full bg-white rounded-2xl shadow border border-gray-200 p-5 flex flex-col gap-4"
-            >
+            <div key={act.id} className="w-full bg-white rounded-2xl shadow border border-gray-200 p-5 flex flex-col gap-4">
+              
               {/* CABECERA */}
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
@@ -188,7 +170,7 @@ export default function Actividades() {
               </h3>
 
               {/* DESCRIPCIÓN */}
-              <div className="text-gray-700 text-sm leading-relaxed">
+              <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
                 {expanded[act.id]
                   ? act.descripcion
                   : act.descripcion.length > 200

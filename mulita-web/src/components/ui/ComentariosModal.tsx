@@ -134,7 +134,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
         <h2 className="text-lg font-bold text-[#003c71] mb-2">
           {actividad.titulo}
         </h2>
-        <p className="text-sm mb-4 text-gray-700">{actividad.descripcion}</p>
+        <p className="text-sm mb-4 text-gray-700 whitespace-pre-line">{actividad.descripcion}</p>
 
         {/* ARCHIVOS DESCARGABLES */}
         {otrosArchivos?.length > 0 && (
