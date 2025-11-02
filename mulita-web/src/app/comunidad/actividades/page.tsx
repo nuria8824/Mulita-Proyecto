@@ -35,6 +35,10 @@ export default function Actividades() {
   const [actividadSeleccionada, setActividadSeleccionada] = useState<Actividad | null>(null);
   const [comentariosPorActividad, setComentariosPorActividad] = useState<Record<string, number>>({});
 
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const limit = 5;
+
   const fetchComentariosCount = async (actividadId: string) => {
     try {
       const res = await fetch(`/api/comunidad/comentarios/${actividadId}`);
@@ -51,29 +55,41 @@ export default function Actividades() {
     setComentariosPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
   };
 
-  useEffect(() => {
-    const fetchActividades = async () => {
-      try {
-        const res = await fetch("/api/comunidad/actividades");
-        if (!res.ok) throw new Error("Error al obtener las actividades");
-        const data = await res.json();
-        setActividades(data);
+  const fetchActividades = async (newOffset = 0) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/comunidad/actividades?offset=${newOffset}&limit=${limit}`);
+      if (!res.ok) throw new Error("Error al obtener las actividades");
+      const data: Actividad[] = await res.json();
 
-        const counts: Record<string, number> = {};
-        await Promise.all(
-          data.map(async (act: Actividad) => {
-            counts[act.id] = await fetchComentariosCount(act.id);
-          })
-        );
-        setComentariosPorActividad(counts);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchActividades();
+      if (data.length < limit) setHasMore(false);
+
+      setActividades((prev) => [...prev, ...data]);
+
+      // obtener comentarios de las nuevas actividades
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        data.map(async (act) => {
+          counts[act.id] = await fetchComentariosCount(act.id);
+        })
+      );
+      setComentariosPorActividad((prev) => ({ ...prev, ...counts }));
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchActividades(offset);
   }, []);
+
+  const handleVerMas = () => {
+    const newOffset = offset + limit;
+    setOffset(newOffset);
+    fetchActividades(newOffset);
+  };
 
   const toggleExpand = (id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -85,7 +101,7 @@ export default function Actividades() {
     setModalOpen(true);
   };
 
-  if (loading)
+  if (loading && actividades.length === 0)
     return (
       <div className="flex justify-center items-center h-60">
         <p className="text-gray-600 animate-pulse">Cargando actividades...</p>
@@ -126,7 +142,6 @@ export default function Actividades() {
 
           return (
             <div key={act.id} className="w-full bg-white rounded-2xl shadow border border-gray-200 p-5 flex flex-col gap-4">
-              
               {/* CABECERA */}
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
@@ -269,6 +284,21 @@ export default function Actividades() {
             </div>
           );
         })}
+
+        {hasMore && !loading && (
+          <button
+            onClick={handleVerMas}
+            className="px-5 py-2 bg-[#003c71] text-white rounded-full hover:bg-[#00509e] transition self-center"
+          >
+            Ver más
+          </button>
+        )}
+
+        {loading && (
+          <p className="text-gray-600 animate-pulse text-center mt-2">
+            Cargando...
+          </p>
+        )}
       </div>
 
       {/* MODAL DE IMÁGENES */}
