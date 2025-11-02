@@ -8,10 +8,12 @@ export default function Comunidad() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex bg-gray-50 min-h-screen">
+      {/* Sidebar */}
       <SidebarComunidad isOpen={isOpen} onClose={() => setIsOpen(false)} />
 
-      <main className="flex-1 overflow-y-auto p-6 ml-0 md:ml-60">
+      {/* Contenedor principal con un único scroll */}
+      <main className="flex-1 overflow-auto p-6 ml-0 md:ml-60">
         {/* Botón para abrir sidebar en mobile */}
         <button
           onClick={() => setIsOpen(true)}
