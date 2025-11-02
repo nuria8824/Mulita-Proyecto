@@ -115,6 +115,22 @@ export default function Actividades() {
     setModalOpen(true);
   };
 
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollButton(window.scrollY > 300);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+
   if (loading && actividades.length === 0)
     return (
       <div className="flex justify-center items-center h-60">
@@ -336,6 +352,16 @@ export default function Actividades() {
             actualizarComentarios(actividadSeleccionada.id, count);
           }}
         />
+      )}
+
+      {showScrollButton && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 bg-[#003c71] text-white p-3 rounded-full shadow-lg hover:bg-[#00509e] transition"
+          aria-label="Subir arriba"
+        >
+          🡹
+        </button>
       )}
     </div>
   );
