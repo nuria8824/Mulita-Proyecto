@@ -26,13 +26,6 @@ export function SidebarComunidad({
       isActive: () => pathname === "/comunidad",
     },
     {
-      href: "/buscar",
-      label: "Buscar",
-      icon: "/images/icons/comunidad/buscar.svg",
-      iconActive: "/images/icons/comunidad/buscar.svg",
-      isActive: () => pathname === "/buscar",
-    },
-    {
       href: "/comunidad/actividades/crear",
       label: "Crear",
       icon: "/images/icons/comunidad/crear.svg",

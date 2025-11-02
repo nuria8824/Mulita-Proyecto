@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-
 export async function GET(req: NextRequest) {
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token)
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-  // Obtener usuario autenticado
   const {
     data: { user },
     error: userError,
@@ -15,8 +13,13 @@ export async function GET(req: NextRequest) {
   if (userError || !user)
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-  // Obtener actividades
-  const { data: actividades, error: actividadError } = await supabase
+  const { searchParams } = new URL(req.url);
+  const limit = parseInt(searchParams.get("limit") || "5", 10);
+  const offset = parseInt(searchParams.get("offset") || "0", 10);
+  const search = searchParams.get("search")?.trim() || "";
+
+  // Filtrar actividades
+  let query = supabase
     .from("actividad")
     .select(`
       *,
@@ -24,14 +27,19 @@ export async function GET(req: NextRequest) {
       actividad_categoria (categoria(nombre))
     `)
     .eq("eliminado", false)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
-  console.log("Actividades de Supabase:", actividades);
+  // Filtrar solo por título o descripción
+  if (search) {
+    query = query.or(`titulo.ilike.%${search}%,descripcion.ilike.%${search}%`);
+  }
+
+  const { data: actividades, error: actividadError } = await query;
   if (actividadError)
     return NextResponse.json({ error: actividadError.message }, { status: 500 });
 
-
-  // Obtener usuarios y perfiles de manera manual
+  // Obtener usuarios
   const usuarioIds = [...new Set(actividades.map((a: any) => a.usuario_id))];
   const { data: usuarios, error: usuarioError } = await supabase
     .from("usuario")
@@ -49,22 +57,26 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
 
-  // Mapear usuario y perfil dentro de cada actividad
-  const actividadesConUsuario = actividades.map((act: any) => {
-    const usuario = usuarios.find((u: any) => u.id === act.usuario_id) || {};
-    const perfil = perfiles.find((p: any) => p.id === act.usuario_id) || {};
-    return {
-      ...act,
-      usuario: {
-        ...usuario,
-        perfil,
-      },
-    };
+  // Combinar usuarios y perfiles
+  const actividadesConUsuario = actividades.filter(Boolean).map((act: any) => {
+    const usuario = usuarios.find((u) => u.id === act.usuario_id) || {};
+    const perfil = perfiles.find((p) => p.id === act.usuario_id) || {};
+    return { ...act, usuario: { ...usuario, perfil } };
   });
 
-  return NextResponse.json(actividadesConUsuario);
-}
+  // Filtradas solo por título/descripcion
+  const filtradas = search
+    ? actividadesConUsuario.filter((a: any) => {
+        const texto = search.toLowerCase();
+        return (
+          a.titulo?.toLowerCase().includes(texto) ||
+          a.descripcion?.toLowerCase().includes(texto)
+        );
+      })
+    : actividadesConUsuario;
 
+  return NextResponse.json(filtradas);
+}
 
 // Función para limpiar nombres de archivo
 function sanitizeFileName(fileName: string) {
