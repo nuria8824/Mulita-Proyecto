@@ -5,7 +5,8 @@ import MenuAccionesActividades from "@/components/ui/MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/ModalImagenActividades";
 import ComentarioInput from "@/components/ui/ComentarioInput";
 import ComentariosModal from "@/components/ui/ComentariosModal";
-import FiltroCategoria from "@/components/ui/Filtros";
+import { FiltroCategoria } from "@/components/ui/Filtros";
+import { FiltroFecha } from "@/components/ui/Filtros";
 import { useUser } from "@/context/UserContext";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
@@ -46,8 +47,9 @@ export default function Actividades() {
 
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("");
+  const [fechaSeleccionada, setFechaSeleccionada] = useState<string>(""); // <-- estado fecha
 
-  // Debounce: actualiza `debouncedSearch` solo después de 500ms sin escribir
+  // Debounce para búsqueda
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500);
     return () => clearTimeout(handler);
@@ -69,14 +71,15 @@ export default function Actividades() {
     setComentariosPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
   };
 
-  // ✅ fetchActividades ahora recibe offset, searchTerm y categoria
+  // fetchActividades con filtros por offset, búsqueda, categoría y fecha
   const fetchActividades = useCallback(
-    async (newOffset = 0, searchTerm = "", categoria = "") => {
+    async (newOffset = 0, searchTerm = "", categoria = "", fecha = "") => {
       try {
         setLoading(true);
 
         let url = `/api/comunidad/actividades?offset=${newOffset}&limit=${limit}&search=${encodeURIComponent(searchTerm)}`;
         if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+        if (fecha) url += `&fecha=${encodeURIComponent(fecha)}`; // <-- agregamos fecha
 
         const res = await fetch(url);
         if (!res.ok) throw new Error("Error al obtener las actividades");
@@ -103,16 +106,16 @@ export default function Actividades() {
     []
   );
 
-  // Carga inicial + búsqueda con debounce + filtro por categoría
+  // Carga inicial y actualización al cambiar filtros
   useEffect(() => {
     setOffset(0);
-    fetchActividades(0, debouncedSearch, categoriaSeleccionada);
-  }, [debouncedSearch, categoriaSeleccionada, fetchActividades]);
+    fetchActividades(0, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
+  }, [debouncedSearch, categoriaSeleccionada, fechaSeleccionada, fetchActividades]);
 
   const handleVerMas = () => {
     const newOffset = offset + limit;
     setOffset(newOffset);
-    fetchActividades(newOffset, debouncedSearch, categoriaSeleccionada);
+    fetchActividades(newOffset, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
   };
 
   const toggleExpand = (id: string) => {
@@ -126,10 +129,7 @@ export default function Actividades() {
   };
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollButton(window.scrollY > 300);
-    };
-
+    const handleScroll = () => setShowScrollButton(window.scrollY > 300);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -150,13 +150,12 @@ export default function Actividades() {
       <div className="text-red-text-center600 font-medium mt-10">{error}</div>
     );
 
-  if (!user) {
+  if (!user)
     return (
       <div className="text-center text-gray-600 mt-10">
         Debes iniciar sesión para ver las actividades.
       </div>
     );
-  }
 
   return (
     <div className="w-full flex flex-col items-center py-10 px-4">
@@ -164,11 +163,15 @@ export default function Actividades() {
         Actividades Mulita
       </h1>
 
-      {/* FILTRO POR CATEGORÍA */}
-      <div className="w-full max-w-xl mb-6 flex justify-end">
+      {/* FILTROS */}
+      <div className="w-full max-w-xl mb-6 flex justify-end gap-2">
         <FiltroCategoria
           categoriaSeleccionada={categoriaSeleccionada}
           onChange={setCategoriaSeleccionada}
+        />
+        <FiltroFecha
+          fechaSeleccionada={fechaSeleccionada}
+          onChange={setFechaSeleccionada}
         />
       </div>
 

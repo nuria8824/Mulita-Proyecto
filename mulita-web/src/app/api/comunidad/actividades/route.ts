@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const search = searchParams.get("search")?.trim() || "";
   const categoria = searchParams.get("categoria")?.trim() || "";
+  const fechaFiltro = searchParams.get("fecha")?.trim() || ""; // nuevo parámetro
 
   // --- Construir filtro por categoría ---
   let actividadIdsFiltradas: string[] | null = null;
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // --- Construir query principal ---
+  // Construir query principal
   let query = supabase
     .from("actividad")
     .select(`
@@ -56,21 +57,50 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
+  // Filtro por búsqueda
   if (search) {
     query = query.or(`titulo.ilike.%${search}%,descripcion.ilike.%${search}%`);
   }
 
+  // Filtro por categoría
   if (actividadIdsFiltradas) {
     query = query.in("id", actividadIdsFiltradas);
   }
 
+  //Filtro por fecha
+  if (fechaFiltro) {
+    const ahora = new Date();
+    let startDate: Date;
+
+    switch (fechaFiltro) {
+      case "hoy":
+        startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case "semana":
+        const dia = ahora.getDay(); // 0 = domingo
+        startDate = new Date();
+        startDate.setDate(ahora.getDate() - dia);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case "mes":
+        startDate = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+        break;
+      default:
+        startDate = new Date(0); // sin filtro si valor no reconocido
+    }
+
+    query = query.gte("created_at", startDate.toISOString());
+  }
+
+  // Ejecutar query
   const { data: actividades, error: actividadError } = await query;
   if (actividadError)
     return NextResponse.json({ error: actividadError.message }, { status: 500 });
 
   if (!actividades || actividades.length === 0) return NextResponse.json([], { status: 200 });
 
-  // --- Obtener usuarios y perfiles ---
+  // Obtener usuarios y perfiles
   const usuarioIds = [...new Set(actividades.map((a: any) => a.usuario_id))];
 
   const { data: usuarios, error: usuarioError } = await supabase
@@ -89,7 +119,7 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
 
-  // --- Combinar usuarios y perfiles ---
+  // Combinar usuarios y perfiles
   const actividadesConUsuario = actividades.map((act: any) => {
     const usuario = usuarios.find((u) => u.id === act.usuario_id) || {};
     const perfil = perfiles.find((p) => p.id === act.usuario_id) || {};
@@ -98,6 +128,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(actividadesConUsuario);
 }
+
 
 
 // Función para limpiar nombres de archivo

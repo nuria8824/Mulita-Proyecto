@@ -1,4 +1,3 @@
-// components/ui/FiltroCategoria.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,7 +12,12 @@ interface FiltroCategoriaProps {
   onChange: (categoria: string) => void;
 }
 
-export default function FiltroCategoria({ categoriaSeleccionada, onChange }: FiltroCategoriaProps) {
+interface FiltroFechaProps {
+  fechaSeleccionada: string;
+  onChange: (fecha: string) => void;
+}
+
+export function FiltroCategoria({ categoriaSeleccionada, onChange }: FiltroCategoriaProps) {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
 
   useEffect(() => {
@@ -42,6 +46,32 @@ export default function FiltroCategoria({ categoriaSeleccionada, onChange }: Fil
         {categorias.map((cat) => (
           <option key={cat.id} value={cat.nombre}>
             {cat.nombre}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+export function FiltroFecha({ fechaSeleccionada, onChange }: FiltroFechaProps) {
+  const opciones = [
+    { label: "Hoy", value: "hoy" },
+    { label: "Esta semana", value: "semana" },
+    { label: "Este mes", value: "mes" },
+  ];
+
+  return (
+    <div className="w-full flex justify-end mb-4">
+      <select
+        aria-label="Filtrar por fecha"
+        value={fechaSeleccionada}
+        onChange={(e) => onChange(e.target.value)}
+        className="border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
+      >
+        <option value="">Filtrar por fecha</option>
+        {opciones.map((op) => (
+          <option key={op.value} value={op.value}>
+            {op.label}
           </option>
         ))}
       </select>
