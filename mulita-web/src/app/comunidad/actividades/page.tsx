@@ -5,6 +5,8 @@ import MenuAccionesActividades from "@/components/ui/MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/ModalImagenActividades";
 import ComentarioInput from "@/components/ui/ComentarioInput";
 import ComentariosModal from "@/components/ui/ComentariosModal";
+import { FiltroCategoria } from "@/components/ui/Filtros";
+import { FiltroFecha } from "@/components/ui/Filtros";
 import { useUser } from "@/context/UserContext";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
@@ -39,11 +41,15 @@ export default function Actividades() {
 
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [search, setSearch] = useState(""); // 🔍 texto de búsqueda
-  const [debouncedSearch, setDebouncedSearch] = useState(""); // texto con debounce aplicado
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const limit = 5;
 
-  // Debounce: actualiza `debouncedSearch` solo después de 500ms sin escribir
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("");
+  const [fechaSeleccionada, setFechaSeleccionada] = useState<string>(""); // <-- estado fecha
+
+  // Debounce para búsqueda
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500);
     return () => clearTimeout(handler);
@@ -65,44 +71,51 @@ export default function Actividades() {
     setComentariosPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
   };
 
-  const fetchActividades = useCallback(async (newOffset = 0, searchTerm = "") => {
-    try {
-      setLoading(true);
-      const res = await fetch(
-        `/api/comunidad/actividades?offset=${newOffset}&limit=${limit}&search=${encodeURIComponent(searchTerm)}`
-      );
-      if (!res.ok) throw new Error("Error al obtener las actividades");
-      const data: Actividad[] = await res.json();
+  // fetchActividades con filtros por offset, búsqueda, categoría y fecha
+  const fetchActividades = useCallback(
+    async (newOffset = 0, searchTerm = "", categoria = "", fecha = "") => {
+      try {
+        setLoading(true);
 
-      if (newOffset === 0) setActividades(data);
-      else setActividades((prev) => [...prev, ...data]);
+        let url = `/api/comunidad/actividades?offset=${newOffset}&limit=${limit}&search=${encodeURIComponent(searchTerm)}`;
+        if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+        if (fecha) url += `&fecha=${encodeURIComponent(fecha)}`; // <-- agregamos fecha
 
-      setHasMore(data.length === limit);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Error al obtener las actividades");
+        const data: Actividad[] = await res.json();
 
-      const counts: Record<string, number> = {};
-      await Promise.all(
-        data.map(async (act) => {
-          counts[act.id] = await fetchComentariosCount(act.id);
-        })
-      );
-      setComentariosPorActividad((prev) => ({ ...prev, ...counts }));
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        if (newOffset === 0) setActividades(data);
+        else setActividades((prev) => [...prev, ...data]);
 
-  // Carga inicial + búsqueda con debounce
+        setHasMore(data.length === limit);
+
+        const counts: Record<string, number> = {};
+        await Promise.all(
+          data.map(async (act) => {
+            counts[act.id] = await fetchComentariosCount(act.id);
+          })
+        );
+        setComentariosPorActividad((prev) => ({ ...prev, ...counts }));
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Carga inicial y actualización al cambiar filtros
   useEffect(() => {
     setOffset(0);
-    fetchActividades(0, debouncedSearch);
-  }, [debouncedSearch, fetchActividades]);
+    fetchActividades(0, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
+  }, [debouncedSearch, categoriaSeleccionada, fechaSeleccionada, fetchActividades]);
 
   const handleVerMas = () => {
     const newOffset = offset + limit;
     setOffset(newOffset);
-    fetchActividades(newOffset, debouncedSearch);
+    fetchActividades(newOffset, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
   };
 
   const toggleExpand = (id: string) => {
@@ -115,13 +128,8 @@ export default function Actividades() {
     setModalOpen(true);
   };
 
-  const [showScrollButton, setShowScrollButton] = useState(false);
-
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollButton(window.scrollY > 300);
-    };
-
+    const handleScroll = () => setShowScrollButton(window.scrollY > 300);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -129,7 +137,6 @@ export default function Actividades() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
 
   if (loading && actividades.length === 0)
     return (
@@ -143,13 +150,12 @@ export default function Actividades() {
       <div className="text-red-text-center600 font-medium mt-10">{error}</div>
     );
 
-  if (!user) {
+  if (!user)
     return (
       <div className="text-center text-gray-600 mt-10">
         Debes iniciar sesión para ver las actividades.
       </div>
     );
-  }
 
   return (
     <div className="w-full flex flex-col items-center py-10 px-4">
@@ -157,26 +163,46 @@ export default function Actividades() {
         Actividades Mulita
       </h1>
 
-      {/* Búsqueda */}
-      <div className="mb-8 w-full max-w-xl">
+      {/* FILTROS + BÚSQUEDA */}
+      <div className="w-full max-w-xl mb-6 flex flex-wrap items-center justify-center sm:justify-between gap-2">
+        {/* Input de búsqueda */}
         <input
           type="text"
           placeholder="Buscar por título o descripción..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
+          className="w-full sm:w-[55%] border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
         />
+
+        {/* Contenedor de filtros */}
+        <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center sm:justify-end">
+          <FiltroCategoria
+            categoriaSeleccionada={categoriaSeleccionada}
+            onChange={setCategoriaSeleccionada}
+          />
+          <FiltroFecha
+            fechaSeleccionada={fechaSeleccionada}
+            onChange={setFechaSeleccionada}
+          />
+        </div>
       </div>
 
-      {actividades.length === 0 && !loading ? (
-        <div className="text-center text-gray-600 mt-10">
-          No hay actividades disponibles.
-        </div>
-      ) : (
-        <div className="flex flex-col gap-8 max-w-xl w-full">
-          {actividades.map((act) => {
-            const imagenesAct = act.actividad_archivos.filter((a) => a.tipo.startsWith("image/"));
-            const otrosArchivos = act.actividad_archivos.filter((a) => !a.tipo.startsWith("image/"));
+
+
+      {/* LISTADO DE ACTIVIDADES */}
+      <div className="flex flex-col gap-8 max-w-xl w-full">
+        {actividades.length === 0 && !loading ? (
+          <div className="text-center text-gray-600 mt-10">
+            No hay actividades disponibles.
+          </div>
+        ) : (
+          actividades.map((act) => {
+            const imagenesAct = act.actividad_archivos.filter((a) =>
+              a.tipo.startsWith("image/")
+            );
+            const otrosArchivos = act.actividad_archivos.filter(
+              (a) => !a.tipo.startsWith("image/")
+            );
             const categorias = act.actividad_categoria?.map((c) => c.categoria.nombre);
 
             return (
@@ -283,7 +309,11 @@ export default function Actividades() {
                 {/* BOTONES */}
                 <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
                   <button className="hover:opacity-75 transition">
-                    <img src="/images/icons/comunidad/favoritos.svg" alt="Me gusta" className="w-6 h-6" />
+                    <img
+                      src="/images/icons/comunidad/favoritos.svg"
+                      alt="Me gusta"
+                      className="w-6 h-6"
+                    />
                   </button>
 
                   <div className="flex items-center gap-1">
@@ -303,7 +333,11 @@ export default function Actividades() {
                   </div>
 
                   <button className="hover:opacity-75 transition">
-                    <img src="/images/icons/comunidad/colecciones.svg" alt="Guardar" className="w-6 h-6" />
+                    <img
+                      src="/images/icons/comunidad/colecciones.svg"
+                      alt="Guardar"
+                      className="w-6 h-6"
+                    />
                   </button>
                 </div>
 
@@ -316,22 +350,22 @@ export default function Actividades() {
                 />
               </div>
             );
-          })}
+          })
+        )}
 
-          {hasMore && !loading && (
-            <button
-              onClick={handleVerMas}
-              className="px-5 py-2 bg-[#003c71] text-white rounded-full hover:bg-[#00509e] transition self-center"
-            >
-              Ver más
-            </button>
-          )}
+        {hasMore && !loading && (
+          <button
+            onClick={handleVerMas}
+            className="px-5 py-2 bg-[#003c71] text-white rounded-full hover:bg-[#00509e] transition self-center"
+          >
+            Ver más
+          </button>
+        )}
 
-          {loading && (
-            <p className="text-gray-600 animate-pulse text-center mt-2">Cargando...</p>
-          )}
-        </div>
-      )}
+        {loading && (
+          <p className="text-gray-600 animate-pulse text-center mt-2">Cargando...</p>
+        )}
+      </div>
 
       {/* MODAL IMÁGENES */}
       {modalOpen && (
@@ -354,6 +388,7 @@ export default function Actividades() {
         />
       )}
 
+      {/* BOTÓN SCROLL TOP */}
       {showScrollButton && (
         <button
           onClick={scrollToTop}
