@@ -163,28 +163,31 @@ export default function Actividades() {
         Actividades Mulita
       </h1>
 
-      {/* FILTROS */}
-      <div className="w-full max-w-xl mb-6 flex justify-end gap-2">
-        <FiltroCategoria
-          categoriaSeleccionada={categoriaSeleccionada}
-          onChange={setCategoriaSeleccionada}
-        />
-        <FiltroFecha
-          fechaSeleccionada={fechaSeleccionada}
-          onChange={setFechaSeleccionada}
-        />
-      </div>
-
-      {/* Búsqueda */}
-      <div className="mb-8 w-full max-w-xl">
+      {/* FILTROS + BÚSQUEDA */}
+      <div className="w-full max-w-xl mb-6 flex flex-wrap items-center justify-center sm:justify-between gap-2">
+        {/* Input de búsqueda */}
         <input
           type="text"
           placeholder="Buscar por título o descripción..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
+          className="w-full sm:w-[55%] border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
         />
+
+        {/* Contenedor de filtros */}
+        <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center sm:justify-end">
+          <FiltroCategoria
+            categoriaSeleccionada={categoriaSeleccionada}
+            onChange={setCategoriaSeleccionada}
+          />
+          <FiltroFecha
+            fechaSeleccionada={fechaSeleccionada}
+            onChange={setFechaSeleccionada}
+          />
+        </div>
       </div>
+
+
 
       {/* LISTADO DE ACTIVIDADES */}
       <div className="flex flex-col gap-8 max-w-xl w-full">

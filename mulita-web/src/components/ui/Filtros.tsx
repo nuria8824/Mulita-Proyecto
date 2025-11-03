@@ -35,14 +35,14 @@ export function FiltroCategoria({ categoriaSeleccionada, onChange }: FiltroCateg
   }, []);
 
   return (
-    <div className="w-full flex justify-end mb-4">
+    <div className="w-full flex">
       <select
         aria-label="categorias"
         value={categoriaSeleccionada}
         onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
+        className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#003c71]"
       >
-        <option value="">Filtrar por categoría</option>
+        <option value="">Categoría</option>
         {categorias.map((cat) => (
           <option key={cat.id} value={cat.nombre}>
             {cat.nombre}
@@ -61,14 +61,14 @@ export function FiltroFecha({ fechaSeleccionada, onChange }: FiltroFechaProps) {
   ];
 
   return (
-    <div className="w-full flex justify-end mb-4">
+    <div className="w-full flex">
       <select
         aria-label="Filtrar por fecha"
         value={fechaSeleccionada}
         onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
+        className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#003c71]"
       >
-        <option value="">Filtrar por fecha</option>
+        <option value="">Fecha</option>
         {opciones.map((op) => (
           <option key={op.value} value={op.value}>
             {op.label}
