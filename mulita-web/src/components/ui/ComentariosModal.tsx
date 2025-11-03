@@ -206,6 +206,14 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
           </button>
         </div>
 
+        <ComentarioInput
+            actividadId={actividad.id}
+            onNuevoComentario={async () => {
+              await cargarComentarios();
+              if (onActualizarComentarios) onActualizarComentarios();
+            }}
+          />
+
         {/* COMENTARIOS */}
         <div className="border-t border-gray-200 pt-3">
           <h3 className="text-sm font-medium mb-2">Comentarios</h3>
@@ -257,14 +265,6 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
               ))}
             </div>
           )}
-
-          <ComentarioInput
-            actividadId={actividad.id}
-            onNuevoComentario={async () => {
-              await cargarComentarios();
-              if (onActualizarComentarios) onActualizarComentarios();
-            }}
-          />
         </div>
       </div>
 
