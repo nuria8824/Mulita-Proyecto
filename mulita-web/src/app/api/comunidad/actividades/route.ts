@@ -129,8 +129,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(actividadesConUsuario);
 }
 
-
-
 // Función para limpiar nombres de archivo
 function sanitizeFileName(fileName: string) {
   return fileName

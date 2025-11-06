@@ -63,7 +63,7 @@ export async function PATCH(
   const params = await props.params;
   const { id } = params;
 
-  // --- Autenticación ---
+  // Autenticación
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token)
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -76,7 +76,7 @@ export async function PATCH(
   if (userError || !user)
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-  // --- Obtener la actividad ---
+  // Obtener la actividad
   const { data: actividad, error: actError } = await supabase
     .from("actividad")
     .select("usuario_id")
@@ -89,14 +89,14 @@ export async function PATCH(
       { status: 404 }
     );
 
-  // --- Verificar permisos ---
+  // Verificar permisos
   if (actividad.usuario_id !== user.id)
     return NextResponse.json(
       { error: "No tienes permisos para editar esta actividad" },
       { status: 403 }
     );
 
-  // --- Procesar FormData ---
+  // Procesar FormData
   const formData = await req.formData();
   const titulo = formData.get("titulo") as string;
   const descripcion = formData.get("descripcion") as string;
@@ -110,7 +110,7 @@ export async function PATCH(
     (formData.get("archivosExistentes") as string) || "[]"
   ) as string[];
 
-  // --- Actualizar actividad ---
+  // Actualizar actividad
   const { data, error: actividadError } = await supabase
     .from("actividad")
     .update({ titulo, descripcion })
@@ -124,8 +124,8 @@ export async function PATCH(
       { status: 400 }
     );
 
-  // --- Actualizar archivos ---
-  // 1️⃣ Obtener los archivos actuales de la actividad
+  // Actualizar archivos
+  // Obtener los archivos actuales de la actividad
   const { data: archivosActuales } = await supabase
     .from("actividad_archivos")
     .select("archivo_url")
@@ -133,7 +133,7 @@ export async function PATCH(
 
   const actualesUrls = archivosActuales?.map((a) => a.archivo_url) || [];
 
-  // 2️⃣ Determinar cuáles eliminar
+  // Determinar cuáles eliminar
   const archivosAEliminar = actualesUrls.filter(
     (url) => !archivosExistentes.includes(url)
   );
@@ -145,7 +145,7 @@ export async function PATCH(
       .in("archivo_url", archivosAEliminar);
   }
 
-  // 3️⃣ Subir y registrar los nuevos archivos
+  // Subir y registrar los nuevos archivos
   const uploadedFiles: { url: string; name: string; type: string }[] = [];
   for (const archivo of archivosNuevos) {
     const sanitizedFileName = sanitizeFileName(archivo.name);
@@ -181,7 +181,7 @@ export async function PATCH(
     );
   }
 
-  // --- Actualizar categorías ---
+  // Actualizar categorías
   if (categorias.length) {
     await supabase.from("actividad_categoria").delete().eq("actividad_id", id);
     await supabase.from("actividad_categoria").insert(

@@ -5,6 +5,7 @@ import MenuAccionesActividades from "@/components/ui/MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/ModalImagenActividades";
 import ComentarioInput from "@/components/ui/ComentarioInput";
 import ComentariosModal from "@/components/ui/ComentariosModal";
+import ModalColecciones from "@/components/ui/ModalColecciones";
 import { FiltroCategoria } from "@/components/ui/Filtros";
 import { FiltroFecha } from "@/components/ui/Filtros";
 import { useUser } from "@/context/UserContext";
@@ -38,6 +39,10 @@ export default function Actividades() {
 
   const [actividadSeleccionada, setActividadSeleccionada] = useState<Actividad | null>(null);
   const [comentariosPorActividad, setComentariosPorActividad] = useState<Record<string, number>>({});
+
+  const [modalColecciones, setModalColecciones] = useState(false);
+  const [actividadParaColeccion, setActividadParaColeccion] = useState<string | null>(null);
+
 
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -187,8 +192,6 @@ export default function Actividades() {
         </div>
       </div>
 
-
-
       {/* LISTADO DE ACTIVIDADES */}
       <div className="flex flex-col gap-8 max-w-xl w-full">
         {actividades.length === 0 && !loading ? (
@@ -332,7 +335,13 @@ export default function Actividades() {
                     </span>
                   </div>
 
-                  <button className="hover:opacity-75 transition">
+                  <button
+                    className="hover:opacity-75 transition"
+                    onClick={() => {
+                      setActividadParaColeccion(act.id);
+                      setModalColecciones(true);
+                    }}
+                  >
                     <img
                       src="/images/icons/comunidad/colecciones.svg"
                       alt="Guardar"
@@ -384,6 +393,16 @@ export default function Actividades() {
           onActualizarComentarios={async () => {
             const count = await fetchComentariosCount(actividadSeleccionada.id);
             actualizarComentarios(actividadSeleccionada.id, count);
+          }}
+        />
+      )}
+
+      {modalColecciones && actividadParaColeccion && (
+        <ModalColecciones
+          actividadId={actividadParaColeccion}
+          onClose={() => {
+            setModalColecciones(false);
+            setActividadParaColeccion(null);
           }}
         />
       )}
