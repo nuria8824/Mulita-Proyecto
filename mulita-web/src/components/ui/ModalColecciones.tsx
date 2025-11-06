@@ -99,16 +99,29 @@ export default function ModalColecciones({
     if (!nuevaColeccion.trim()) return;
     setLoading(true);
     try {
+      // 1️⃣ Crear la colección
       const res = await fetch("/api/colecciones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: nuevaColeccion, actividadId }),
+        body: JSON.stringify({ nombre: nuevaColeccion }),
       });
       if (!res.ok) throw new Error("Error al crear la colección");
 
       const nueva = await res.json();
       setColecciones((prev) => [...prev, nueva]);
-      setSeleccionadas((prev) => [...prev, nueva.id]); // la marca como seleccionada
+
+      // 2️⃣ Asociar la actividad a la nueva colección
+      const resAsociar = await fetch(`/api/colecciones/${nueva.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actividadIds: [actividadId] }),
+      });
+
+      if (!resAsociar.ok)
+        throw new Error("Error al asociar actividad a la nueva colección");
+
+      // 3️⃣ Actualizar estado local
+      setSeleccionadas((prev) => [...prev, nueva.id]);
       setNuevaColeccion("");
       setCreating(false);
     } catch (err: any) {
@@ -117,6 +130,7 @@ export default function ModalColecciones({
       setLoading(false);
     }
   };
+
 
   if (!isOpen) return null;
 
