@@ -25,30 +25,76 @@ export default function ModalColecciones({
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar colecciones del usuario
+  // Cargar colecciones del usuario y las de la actividad
   useEffect(() => {
     if (!isOpen) return;
-    const fetchColecciones = async () => {
+
+    const fetchData = async () => {
       try {
-        const res = await fetch("/api/colecciones");
-        if (!res.ok) throw new Error("Error al obtener colecciones");
-        const data = await res.json();
-        setColecciones(data);
+        setLoading(true);
+        setError(null);
+
+        // Traer todas las colecciones del usuario
+        const resColecciones = await fetch("/api/colecciones");
+        if (!resColecciones.ok) throw new Error("Error al obtener colecciones");
+        const coleccionesData = await resColecciones.json();
+        setColecciones(coleccionesData);
+
+        // Traer colecciones donde ya está esta actividad
+        const resActividad = await fetch(
+          `/api/comunidad/actividades/${actividadId}/colecciones`
+        );
+        if (!resActividad.ok)
+          throw new Error("Error al obtener colecciones de la actividad");
+        const coleccionesActividad = await resActividad.json();
+
+        // Marcar las existentes
+        setSeleccionadas(coleccionesActividad);
       } catch (err: any) {
         setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchColecciones();
-  }, [isOpen]);
 
-  // Alternar selección
-  const toggleSeleccion = (id: string) => {
-    setSeleccionadas((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
+    fetchData();
+  }, [isOpen, actividadId]);
+
+  // 🔹 Alternar selección (agrega o quita actividad de la colección)
+  const toggleSeleccion = async (id: string) => {
+    const yaSeleccionada = seleccionadas.includes(id);
+    setLoading(true);
+    try {
+      if (yaSeleccionada) {
+        // Eliminar la actividad de la colección
+        const res = await fetch(
+          `/api/comunidad/actividades/${actividadId}/colecciones`,
+          {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ coleccion_id: id }),
+          }
+        );
+        if (!res.ok) throw new Error("Error al eliminar de la colección");
+        setSeleccionadas((prev) => prev.filter((c) => c !== id));
+      } else {
+        // Agregar la actividad a la colección
+        const res = await fetch(`/api/colecciones/${id}`,{
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ actividadIds: [actividadId] }),
+        });
+        if (!res.ok) throw new Error("Error al agregar a la colección");
+        setSeleccionadas((prev) => [...prev, id]);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Crear nueva colección y agregar la actividad
+  // Crear nueva colección y asociar la actividad
   const handleCrearColeccion = async () => {
     if (!nuevaColeccion.trim()) return;
     setLoading(true);
@@ -62,34 +108,9 @@ export default function ModalColecciones({
 
       const nueva = await res.json();
       setColecciones((prev) => [...prev, nueva]);
+      setSeleccionadas((prev) => [...prev, nueva.id]); // la marca como seleccionada
       setNuevaColeccion("");
       setCreating(false);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Agregar actividad a colecciones seleccionadas
-  const handleGuardar = async () => {
-    if (seleccionadas.length === 0) {
-      onClose();
-      return;
-    }
-    setLoading(true);
-    try {
-      await Promise.all(
-        seleccionadas.map(async (id) => {
-          const res = await fetch(`/api/colecciones/${id}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ actividadIds: [actividadId] }),
-          });
-          if (!res.ok) throw new Error("Error al agregar actividad");
-        })
-      );
-      onClose();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -100,19 +121,19 @@ export default function ModalColecciones({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center p-4">
       <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-6 relative">
         <h2 className="text-xl font-semibold mb-4 text-[#003c71]">
           Agregar a colecciones
         </h2>
 
-        {error && (
-          <div className="text-red-600 text-sm mb-3">{error}</div>
-        )}
+        {error && <div className="text-red-600 text-sm mb-3">{error}</div>}
 
         {/* Lista de colecciones */}
         <div className="max-h-60 overflow-y-auto mb-4 border rounded-md">
-          {colecciones.length === 0 ? (
+          {loading ? (
+            <p className="text-center text-gray-500 py-4">Cargando...</p>
+          ) : colecciones.length === 0 ? (
             <p className="text-center text-gray-500 py-4">
               No tienes colecciones aún.
             </p>
@@ -179,14 +200,7 @@ export default function ModalColecciones({
             onClick={onClose}
             className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
           >
-            Cancelar
-          </button>
-          <button
-            onClick={handleGuardar}
-            disabled={loading}
-            className="px-5 py-2 bg-[#003c71] text-white rounded-md hover:bg-[#00509e] disabled:opacity-50"
-          >
-            {loading ? "Guardando..." : "Guardar"}
+            Cerrar
           </button>
         </div>
       </div>

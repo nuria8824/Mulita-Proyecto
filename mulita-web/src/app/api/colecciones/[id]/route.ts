@@ -27,7 +27,9 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
 }
 
 // POST: agrega una actividad a una colección (tabla intermedia)
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token)
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -37,7 +39,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
   const { actividadIds } = await req.json(); // puede ser un array o un solo ID
-  
+
   if (!actividadIds || actividadIds.length === 0)
     return NextResponse.json({ error: "Debe incluir al menos una actividad" }, { status: 400 });
 
@@ -49,7 +51,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     actividad_id: actividadId,
   }));
 
-  const { error } = await supabase.from("coleccion_actividad").insert(insertData);
+  const { error } = await supabase
+    .from("coleccion_actividad")
+    .upsert(insertData, { onConflict: "coleccion_id, actividad_id" });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ success: true });
