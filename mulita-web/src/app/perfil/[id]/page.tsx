@@ -62,15 +62,17 @@ export default function PerfilPage() {
   const esPropietario = user?.id === perfil.usuario.id;
 
   return (
-    <div className="w-full min-h-screen bg-white flex flex-col items-center text-center text-xs text-[#6d758f] font-inter">
+    <div className="w-full min-h-screen bg-white flex flex-col items-center justify-center text-center text-xs text-[#6d758f] font-inter">
       {/* Sección superior */}
       <div className="w-full flex items-center justify-center gap-10 p-[60px_170px] relative text-left text-2xl text-black font-roboto">
         {/* Avatar */}
-        <img
-          src={perfil.imagen || "/default-avatar.png"}
-          alt="Avatar"
-          className="h-[100px] w-[100px] rounded-full object-cover"
-        />
+        <div className="w-[120px] h-[120px] rounded-full overflow-hidden flex-shrink-0 border border-gray-200 shadow-sm">
+          <img
+            src={perfil.imagen || "/images/icons/perfil/default-avatar.svg"}
+            alt="Avatar"
+            className={`w-full h-full object-cover ${!perfil.imagen ? "scale-50" : ""}`}
+          />
+        </div>
 
         {/* Info usuario */}
         <div className="flex-1 flex flex-col items-center gap-3">

@@ -17,9 +17,18 @@ export default function Header() {
     return null;
   }
 
+  const navLinks = [
+    { href: "/", label: "Inicio" },
+    { href: "/noticias", label: "Noticias" },
+    { href: "/comunidad", label: "Comunidad" },
+    { href: "/tienda", label: "Tienda" },
+    { href: "/sobreNosotros", label: "Sobre nosotros" },
+  ];
+
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-light">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Logo */}
         <div className="flex items-center gap-3">
           <img
             src="/images/logosMulita/Logo Mulita-13.svg"
@@ -31,31 +40,49 @@ export default function Header() {
           </Link>
         </div>
 
+        {/* Links principales */}
         <ul className="hidden md:flex items-center gap-8 text-[15px]">
-          <li><Link href="/">Inicio</Link></li>
-          <li><Link href="/noticias">Noticias</Link></li>
-          <li><Link href="/comunidad">Comunidad</Link></li>
-          <li><Link href="/tienda">Tienda</Link></li>
-          <li><Link href="/sobreNosotros">Sobre nosotros</Link></li>
+          {navLinks.map(({ href, label }) => {
+            const active =
+              pathname === href ||
+              (href !== "/" && pathname.startsWith(href));
 
-          {/* Boton Dashboard solo para admins */}
+            return (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className={`transition-colors duration-200 ${
+                    active
+                      ? "text-[#fedd00] font-semibold"
+                      : "hover:text-[#fedd00] text-gray-700"
+                  }`}
+                >
+                  {label}
+                </Link>
+              </li>
+            );
+          })}
+
+          {/* Botón Dashboard solo para admins */}
           {(user?.rol === "admin" || user?.rol === "superAdmin") && (
             <li>
-              <Link
-                href="/dashboard"
-                className="btn btn--yellow"
-              >
+              <Link href="/dashboard" className="btn btn--yellow">
                 Dashboard
               </Link>
             </li>
           )}
         </ul>
 
+        {/* Acciones (registro/login o menú usuario) */}
         <div className="flex items-center gap-3">
           {!user ? (
             <>
-              <Link href="/auth/register" className="btn btn--yellow">Registro</Link>
-              <Link href="/auth/login" className="btn btn--blue">Log In</Link>
+              <Link href="/auth/register" className="btn btn--yellow">
+                Registro
+              </Link>
+              <Link href="/auth/login" className="btn btn--blue">
+                Log In
+              </Link>
             </>
           ) : (
             <MenuAccionesHeaderPrincipal />

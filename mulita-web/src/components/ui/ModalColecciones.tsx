@@ -99,7 +99,7 @@ export default function ModalColecciones({
     if (!nuevaColeccion.trim()) return;
     setLoading(true);
     try {
-      // 1️⃣ Crear la colección
+      // Crear la colección
       const res = await fetch("/api/colecciones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,7 +110,7 @@ export default function ModalColecciones({
       const nueva = await res.json();
       setColecciones((prev) => [...prev, nueva]);
 
-      // 2️⃣ Asociar la actividad a la nueva colección
+      // Asociar la actividad a la nueva colección
       const resAsociar = await fetch(`/api/colecciones/${nueva.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -120,7 +120,7 @@ export default function ModalColecciones({
       if (!resAsociar.ok)
         throw new Error("Error al asociar actividad a la nueva colección");
 
-      // 3️⃣ Actualizar estado local
+      // Actualizar estado local
       setSeleccionadas((prev) => [...prev, nueva.id]);
       setNuevaColeccion("");
       setCreating(false);

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import { Menu } from "lucide-react";
+import MenuAccionesHeaderPrincipal from "./MenuAccionesHeaderPrincipal";
 
 export default function HeaderDashboard({
   onMenuClick,
@@ -29,13 +30,7 @@ export default function HeaderDashboard({
       {/* Barra de navegación derecha */}
       <div className="flex items-center gap-[30px]">
         <div className="flex items-center gap-2">
-          <Image
-            src={user?.imagen || "/default-avatar.png"}
-            alt="Avatar"
-            width={40}
-            height={40}
-            className="rounded-full object-cover"
-          />
+         <MenuAccionesHeaderPrincipal />
         </div>
 
         <div className="w-[59px] flex items-center gap-2 overflow-hidden">
