@@ -207,12 +207,12 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
         </div>
 
         <ComentarioInput
-            actividadId={actividad.id}
-            onNuevoComentario={async () => {
-              await cargarComentarios();
-              if (onActualizarComentarios) onActualizarComentarios();
-            }}
-          />
+          actividadId={actividad.id}
+          onNuevoComentario={async () => {
+            await cargarComentarios();
+            if (onActualizarComentarios) onActualizarComentarios();
+          }}
+        />
 
         {/* COMENTARIOS */}
         <div className="border-t border-gray-200 pt-3">

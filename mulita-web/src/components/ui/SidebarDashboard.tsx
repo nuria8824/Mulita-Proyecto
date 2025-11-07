@@ -37,7 +37,6 @@ export default function SidebarDashboard({
       label: "Gestión de Landing",
       icon: "/images/icons/dashboard/gestion landing.svg",
       iconActive: "/images/icons/dashboard/gestion landing azul.svg",
-      // activo si la ruta actual empieza con /dashboard/gestionLanding
       isActive: () => pathname.startsWith("/dashboard/gestionLanding"),
     },
     {

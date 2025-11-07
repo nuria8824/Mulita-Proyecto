@@ -5,8 +5,8 @@ import MenuAccionesActividades from "@/components/ui/MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/ModalImagenActividades";
 import ComentarioInput from "@/components/ui/ComentarioInput";
 import ComentariosModal from "@/components/ui/ComentariosModal";
-import { FiltroCategoria } from "@/components/ui/Filtros";
-import { FiltroFecha } from "@/components/ui/Filtros";
+import { FiltroCategoria, FiltroFecha } from "@/components/ui/Filtros";
+import ModalColecciones from "@/components/ui/ModalColecciones";
 import { useUser } from "@/context/UserContext";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
@@ -37,8 +37,10 @@ export default function Actividades() {
   const [imagenes, setImagenes] = useState<Archivo[]>([]);
 
   const [actividadSeleccionada, setActividadSeleccionada] = useState<Actividad | null>(null);
-  const [comentariosPorActividad, setComentariosPorActividad] = useState<Record<string, number>>({});
+  const [modalColeccionesOpen, setModalColeccionesOpen] = useState(false);
+  const [actividadParaColeccion, setActividadParaColeccion] = useState<string | null>(null);
 
+  const [comentariosPorActividad, setComentariosPorActividad] = useState<Record<string, number>>({});
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState("");
@@ -47,9 +49,9 @@ export default function Actividades() {
 
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("");
-  const [fechaSeleccionada, setFechaSeleccionada] = useState<string>(""); // <-- estado fecha
+  const [fechaSeleccionada, setFechaSeleccionada] = useState<string>("");
 
-  // Debounce para búsqueda
+  // Debounce búsqueda
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500);
     return () => clearTimeout(handler);
@@ -71,7 +73,7 @@ export default function Actividades() {
     setComentariosPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
   };
 
-  // fetchActividades con filtros por offset, búsqueda, categoría y fecha
+  // Fetch actividades
   const fetchActividades = useCallback(
     async (newOffset = 0, searchTerm = "", categoria = "", fecha = "") => {
       try {
@@ -79,7 +81,7 @@ export default function Actividades() {
 
         let url = `/api/comunidad/actividades?offset=${newOffset}&limit=${limit}&search=${encodeURIComponent(searchTerm)}`;
         if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
-        if (fecha) url += `&fecha=${encodeURIComponent(fecha)}`; // <-- agregamos fecha
+        if (fecha) url += `&fecha=${encodeURIComponent(fecha)}`;
 
         const res = await fetch(url);
         if (!res.ok) throw new Error("Error al obtener las actividades");
@@ -106,7 +108,6 @@ export default function Actividades() {
     []
   );
 
-  // Carga inicial y actualización al cambiar filtros
   useEffect(() => {
     setOffset(0);
     fetchActividades(0, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
@@ -165,7 +166,6 @@ export default function Actividades() {
 
       {/* FILTROS + BÚSQUEDA */}
       <div className="w-full max-w-xl mb-6 flex flex-wrap items-center justify-center sm:justify-between gap-2">
-        {/* Input de búsqueda */}
         <input
           type="text"
           placeholder="Buscar por título o descripción..."
@@ -173,8 +173,6 @@ export default function Actividades() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full sm:w-[55%] border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
         />
-
-        {/* Contenedor de filtros */}
         <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center sm:justify-end">
           <FiltroCategoria
             categoriaSeleccionada={categoriaSeleccionada}
@@ -187,8 +185,6 @@ export default function Actividades() {
         </div>
       </div>
 
-
-
       {/* LISTADO DE ACTIVIDADES */}
       <div className="flex flex-col gap-8 max-w-xl w-full">
         {actividades.length === 0 && !loading ? (
@@ -197,12 +193,8 @@ export default function Actividades() {
           </div>
         ) : (
           actividades.map((act) => {
-            const imagenesAct = act.actividad_archivos.filter((a) =>
-              a.tipo.startsWith("image/")
-            );
-            const otrosArchivos = act.actividad_archivos.filter(
-              (a) => !a.tipo.startsWith("image/")
-            );
+            const imagenesAct = act.actividad_archivos.filter((a) => a.tipo.startsWith("image/"));
+            const otrosArchivos = act.actividad_archivos.filter((a) => !a.tipo.startsWith("image/"));
             const categorias = act.actividad_categoria?.map((c) => c.categoria.nombre);
 
             return (
@@ -308,6 +300,7 @@ export default function Actividades() {
 
                 {/* BOTONES */}
                 <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
+                  {/* Me gusta */}
                   <button className="hover:opacity-75 transition">
                     <img
                       src="/images/icons/comunidad/favoritos.svg"
@@ -316,6 +309,7 @@ export default function Actividades() {
                     />
                   </button>
 
+                  {/* Comentarios */}
                   <div className="flex items-center gap-1">
                     <button
                       className="hover:opacity-75 transition"
@@ -332,7 +326,14 @@ export default function Actividades() {
                     </span>
                   </div>
 
-                  <button className="hover:opacity-75 transition">
+                  {/* Colecciones */}
+                  <button
+                    onClick={() => {
+                      setActividadParaColeccion(act.id);
+                      setModalColeccionesOpen(true);
+                    }}
+                    className="hover:opacity-75 transition"
+                  >
                     <img
                       src="/images/icons/comunidad/colecciones.svg"
                       alt="Guardar"
@@ -341,6 +342,7 @@ export default function Actividades() {
                   </button>
                 </div>
 
+                {/* Input de comentario */}
                 <ComentarioInput
                   actividadId={act.id}
                   onNuevoComentario={async () => {
@@ -388,6 +390,18 @@ export default function Actividades() {
         />
       )}
 
+      {/* MODAL COLECCIONES */}
+      {actividadParaColeccion && (
+        <ModalColecciones
+          isOpen={modalColeccionesOpen}
+          onClose={() => {
+            setModalColeccionesOpen(false);
+            setActividadParaColeccion(null);
+          }}
+          actividadId={actividadParaColeccion}
+        />
+      )}
+      
       {/* BOTÓN SCROLL TOP */}
       {showScrollButton && (
         <button
