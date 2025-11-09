@@ -216,7 +216,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
 
         {/* COMENTARIOS */}
         <div className="border-t border-gray-200 pt-3">
-          <h3 className="text-sm font-medium mb-2">Comentarios</h3>
+          <h3 className="text-sm font-medium mb-2 text-black">Comentarios</h3>
 
           {cargando ? (
             <p className="text-sm text-gray-500">Cargando comentarios...</p>
@@ -242,8 +242,8 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
                         </div>
                       )}
                       <div>
-                        <p className="text-sm">
-                          <strong>
+                        <p className="text-sm text-black">
+                          <strong className="font-semibold text-black">
                             {c.usuario?.nombre} {c.usuario?.apellido}
                           </strong>
                           : {c.contenido}
@@ -266,6 +266,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
             </div>
           )}
         </div>
+
       </div>
 
       {/* Modal de imágenes */}

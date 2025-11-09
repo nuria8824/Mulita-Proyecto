@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   const offset = parseInt(searchParams.get("offset") || "0");
 
   // Consultar las actividades con paginación
-  const { data, error } = await supabase
+  const { data: actividades, error: actividadError } = await supabase
     .from("actividad")
     .select(`
       *,
@@ -36,8 +36,33 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (actividadError)
+    return NextResponse.json({ error: actividadError.message }, { status: 500 });
 
-  return NextResponse.json(data);
+  // Obtener usuario y perfil
+  const { data: usuario, error: usuarioError } = await supabase
+    .from("usuario")
+    .select("id, nombre, apellido")
+    .eq("id", id)
+    .single();
+
+  const { data: perfil, error: perfilError } = await supabase
+    .from("perfil")
+    .select("id, imagen")
+    .eq("id", id)
+    .single();
+
+  if (usuarioError || perfilError)
+    return NextResponse.json(
+      { error: "Error obteniendo usuarios o perfiles" },
+      { status: 500 }
+    );
+
+  // Agregar usuario y perfil a cada actividad
+  const actividadesConUsuario = actividades.map((act) => ({
+    ...act,
+    usuario: { ...usuario, perfil },
+  }));
+
+  return NextResponse.json(actividadesConUsuario);
 }
