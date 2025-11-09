@@ -28,8 +28,6 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       .eq("eliminado", false)
       .order("created_at", { ascending: false });
 
-    console.log("Comentarios obtenidos:", comentarios);
-
     if (comentariosError) {
       console.error("Error de Supabase:", comentariosError.message);
       throw comentariosError;

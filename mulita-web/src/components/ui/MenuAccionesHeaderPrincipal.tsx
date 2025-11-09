@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
-import { set } from "zod";
 
 export default function MenuAccionesHeaderPrincipal() {
   const { user, logout } = useUser();
@@ -29,15 +28,16 @@ export default function MenuAccionesHeaderPrincipal() {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen(prev => !prev)}
-        className="flex items-center gap-2 rounded-full border px-2 py-1 hover:bg-muted"
+        className="relative flex items-center justify-center w-10 h-10 rounded-full overflow-hidden hover:opacity-90 transition"
       >
         <img
-          src={user.imagen || "/default-avatar.png"}
+          src={user.imagen || "/images/icons/perfil/default-avatar.svg"}
           alt="Avatar"
-          className="w-8 h-8 rounded-full object-cover"
+          className={`w-full h-full object-cover ${!user.imagen ? "scale-50" : ""}`}
         />
-        <span className="i-lucide-chevron-down" />
+        <span className="absolute right-[-4px] bottom-[-2px] i-lucide-chevron-down text-gray-600 bg-white rounded-full p-[2px] shadow-sm" />
       </button>
+
 
       {open && (
         <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-50">

@@ -207,7 +207,7 @@ export default function Actividades() {
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
                       <img
-                        src={act.usuario.perfil.imagen || "/default-profile.png"}
+                        src={act.usuario.perfil.imagen || "/images/icons/perfil/default-avatar.svg"}
                         alt="Perfil"
                         className="w-full h-full rounded-full object-cover"
                       />

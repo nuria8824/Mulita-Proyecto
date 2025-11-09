@@ -11,7 +11,8 @@ export function Footer() {
     pathname.startsWith("/noticias/crear") ||
     pathname.startsWith("/noticias/editar") ||
     pathname.startsWith("/comunidad") ||
-    pathname.startsWith("/perfil")
+    pathname.startsWith("/perfil") ||
+    pathname.startsWith("/colecciones")
   ) {
     return null;
   }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { SidebarComunidad } from "@/components/ui/SidebarComunidad";
-import Actividades from "./actividades/page";
+import Actividades from "../../components/ui/Actividades"
 
 export default function Comunidad() {
   const [isOpen, setIsOpen] = useState(false);

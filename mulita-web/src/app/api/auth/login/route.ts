@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { z } from "zod";
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   contrasena: z.string().min(6),
 });
 
@@ -40,7 +40,19 @@ export async function POST(req: Request) {
       throw new Error(usuarioError.message);
     }
 
-    // 3. Si es docente, buscar sus datos también
+    // 3. Buscar imagen de perfil
+    const { data: perfil, error: perfilError } = await supabase
+      .from("perfil")
+      .select("imagen")
+      .eq("id", user.id)
+      .single();
+
+     if (perfilError || !perfil) {
+      // Si no existe el perfil, cancelar el login
+      throw new Error("El usuario no tiene un perfil asociado. No se puede iniciar sesión.");
+    }
+
+    // 4. Si es docente, buscar sus datos también
     let docente = null;
     if (usuario.rol === "docente") {
       const { data: docenteData, error: docenteError } = await supabase
@@ -55,7 +67,7 @@ export async function POST(req: Request) {
       docente = docenteData;
     }
 
-    // 4. Guardar tokens en cookies HTTP-only para persistencia de sesión
+    // 5. Guardar tokens en cookies HTTP-only para persistencia de sesión
     const res = NextResponse.json({
       success: true,
       user: {
@@ -65,6 +77,7 @@ export async function POST(req: Request) {
         nombre: usuario.nombre,
         apellido: usuario.apellido,
         telefono: usuario.telefono,
+        imagen: perfil.imagen || null,
         docente,
       },
     });

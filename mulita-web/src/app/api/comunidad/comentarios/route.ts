@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const { actividad_id, contenido } = await req.json();
-    console.log("Datos recibidos:", { actividad_id, contenido });
 
     if (!actividad_id || !contenido) {
       return NextResponse.json(
