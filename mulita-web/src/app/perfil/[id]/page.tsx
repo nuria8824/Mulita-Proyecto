@@ -18,6 +18,15 @@ interface Perfil {
   usuario: Usuario;
 }
 
+interface Actividad {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  fecha: string;
+  actividad_archivos?: { archivo_url: string; tipo: string; nombre: string }[];
+  actividad_categoria?: { categoria: { nombre: string } }[];
+}
+
 export default function PerfilPage() {
   const { id } = useParams();
   const { user, logout } = useUser();
@@ -25,6 +34,9 @@ export default function PerfilPage() {
 
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actividades, setActividades] = useState<Actividad[]>([]);
+  const [loadingActividades, setLoadingActividades] = useState(false);
+  const [vista, setVista] = useState<"colecciones" | "actividades">("colecciones");
 
   useEffect(() => {
     const fetchPerfil = async () => {
@@ -44,6 +56,25 @@ export default function PerfilPage() {
 
     fetchPerfil();
   }, [id]);
+
+  useEffect(() => {
+    const fetchActividades = async () => {
+      if (vista !== "actividades") return;
+      try {
+        setLoadingActividades(true);
+        const res = await fetch(`/api/perfil/${id}/actividades`);
+        if (!res.ok) throw new Error("Error al obtener actividades");
+        const data = await res.json();
+        setActividades(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingActividades(false);
+      }
+    };
+
+    fetchActividades();
+  }, [vista, id]);
 
   if (loading)
     return (
@@ -70,7 +101,9 @@ export default function PerfilPage() {
           <img
             src={perfil.imagen || "/images/icons/perfil/default-avatar.svg"}
             alt="Avatar"
-            className={`w-full h-full object-cover ${!perfil.imagen ? "scale-50" : ""}`}
+            className={`w-full h-full object-cover ${
+              !perfil.imagen ? "scale-50" : ""
+            }`}
           />
         </div>
 
@@ -100,7 +133,9 @@ export default function PerfilPage() {
             </button>
 
             <button
-              onClick={() => router.push(`/perfil/editar/${perfil.usuario.id}`)}
+              onClick={() =>
+                router.push(`/perfil/editar/${perfil.usuario.id}`)
+              }
               className="w-[160px] rounded-lg bg-[#003c71] text-white flex items-center justify-center py-3 cursor-pointer"
             >
               <span className="leading-6 font-medium">Editar perfil</span>
@@ -112,18 +147,28 @@ export default function PerfilPage() {
         <div className="absolute bottom-0 left-0 w-full h-px bg-gray-200" />
       </div>
 
-      {/* Secciones */}
+      {/* Menú de secciones */}
       <div className="w-full max-w-[1200px] flex justify-end py-8 pr-[90px] text-left text-4xl text-white font-extrabold">
         <div className="flex items-center gap-4 text-center text-base text-[#6d758f]">
-          <div className="shadow-sm rounded bg-[#f8faff] border border-[#f1f3f7] px-3 py-2 cursor-pointer">
-            <span className="font-semibold text-[#003c71]">Mis Actividades</span>
+          <div
+            onClick={() => setVista("actividades")}
+            className={`shadow-sm rounded border px-3 py-2 cursor-pointer ${
+              vista === "actividades"
+                ? "bg-[#003c71] text-white border-[#003c71]"
+                : "bg-[#f8faff] border-[#f1f3f7] text-[#003c71]"
+            }`}
+          >
+            <span className="font-semibold">Actividades</span>
           </div>
 
-          <div className="shadow-sm rounded bg-[#f8faff] border border-[#f1f3f7] px-3 py-2 cursor-pointer">
-            <span className="font-semibold text-[#003c71]">Favoritos</span>
-          </div>
-
-          <div className="rounded bg-[#003c71] px-3 py-2 text-white">
+          <div
+            onClick={() => setVista("colecciones")}
+            className={`shadow-sm rounded border px-3 py-2 cursor-pointer ${
+              vista === "colecciones"
+                ? "bg-[#003c71] text-white border-[#003c71]"
+                : "bg-[#f8faff] border-[#f1f3f7] text-[#003c71]"
+            }`}
+          >
             <span className="font-semibold">Colecciones</span>
           </div>
 
@@ -135,36 +180,53 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      {/* Cards de ejemplo */}
-      <div className="flex flex-wrap justify-center gap-6 py-1">
-        {[
-          { titulo: "Actividades de Física", fecha: "Jan 22, 2024" },
-          { titulo: "Ideas de Programación 💻", fecha: "Jan 22, 2024" },
-          { titulo: "Matemática 🧮", fecha: "Jan 22, 2024" },
-          { titulo: "Actividades de Robótica", fecha: "Jan 22, 2024" },
-        ].map((card, i) => (
-          <div
-            key={i}
-            className="w-[500px] h-[156px] shadow-sm border border-[#e1e4ed] rounded-lg bg-white flex flex-col justify-center relative p-6 text-left cursor-pointer hover:shadow-md transition"
-          >
-            <div className="flex flex-col justify-between h-full">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-semibold text-[#6d758f]">
-                  {card.fecha}
-                </span>
-                <img
-                  src="/menu-icon.svg"
-                  alt="menu"
-                  className="cursor-pointer w-6 h-6"
-                />
+      {/* Contenido dinámico */}
+      {vista === "actividades" ? (
+        <div className="flex flex-wrap justify-center gap-6 py-1">
+          {loadingActividades ? (
+            <div className="text-gray-500">Cargando actividades...</div>
+          ) : actividades.length > 0 ? (
+            actividades.map((actividad) => (
+              <div
+                key={actividad.id}
+                className="w-[500px] h-[156px] shadow-sm border border-[#e1e4ed] rounded-lg bg-white flex flex-col justify-center relative p-6 text-left cursor-pointer hover:shadow-md transition"
+              >
+                <div className="flex flex-col justify-between h-full">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold text-[#6d758f]">
+                      {new Date(actividad.fecha).toLocaleDateString("es-AR", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                    <img
+                      src="/menu-icon.svg"
+                      alt="menu"
+                      className="cursor-pointer w-6 h-6"
+                    />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-[#003c71]">
+                    {actividad.titulo}
+                  </h3>
+                  <p className="text-sm text-[#6d758f] line-clamp-2">
+                    {actividad.descripcion}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-2xl font-semibold text-[#003c71]">
-                {card.titulo}
-              </h3>
-            </div>
+            ))
+          ) : (
+            <div className="text-gray-500">Este usuario no tiene actividades.</div>
+          )}
+        </div>
+      ) : (
+        // vista "colecciones"
+        <div className="flex flex-wrap justify-center gap-6 py-1">
+          <div className="text-gray-500 italic">
+            Aquí irán las colecciones del usuario...
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
