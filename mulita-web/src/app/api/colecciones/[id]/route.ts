@@ -1,30 +1,86 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-// GET: Devuelve una colección en particular (si no está eliminada).
+// GET: Devuelve una colección con todas sus actividades, incluyendo usuario y perfil
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-
   const access_token = req.cookies.get("sb-access-token")?.value;
+
   if (!access_token)
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
   // Obtener usuario autenticado
-  const { data: { user }, error: userError } = await supabase.auth.getUser(access_token);
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(access_token);
+
   if (userError || !user)
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-  const { data, error } = await supabase
+  // Obtener la colección
+  const { data: coleccion, error: coleccionError } = await supabase
     .from("coleccion")
     .select("*")
     .eq("id", params.id)
-    .eq("usuario_id", user?.id)
+    .eq("usuario_id", user.id)
     .eq("eliminado", false)
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 404 });
-  return NextResponse.json(data);
+  if (coleccionError) return NextResponse.json({ error: coleccionError.message }, { status: 404 });
+
+  // Obtener los IDs de las actividades de la colección
+  const { data: coleccionActividad, error: caError } = await supabase
+    .from("coleccion_actividad")
+    .select("actividad_id")
+    .eq("coleccion_id", params.id);
+
+  if (caError) return NextResponse.json({ error: caError.message }, { status: 500 });
+
+  const actividadIds = coleccionActividad.map((c: any) => c.actividad_id);
+  if (actividadIds.length === 0) return NextResponse.json({ ...coleccion, actividades: [] });
+
+  // Traer actividades
+  const { data: actividades, error: actError } = await supabase
+    .from("actividad")
+    .select("*")
+    .in("id", actividadIds)
+    .eq("eliminado", false)
+    .order("created_at", { ascending: false });
+
+  if (actError) return NextResponse.json({ error: actError.message }, { status: 500 });
+
+  // Traer usuarios y perfiles por separado
+  const usuarioIds = [...new Set(actividades.map((a: any) => a.usuario_id))];
+
+  const { data: usuarios, error: usuarioError } = await supabase
+    .from("usuario")
+    .select("id, nombre, apellido")
+    .in("id", usuarioIds);
+
+  const { data: perfiles, error: perfilError } = await supabase
+    .from("perfil")
+    .select("id, imagen")
+    .in("id", usuarioIds);
+
+  if (usuarioError || perfilError)
+    return NextResponse.json(
+      { error: "Error obteniendo usuarios o perfiles" },
+      { status: 500 }
+    );
+
+  // Combinar usuarios y perfiles con las actividades
+  const actividadesConUsuario = actividades.map((act: any) => {
+    const usuario = usuarios.find((u) => u.id === act.usuario_id) || {};
+    const perfil = perfiles.find((p) => p.id === act.usuario_id) || {};
+    return { ...act, usuario: { ...usuario, perfil } };
+  });
+
+  return NextResponse.json({ ...coleccion, actividades: actividadesConUsuario });
 }
+
+
+
 
 // POST: agrega una actividad a una colección (tabla intermedia)
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {

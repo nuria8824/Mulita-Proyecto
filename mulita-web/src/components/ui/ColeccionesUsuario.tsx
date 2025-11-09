@@ -1,6 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import MenuAccionesColecciones from "./MenuAccionesColecciones";
 
 type Coleccion = {
@@ -10,6 +9,7 @@ type Coleccion = {
 };
 
 export default function ColeccionesUsuario() {
+  const router = useRouter();
   const [colecciones, setColecciones] = useState<Coleccion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,17 +41,14 @@ export default function ColeccionesUsuario() {
 
   const handleGuardar = async (id: string) => {
     if (!nombreTemporal.trim()) return;
-
     try {
       const res = await fetch(`/api/colecciones/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre: nombreTemporal }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al actualizar la colección");
-
       setColecciones((prev) =>
         prev.map((col) => (col.id === id ? { ...col, nombre: data.nombre } : col))
       );
@@ -66,14 +63,12 @@ export default function ColeccionesUsuario() {
       const res = await fetch(`/api/colecciones/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al eliminar la colección");
-
       setColecciones((prev) => prev.filter((col) => col.id !== id));
     } catch (err: any) {
       console.error(err);
       alert("No se pudo eliminar la colección: " + err.message);
     }
   };
-
 
   if (loading) return <p className="text-center text-gray-500">Cargando colecciones...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -85,9 +80,9 @@ export default function ColeccionesUsuario() {
       {colecciones.map((col) => (
         <div
           key={col.id}
-          className="relative flex flex-col items-start justify-between p-6 rounded-2xl shadow-md border border-gray-200 bg-white hover:shadow-lg transition-shadow duration-200"
+          className="relative flex flex-col items-start justify-between p-6 rounded-2xl shadow-md border border-gray-200 bg-white hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+          onClick={() => router.push(`/colecciones/${col.id}`)} // 🔹 Navegación a detalle
         >
-          {/* Línea superior */}
           <div className="flex justify-between items-center w-full text-sm font-semibold text-gray-500 mb-2">
             <span>
               {new Date(col.created_at).toLocaleDateString("es-AR", {
@@ -103,7 +98,6 @@ export default function ColeccionesUsuario() {
             />
           </div>
 
-          {/* Nombre o campo editable */}
           {editandoId === col.id ? (
             <input
               aria-label="nombre coleccion"
