@@ -6,7 +6,7 @@ import { MoreVertical } from "lucide-react";
 type Props = {
   coleccionId: string;
   onEditar: (id: string) => void;
-  onEliminar?: (id: string) => void;
+  onEliminar: (id: string) => void;
 };
 
 export default function MenuAccionesColecciones({ coleccionId, onEditar, onEliminar }: Props) {
@@ -15,7 +15,6 @@ export default function MenuAccionesColecciones({ coleccionId, onEditar, onElimi
 
   const toggleMenu = () => setOpen((prev) => !prev);
 
-  // Cerrar menú al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -33,7 +32,9 @@ export default function MenuAccionesColecciones({ coleccionId, onEditar, onElimi
 
   const handleEliminarClick = () => {
     setOpen(false);
-    if (onEliminar) onEliminar(coleccionId);
+    if (confirm("¿Estás seguro que querés eliminar esta colección?")) {
+      onEliminar(coleccionId);
+    }
   };
 
   return (
@@ -52,13 +53,13 @@ export default function MenuAccionesColecciones({ coleccionId, onEditar, onElimi
             onClick={handleEditarClick}
             className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 rounded-t-xl"
           >
-            ✏️ Editar
+            Editar
           </button>
           <button
             onClick={handleEliminarClick}
             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-xl"
           >
-            🗑️ Eliminar
+            Eliminar
           </button>
         </div>
       )}

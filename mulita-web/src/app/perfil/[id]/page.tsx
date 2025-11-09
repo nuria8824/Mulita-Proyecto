@@ -229,7 +229,7 @@ export default function PerfilPage() {
       </div>
 
       {/* Contenido dinámico */}
-      <div className="w-full text-left px-[170px]">
+      <div className="w-full text-left px-[170px] pb-25">
         {vista === "actividades" ? (
           <ActividadesUsuario usuarioId={perfil.usuario.id} perfilImagen={perfil.imagen} />
         ) : (

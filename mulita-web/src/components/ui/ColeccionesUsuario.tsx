@@ -9,7 +9,7 @@ type Coleccion = {
   created_at: string;
 };
 
-export default function ColeccionesGrid() {
+export default function ColeccionesUsuario() {
   const [colecciones, setColecciones] = useState<Coleccion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +61,20 @@ export default function ColeccionesGrid() {
     }
   };
 
+  const handleEliminar = async (id: string) => {
+    try {
+      const res = await fetch(`/api/colecciones/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al eliminar la colección");
+
+      setColecciones((prev) => prev.filter((col) => col.id !== id));
+    } catch (err: any) {
+      console.error(err);
+      alert("No se pudo eliminar la colección: " + err.message);
+    }
+  };
+
+
   if (loading) return <p className="text-center text-gray-500">Cargando colecciones...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
   if (colecciones.length === 0)
@@ -82,7 +96,11 @@ export default function ColeccionesGrid() {
                 year: "numeric",
               })}
             </span>
-            <MenuAccionesColecciones coleccionId={col.id} onEditar={handleEditar} />
+            <MenuAccionesColecciones
+              coleccionId={col.id}
+              onEditar={handleEditar}
+              onEliminar={handleEliminar}
+            />
           </div>
 
           {/* Nombre o campo editable */}
