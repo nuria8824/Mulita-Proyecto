@@ -1,4 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
+import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import MenuAccionesColecciones from "./MenuAccionesColecciones";
 
@@ -6,21 +9,35 @@ type Coleccion = {
   id: string;
   nombre: string;
   created_at: string;
+  usuario_id: string;
 };
 
-export default function ColeccionesUsuario() {
+type ColeccionesUsuarioProps = {
+  userPerfilId?: string;
+};
+
+export default function ColeccionesUsuario({ userPerfilId }: ColeccionesUsuarioProps) {
   const router = useRouter();
+  const { user } = useUser();
+
   const [colecciones, setColecciones] = useState<Coleccion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [nombreTemporal, setNombreTemporal] = useState("");
 
+  // Determinar si el perfil es propio
+  const esPropioPerfil = !userPerfilId || userPerfilId === user?.id;
+
   useEffect(() => {
     const fetchColecciones = async () => {
       try {
-        const res = await fetch("/api/colecciones");
+        setLoading(true);
+
+        const query = userPerfilId ? `?userId=${userPerfilId}` : "";
+        const res = await fetch(`/api/colecciones${query}`);
         const data = await res.json();
+
         if (!res.ok) throw new Error(data.error || "Error al obtener colecciones");
         setColecciones(data);
       } catch (err: any) {
@@ -30,9 +47,10 @@ export default function ColeccionesUsuario() {
       }
     };
     fetchColecciones();
-  }, []);
+  }, [userPerfilId]);
 
   const handleEditar = (id: string) => {
+    if (!esPropioPerfil) return; // solo permitimos editar en el propio perfil
     const col = colecciones.find((c) => c.id === id);
     if (!col) return;
     setEditandoId(id);
@@ -53,12 +71,14 @@ export default function ColeccionesUsuario() {
         prev.map((col) => (col.id === id ? { ...col, nombre: data.nombre } : col))
       );
       setEditandoId(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert("No se pudo actualizar la colección: " + err.message);
     }
   };
 
   const handleEliminar = async (id: string) => {
+    if (!esPropioPerfil) return; // solo permitir eliminar en el propio perfil
     try {
       const res = await fetch(`/api/colecciones/${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -73,7 +93,7 @@ export default function ColeccionesUsuario() {
   if (loading) return <p className="text-center text-gray-500">Cargando colecciones...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
   if (colecciones.length === 0)
-    return <p className="text-center text-gray-400">No tenés colecciones todavía.</p>;
+    return <p className="text-center text-gray-400">No hay colecciones para este usuario.</p>;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 p-4">
@@ -81,7 +101,7 @@ export default function ColeccionesUsuario() {
         <div
           key={col.id}
           className="relative flex flex-col items-start justify-between p-6 rounded-2xl shadow-md border border-gray-200 bg-white hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-          onClick={() => router.push(`/colecciones/${col.id}`)} // 🔹 Navegación a detalle
+          onClick={() => router.push(`/colecciones/${col.id}`)}
         >
           <div className="flex justify-between items-center w-full text-sm font-semibold text-gray-500 mb-2">
             <span>
@@ -91,11 +111,14 @@ export default function ColeccionesUsuario() {
                 year: "numeric",
               })}
             </span>
-            <MenuAccionesColecciones
-              coleccionId={col.id}
-              onEditar={handleEditar}
-              onEliminar={handleEliminar}
-            />
+
+            {esPropioPerfil && (
+              <MenuAccionesColecciones
+                coleccionId={col.id}
+                onEditar={handleEditar}
+                onEliminar={handleEliminar}
+              />
+            )}
           </div>
 
           {editandoId === col.id ? (

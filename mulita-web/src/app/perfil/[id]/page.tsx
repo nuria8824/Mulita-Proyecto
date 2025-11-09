@@ -93,7 +93,7 @@ export default function PerfilPage() {
       setNuevoNombre("");
       setMensajeError("");
       setMostrarInput(false);
-      // router.refresh();
+      router.refresh();
     } catch (error) {
       console.error(error);
       setMensajeError("No se pudo crear la colección.");
@@ -233,7 +233,7 @@ export default function PerfilPage() {
         {vista === "actividades" ? (
           <ActividadesUsuario usuarioId={perfil.usuario.id} perfilImagen={perfil.imagen} />
         ) : (
-          <ColeccionesUsuario />
+          <ColeccionesUsuario userPerfilId={perfil.usuario.id}/>
         )}
 
       </div>

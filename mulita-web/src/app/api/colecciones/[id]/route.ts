@@ -23,7 +23,6 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     .from("coleccion")
     .select("*")
     .eq("id", params.id)
-    .eq("usuario_id", user.id)
     .eq("eliminado", false)
     .single();
 
@@ -79,9 +78,6 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   return NextResponse.json({ ...coleccion, actividades: actividadesConUsuario });
 }
 
-
-
-
 // POST: agrega una actividad a una colección (tabla intermedia)
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -94,7 +90,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
   if (userError || !user)
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-  const { actividadIds } = await req.json(); // puede ser un array o un solo ID
+  const { actividadIds } = await req.json();
 
   if (!actividadIds || actividadIds.length === 0)
     return NextResponse.json({ error: "Debe incluir al menos una actividad" }, { status: 400 });
