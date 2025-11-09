@@ -6,13 +6,23 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   const params = await props.params;
   const { id } = params;
 
+   const access_token = req.cookies.get("sb-access-token")?.value;
+  if (!access_token)
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+  // Obtener usuario autenticado
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(access_token);
+  if (userError || !user)
+    return NextResponse.json({ error: "Token inválido" }, { status: 401 });
+
   const { data, error } = await supabase
     .from("perfil")
     .select("*, usuario(id,nombre,apellido,email,rol)")
     .eq("id", id)
     .single();
-
-  console.log("data perfil obtenido:", data);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });

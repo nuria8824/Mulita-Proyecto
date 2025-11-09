@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import ActividadesUsuario from "@/components/ui/ActividadesUsuario";
 
 interface Usuario {
   id: string;
@@ -18,24 +19,14 @@ interface Perfil {
   usuario: Usuario;
 }
 
-interface Actividad {
-  id: string;
-  titulo: string;
-  descripcion: string;
-  fecha: string;
-  actividad_archivos?: { archivo_url: string; tipo: string; nombre: string }[];
-  actividad_categoria?: { categoria: { nombre: string } }[];
-}
-
 export default function PerfilPage() {
   const { id } = useParams();
+  console.log("id", id);
   const { user, logout } = useUser();
   const router = useRouter();
 
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [loading, setLoading] = useState(true);
-  const [actividades, setActividades] = useState<Actividad[]>([]);
-  const [loadingActividades, setLoadingActividades] = useState(false);
   const [vista, setVista] = useState<"colecciones" | "actividades">("colecciones");
 
   useEffect(() => {
@@ -56,25 +47,6 @@ export default function PerfilPage() {
 
     fetchPerfil();
   }, [id]);
-
-  useEffect(() => {
-    const fetchActividades = async () => {
-      if (vista !== "actividades") return;
-      try {
-        setLoadingActividades(true);
-        const res = await fetch(`/api/perfil/${id}/actividades`);
-        if (!res.ok) throw new Error("Error al obtener actividades");
-        const data = await res.json();
-        setActividades(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingActividades(false);
-      }
-    };
-
-    fetchActividades();
-  }, [vista, id]);
 
   if (loading)
     return (
@@ -182,45 +154,11 @@ export default function PerfilPage() {
 
       {/* Contenido dinámico */}
       {vista === "actividades" ? (
-        <div className="flex flex-wrap justify-center gap-6 py-1">
-          {loadingActividades ? (
-            <div className="text-gray-500">Cargando actividades...</div>
-          ) : actividades.length > 0 ? (
-            actividades.map((actividad) => (
-              <div
-                key={actividad.id}
-                className="w-[500px] h-[156px] shadow-sm border border-[#e1e4ed] rounded-lg bg-white flex flex-col justify-center relative p-6 text-left cursor-pointer hover:shadow-md transition"
-              >
-                <div className="flex flex-col justify-between h-full">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-[#6d758f]">
-                      {new Date(actividad.fecha).toLocaleDateString("es-AR", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-                    <img
-                      src="/menu-icon.svg"
-                      alt="menu"
-                      className="cursor-pointer w-6 h-6"
-                    />
-                  </div>
-                  <h3 className="text-2xl font-semibold text-[#003c71]">
-                    {actividad.titulo}
-                  </h3>
-                  <p className="text-sm text-[#6d758f] line-clamp-2">
-                    {actividad.descripcion}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-gray-500">Este usuario no tiene actividades.</div>
-          )}
-        </div>
+        <ActividadesUsuario
+          usuarioId={perfil.usuario.id}
+          perfilImagen={perfil.imagen}
+        />
       ) : (
-        // vista "colecciones"
         <div className="flex flex-wrap justify-center gap-6 py-1">
           <div className="text-gray-500 italic">
             Aquí irán las colecciones del usuario...
