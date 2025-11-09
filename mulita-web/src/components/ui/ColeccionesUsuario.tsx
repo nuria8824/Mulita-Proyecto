@@ -13,13 +13,14 @@ export default function ColeccionesGrid() {
   const [colecciones, setColecciones] = useState<Coleccion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [nombreTemporal, setNombreTemporal] = useState("");
 
   useEffect(() => {
     const fetchColecciones = async () => {
       try {
         const res = await fetch("/api/colecciones");
         const data = await res.json();
-
         if (!res.ok) throw new Error(data.error || "Error al obtener colecciones");
         setColecciones(data);
       } catch (err: any) {
@@ -28,9 +29,37 @@ export default function ColeccionesGrid() {
         setLoading(false);
       }
     };
-
     fetchColecciones();
   }, []);
+
+  const handleEditar = (id: string) => {
+    const col = colecciones.find((c) => c.id === id);
+    if (!col) return;
+    setEditandoId(id);
+    setNombreTemporal(col.nombre);
+  };
+
+  const handleGuardar = async (id: string) => {
+    if (!nombreTemporal.trim()) return;
+
+    try {
+      const res = await fetch(`/api/colecciones/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: nombreTemporal }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al actualizar la colección");
+
+      setColecciones((prev) =>
+        prev.map((col) => (col.id === id ? { ...col, nombre: data.nombre } : col))
+      );
+      setEditandoId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   if (loading) return <p className="text-center text-gray-500">Cargando colecciones...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -53,15 +82,26 @@ export default function ColeccionesGrid() {
                 year: "numeric",
               })}
             </span>
-
-            {/* Botón de acciones */}
-            <MenuAccionesColecciones coleccionId={col.id} />
+            <MenuAccionesColecciones coleccionId={col.id} onEditar={handleEditar} />
           </div>
 
-          {/* Nombre */}
-          <h3 className="text-2xl font-semibold text-[#003c71] mt-2 mb-4 text-left">
-            {col.nombre}
-          </h3>
+          {/* Nombre o campo editable */}
+          {editandoId === col.id ? (
+            <input
+              aria-label="nombre coleccion"
+              type="text"
+              value={nombreTemporal}
+              onChange={(e) => setNombreTemporal(e.target.value)}
+              onBlur={() => handleGuardar(col.id)}
+              onKeyDown={(e) => e.key === "Enter" && handleGuardar(col.id)}
+              autoFocus
+              className="w-full text-2xl font-semibold text-[#003c71] mt-2 mb-4 border-b-2 border-blue-500 focus:outline-none bg-transparent"
+            />
+          ) : (
+            <h3 className="text-2xl font-semibold text-[#003c71] mt-2 mb-4 text-left">
+              {col.nombre}
+            </h3>
+          )}
         </div>
       ))}
     </div>

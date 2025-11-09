@@ -77,7 +77,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     return NextResponse.json({ error: "El nombre es obligatorio" }, { status: 400 });
 
   const { data, error } = await supabase
-    .from("colecciones")
+    .from("coleccion")
     .update({ nombre })
     .eq("id", params.id)
     .eq("usuario_id", user?.id)
@@ -103,7 +103,7 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
   const { error } = await supabase
-    .from("colecciones")
+    .from("coleccion")
     .update({ eliminado: true })
     .eq("id", params.id)
     .eq("usuario_id", user?.id)
