@@ -80,7 +80,7 @@ export default function ActividadesUsuario({
         let data: Actividad[] = [];
 
         // --- 1️⃣ Obtener todas las colecciones del usuario ---
-        const resColecciones = await fetch(`/api/colecciones?usuarioId=${user?.id}`);
+        const resColecciones = await fetch(`/api/colecciones?userId=${usuarioId}`);
         if (!resColecciones.ok) throw new Error("Error al obtener las colecciones del usuario");
 
         const colecciones = await resColecciones.json();
@@ -140,7 +140,7 @@ export default function ActividadesUsuario({
         setLoading(false);
       }
     },
-    [usuarioId, mostrarSoloFavoritos, user?.id]
+    [usuarioId, mostrarSoloFavoritos]
   );
 
 
