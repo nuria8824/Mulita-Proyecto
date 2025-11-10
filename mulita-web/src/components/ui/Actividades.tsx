@@ -28,6 +28,7 @@ export default function Actividades() {
   const { user } = useUser();
 
   const [actividades, setActividades] = useState<Actividad[]>([]);
+  const [favoritos, setFavoritos] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,15 +109,48 @@ export default function Actividades() {
     []
   );
 
+  // Obtener actividades favoritas del usuario
+  const fetchFavoritos = useCallback(async () => {
+    try {
+      const res = await fetch("/api/colecciones/favoritos");
+      if (!res.ok) return;
+      const data = await res.json();
+      const favIds = data.map((f: { actividad_id: string }) => f.actividad_id);
+      setFavoritos(favIds);
+    } catch (err) {
+      console.error("Error al cargar favoritos", err);
+    }
+  }, []);
+
   useEffect(() => {
     setOffset(0);
     fetchActividades(0, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
-  }, [debouncedSearch, categoriaSeleccionada, fechaSeleccionada, fetchActividades]);
+    fetchFavoritos();
+  }, [debouncedSearch, categoriaSeleccionada, fechaSeleccionada, fetchActividades, fetchFavoritos]);
 
   const handleVerMas = () => {
     const newOffset = offset + limit;
     setOffset(newOffset);
     fetchActividades(newOffset, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
+  };
+
+  // Alternar like (añadir o quitar de favoritos)
+  const toggleLike = async (actividadId: string) => {
+    console.log("click en like:", actividadId);
+    try {
+      const res = await fetch(`/api/comunidad/actividades/${actividadId}/like`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Error al actualizar like");
+
+      setFavoritos((prev) =>
+        prev.includes(actividadId)
+          ? prev.filter((id) => id !== actividadId)
+          : [...prev, actividadId]
+      );
+    } catch (err) {
+      console.error("Error al dar like:", err);
+    }
   };
 
   const toggleExpand = (id: string) => {
@@ -196,6 +230,7 @@ export default function Actividades() {
             const imagenesAct = act.actividad_archivos.filter((a) => a.tipo.startsWith("image/"));
             const otrosArchivos = act.actividad_archivos.filter((a) => !a.tipo.startsWith("image/"));
             const categorias = act.actividad_categoria?.map((c) => c.categoria.nombre);
+            const isFav = favoritos.includes(act.id);
 
             return (
               <div
@@ -301,9 +336,13 @@ export default function Actividades() {
                 {/* BOTONES */}
                 <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
                   {/* Me gusta */}
-                  <button className="hover:opacity-75 transition">
+                  <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
                     <img
-                      src="/images/icons/comunidad/favoritos.svg"
+                      src={
+                        isFav
+                          ? "/images/icons/comunidad/favoritos-fill.svg"
+                          : "/images/icons/comunidad/favoritos.svg"
+                      }
                       alt="Me gusta"
                       className="w-6 h-6"
                     />
