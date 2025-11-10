@@ -121,6 +121,7 @@ export default function Actividades() {
       console.error("Error al cargar favoritos", err);
     }
   }, []);
+  
 
   useEffect(() => {
     setOffset(0);

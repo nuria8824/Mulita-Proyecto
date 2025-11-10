@@ -32,6 +32,7 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
   const { user } = useUser();
 
   const [actividades, setActividades] = useState<Actividad[]>([]);
+  const [favoritos, setFavoritos] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,14 +97,49 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
     [usuarioId]
   );
 
+  // Obtener actividades favoritas del usuario
+  const fetchFavoritos = useCallback(async () => {
+    try {
+      const res = await fetch("/api/colecciones/favoritos");
+      if (!res.ok) return;
+      const data = await res.json();
+      const favIds = data.map((f: { actividad_id: string }) => f.actividad_id);
+      setFavoritos(favIds);
+    } catch (err) {
+      console.error("Error al cargar favoritos", err);
+    }
+  }, []);
+
   useEffect(() => {
-    if (usuarioId) fetchActividades(0);
-  }, [fetchActividades, usuarioId]);
+    if (usuarioId) {
+      fetchActividades(0);
+      fetchFavoritos();
+    }
+  }, [fetchActividades, fetchFavoritos, usuarioId]);
 
   const handleVerMas = () => {
     const nuevoOffset = offset + limit;
     setOffset(nuevoOffset);
     fetchActividades(nuevoOffset);
+  };
+
+  // Alternar like (añadir o quitar de favoritos)
+  const toggleLike = async (actividadId: string) => {
+    console.log("click en like:", actividadId);
+    try {
+      const res = await fetch(`/api/comunidad/actividades/${actividadId}/like`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Error al actualizar like");
+
+      setFavoritos((prev) =>
+        prev.includes(actividadId)
+          ? prev.filter((id) => id !== actividadId)
+          : [...prev, actividadId]
+      );
+    } catch (err) {
+      console.error("Error al dar like:", err);
+    }
   };
 
   const toggleExpand = (id: string) => {
@@ -159,6 +195,7 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
           const imagenesAct = act.actividad_archivos.filter((a) => a.tipo.startsWith("image/"));
           const otrosArchivos = act.actividad_archivos.filter((a) => !a.tipo.startsWith("image/"));
           const categorias = act.actividad_categoria?.map((c) => c.categoria.nombre);
+          const isFav = favoritos.includes(act.id);
 
           return (
             <div
@@ -264,13 +301,17 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
               {/* BOTONES */}
               <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
                 {/* Me gusta */}
-                <button className="hover:opacity-75 transition">
-                  <img
-                    src="/images/icons/comunidad/favoritos.svg"
-                    alt="Me gusta"
-                    className="w-6 h-6"
-                  />
-                </button>
+                <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
+                    <img
+                      src={
+                        isFav
+                          ? "/images/icons/comunidad/favoritos-fill.svg"
+                          : "/images/icons/comunidad/favoritos.svg"
+                      }
+                      alt="Me gusta"
+                      className="w-6 h-6"
+                    />
+                  </button>
 
                 {/* Comentarios */}
                 <div className="flex items-center gap-1">
