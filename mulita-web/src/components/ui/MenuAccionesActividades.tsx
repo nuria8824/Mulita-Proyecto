@@ -85,14 +85,6 @@ export default function MenuAccionesActividades({ actividad, userId, rol }: Acci
               Ver perfil
             </Link>
 
-            <Link
-              href={`#favoritos`}
-              onClick={() => setOpen(false)}
-              className="px-4 py-2 text-left hover:bg-gray-100 text-sm"
-            >
-              Agregar a favoritos
-            </Link>
-
             <button
               onClick={handleAbrirModalColecciones}
               className="px-4 py-2 text-left hover:bg-gray-100 text-sm"

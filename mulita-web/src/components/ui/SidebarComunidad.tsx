@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 
 export function SidebarComunidad({
   isOpen,
@@ -12,10 +13,15 @@ export function SidebarComunidad({
   onClose: () => void;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { user } = useUser();
 
   const handleLinkClick = () => {
     onClose();
   };
+
+  // Si no hay usuario logueado, podemos poner un fallback
+  const userId = user?.id || "";
 
   const links = [
     {
@@ -33,18 +39,25 @@ export function SidebarComunidad({
       isActive: () => pathname.startsWith("/comunidad/actividades/crear"),
     },
     {
-      href: "/colecciones",
+      href: `/perfil/${userId}?vista=colecciones`,
       label: "Colecciones",
       icon: "/images/icons/comunidad/colecciones.svg",
-      iconActive: "/images/icon/comunidad/colecciones.svg",
-      isActive: () => pathname === "/colecciones",
+      iconActive: "/images/icons/comunidad/colecciones.svg",
+      isActive: () => {
+        // Activo si estamos en la ruta del perfil del usuario y la query vista=colecciones
+        const vista = searchParams.get("vista");
+        return pathname === `/perfil/${userId}` && vista === "colecciones";
+      },
     },
     {
-      href: "/favoritos",
+      href: `/perfil/${userId}?vista=favoritos`,
       label: "Favoritos",
       icon: "/images/icons/comunidad/favoritos.svg",
       iconActive: "/images/icons/comunidad/favoritos.svg",
-      isActive: () => pathname === "/favoritos",
+      isActive: () => {
+        const vista = searchParams.get("vista");
+        return pathname === `/perfil/${userId}` && vista === "favoritos";
+      },
     },
     {
       href: "/configuracion",
@@ -78,7 +91,6 @@ export function SidebarComunidad({
             height={60}
             alt="Logo Mulita"
           />
-          {/* Botón cerrar (solo móvil) */}
           <button
             onClick={onClose}
             className="absolute right-3 top-3 md:hidden text-gray-600 text-2xl"

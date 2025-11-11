@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { motion, AnimatePresence } from "framer-motion";
 import ActividadesUsuario from "@/components/ui/ActividadesUsuario";
@@ -25,14 +25,23 @@ export default function PerfilPage() {
   const { id } = useParams();
   const { user, logout } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [loading, setLoading] = useState(true);
-  const [vista, setVista] = useState<"colecciones" | "actividades">("actividades");
+  const [vista, setVista] = useState<"colecciones" | "actividades" | "favoritos">("actividades");
 
   const [mostrarInput, setMostrarInput] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [mensajeError, setMensajeError] = useState("");
+
+  // Leer la query 'vista' y actualizar el estado
+  useEffect(() => {
+    const vistaParam = searchParams.get("vista");
+    if (vistaParam === "actividades" || vistaParam === "colecciones" || vistaParam === "favoritos") {
+      setVista(vistaParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchPerfil = async () => {
@@ -165,6 +174,17 @@ export default function PerfilPage() {
           </div>
 
           <div
+            onClick={() => setVista("favoritos")}
+            className={`shadow-sm rounded border px-3 py-2 cursor-pointer ${
+              vista === "favoritos"
+                ? "bg-[#003c71] text-white border-[#003c71]"
+                : "bg-[#f8faff] border-[#f1f3f7] text-[#003c71]"
+            }`}
+          >
+            <span className="font-semibold">Favoritos</span>
+          </div>
+
+          <div
             onClick={() => setVista("colecciones")}
             className={`shadow-sm rounded border px-3 py-2 cursor-pointer ${
               vista === "colecciones"
@@ -232,10 +252,15 @@ export default function PerfilPage() {
       <div className="w-full text-left px-[170px] pb-25">
         {vista === "actividades" ? (
           <ActividadesUsuario usuarioId={perfil.usuario.id} perfilImagen={perfil.imagen} />
+        ) : vista === "colecciones" ? (
+          <ColeccionesUsuario userPerfilId={perfil.usuario.id} />
         ) : (
-          <ColeccionesUsuario userPerfilId={perfil.usuario.id}/>
+          <ActividadesUsuario
+            usuarioId={perfil.usuario.id}
+            perfilImagen={perfil.imagen}
+            mostrarSoloFavoritos
+          />
         )}
-
       </div>
     </div>
   );

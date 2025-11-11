@@ -42,7 +42,11 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   // Traer actividades
   const { data: actividades, error: actError } = await supabase
     .from("actividad")
-    .select("*")
+    .select(`
+      *,
+      actividad_archivos (archivo_url, tipo, nombre),
+      actividad_categoria (categoria (id, nombre))
+      `)
     .in("id", actividadIds)
     .eq("eliminado", false)
     .order("created_at", { ascending: false });

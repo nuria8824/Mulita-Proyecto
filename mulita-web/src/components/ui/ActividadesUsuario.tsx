@@ -26,12 +26,17 @@ type Actividad = {
 type Props = {
   usuarioId: string;
   perfilImagen?: string;
+  mostrarSoloFavoritos?: boolean;
 };
 
-export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
+export default function ActividadesUsuario({
+  usuarioId,
+  perfilImagen,
+  mostrarSoloFavoritos = false,
+}: Props) {
   const { user } = useUser();
-
   const [actividades, setActividades] = useState<Actividad[]>([]);
+  const [favoritos, setFavoritos] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,18 +52,18 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
   const [comentariosPorActividad, setComentariosPorActividad] = useState<Record<string, number>>({});
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-
-  const limit = 5;
   const [showScrollButton, setShowScrollButton] = useState(false);
 
+  const limit = 5;
+
+  // Obtiene la cantidad de comentarios de una actividad
   const fetchComentariosCount = async (actividadId: string) => {
     try {
       const res = await fetch(`/api/comunidad/comentarios/${actividadId}`);
       if (!res.ok) throw new Error("Error al obtener comentarios");
       const data = await res.json();
       return data.length;
-    } catch (err) {
-      console.error(err);
+    } catch {
       return 0;
     }
   };
@@ -67,19 +72,61 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
     setComentariosPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
   };
 
+  // Trae todas las actividades o solo los favoritos
   const fetchActividades = useCallback(
     async (newOffset = 0) => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/perfil/${usuarioId}/actividades?offset=${newOffset}&limit=${limit}`);
-        if (!res.ok) throw new Error("Error al obtener las actividades del usuario");
-        const data: Actividad[] = await res.json();
+        let data: Actividad[] = [];
 
-        if (newOffset === 0) setActividades(data);
-        else setActividades((prev) => [...prev, ...data]);
+        // --- 1️⃣ Obtener todas las colecciones del usuario ---
+        const resColecciones = await fetch(`/api/colecciones?userId=${usuarioId}`);
+        if (!resColecciones.ok) throw new Error("Error al obtener las colecciones del usuario");
 
-        setHasMore(data.length === limit);
+        const colecciones = await resColecciones.json();
+        const coleccionFavoritos = colecciones.find(
+          (c: any) => c.nombre?.toLowerCase() === "favoritos"
+        );
 
+        // --- 2️⃣ Si hay favoritos, traer sus actividades ---
+        let idsFavoritos: string[] = [];
+        if (coleccionFavoritos) {
+          const resFav = await fetch(`/api/colecciones/${coleccionFavoritos.id}`);
+          if (resFav.ok) {
+            const favData = await resFav.json();
+            idsFavoritos = (favData.actividades || []).map((a: Actividad) => a.id);
+            setFavoritos(idsFavoritos);
+          }
+        }
+
+        // --- 3️⃣ Si se muestran solo favoritos, usar esos datos ---
+        if (mostrarSoloFavoritos && coleccionFavoritos) {
+          const resFav = await fetch(`/api/colecciones/${coleccionFavoritos.id}`);
+          if (!resFav.ok) throw new Error("Error al obtener actividades favoritas");
+
+          const coleccionData = await resFav.json();
+          data = coleccionData.actividades || [];
+        } else {
+          // --- 4️⃣ Si no, traer las actividades del usuario ---
+          const res = await fetch(
+            `/api/perfil/${usuarioId}/actividades?offset=${newOffset}&limit=${limit}`
+          );
+          if (!res.ok) throw new Error("Error al obtener las actividades del usuario");
+          data = await res.json();
+          setHasMore(data.length === limit);
+        }
+
+        // --- 5️⃣ Agregar campo 'isFav' a cada actividad ---
+        const actividadesConLike = data.map((act) => ({
+          ...act,
+          isFav: idsFavoritos.includes(act.id),
+        }));
+
+        // --- 6️⃣ Actualizar estado ---
+        if (newOffset === 0) setActividades(actividadesConLike);
+        else setActividades((prev) => [...prev, ...actividadesConLike]);
+
+        // --- 7️⃣ Cargar cantidad de comentarios ---
         const counts: Record<string, number> = {};
         await Promise.all(
           data.map(async (act) => {
@@ -93,8 +140,9 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
         setLoading(false);
       }
     },
-    [usuarioId]
+    [usuarioId, mostrarSoloFavoritos]
   );
+
 
   useEffect(() => {
     if (usuarioId) fetchActividades(0);
@@ -104,6 +152,25 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
     const nuevoOffset = offset + limit;
     setOffset(nuevoOffset);
     fetchActividades(nuevoOffset);
+  };
+
+  const toggleLike = async (actividadId: string) => {
+    try {
+      const res = await fetch(`/api/comunidad/actividades/${actividadId}/like`, { method: "POST" });
+      if (!res.ok) throw new Error("Error al actualizar like");
+
+      setFavoritos((prev) =>
+        prev.includes(actividadId)
+          ? prev.filter((id) => id !== actividadId)
+          : [...prev, actividadId]
+      );
+
+      if (mostrarSoloFavoritos) {
+        setActividades((prev) => prev.filter((a) => a.id !== actividadId));
+      }
+    } catch (err) {
+      console.error("Error al dar like:", err);
+    }
   };
 
   const toggleExpand = (id: string) => {
@@ -135,11 +202,7 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
     return <div className="text-red-600 text-center font-medium mt-10">{error}</div>;
 
   if (actividades.length === 0 && !loading)
-    return (
-      <div className="text-center text-gray-600 mt-10">
-        No tiene actividades publicadas.
-      </div>
-    );
+    return <div className="text-center text-gray-600 mt-10">No hay actividades para mostrar.</div>;
 
   if (!user)
     return (
@@ -151,7 +214,7 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
   return (
     <div className="w-full flex flex-col items-center py-6 px-4 md:px-0">
       <h2 className="text-3xl font-bold mb-8 text-[#003c71] text-center">
-        Actividades del usuario
+        {mostrarSoloFavoritos ? "Favoritos" : "Actividades del usuario"}
       </h2>
 
       <div className="flex flex-col gap-8 max-w-2xl w-full">
@@ -159,13 +222,14 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
           const imagenesAct = act.actividad_archivos.filter((a) => a.tipo.startsWith("image/"));
           const otrosArchivos = act.actividad_archivos.filter((a) => !a.tipo.startsWith("image/"));
           const categorias = act.actividad_categoria?.map((c) => c.categoria.nombre);
+          const isFav = favoritos.includes(act.id);
 
           return (
             <div
               key={act.id}
               className="w-full bg-white rounded-2xl shadow border border-gray-200 p-5 flex flex-col gap-4"
             >
-              {/* CABECERA */}
+              {/* Cabecera */}
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
@@ -202,12 +266,10 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
                 </div>
               </div>
 
-              {/* TÍTULO */}
-              <h3 className="text-lg font-bold text-[#003c71] -mb-2">
-                {act.titulo}
-              </h3>
+              {/* Título */}
+              <h3 className="text-lg font-bold text-[#003c71] -mb-2">{act.titulo}</h3>
 
-              {/* DESCRIPCIÓN */}
+              {/* Descripción */}
               <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
                 {expanded[act.id]
                   ? act.descripcion
@@ -224,7 +286,7 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
                 )}
               </div>
 
-              {/* ARCHIVOS */}
+              {/* Archivos */}
               {otrosArchivos.length > 0 && (
                 <div className="flex flex-col gap-1 mt-2">
                   {otrosArchivos.map((a, i) => (
@@ -242,7 +304,7 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
                 </div>
               )}
 
-              {/* GALERÍA */}
+              {/* Galería */}
               {imagenesAct.length > 0 && (
                 <div className="px-4 pb-4 grid grid-cols-3 gap-2">
                   {imagenesAct.map((img, i) => (
@@ -261,18 +323,20 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
                 </div>
               )}
 
-              {/* BOTONES */}
+              {/* Botones */}
               <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
-                {/* Me gusta */}
-                <button className="hover:opacity-75 transition">
+                <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
                   <img
-                    src="/images/icons/comunidad/favoritos.svg"
+                    src={
+                      isFav
+                        ? "/images/icons/comunidad/favoritos-fill.svg"
+                        : "/images/icons/comunidad/favoritos.svg"
+                    }
                     alt="Me gusta"
                     className="w-6 h-6"
                   />
                 </button>
 
-                {/* Comentarios */}
                 <div className="flex items-center gap-1">
                   <button
                     className="hover:opacity-75 transition"
@@ -289,7 +353,6 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
                   </span>
                 </div>
 
-                {/* Colecciones */}
                 <button
                   onClick={() => {
                     setActividadParaColeccion(act.id);
@@ -305,7 +368,6 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
                 </button>
               </div>
 
-              {/* Input de comentario */}
               <ComentarioInput
                 actividadId={act.id}
                 onNuevoComentario={async () => {
@@ -317,8 +379,7 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
           );
         })}
 
-        {/* PAGINACIÓN */}
-        {hasMore && !loading && (
+        {hasMore && !loading && !mostrarSoloFavoritos && (
           <button
             onClick={handleVerMas}
             className="px-5 py-2 bg-[#003c71] text-white rounded-full hover:bg-[#00509e] transition self-center"
@@ -332,7 +393,7 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
         )}
       </div>
 
-      {/* MODAL IMÁGENES */}
+      {/* Modales */}
       {modalOpen && (
         <ModalImagenActividades
           images={imagenes.map((img) => img.archivo_url)}
@@ -341,7 +402,6 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
         />
       )}
 
-      {/* MODAL COMENTARIOS */}
       {actividadSeleccionada && (
         <ComentariosModal
           actividad={actividadSeleccionada}
@@ -353,7 +413,6 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
         />
       )}
 
-      {/* MODAL COLECCIONES */}
       {actividadParaColeccion && (
         <ModalColecciones
           isOpen={modalColeccionesOpen}
@@ -365,7 +424,6 @@ export default function ActividadesUsuario({ usuarioId, perfilImagen }: Props) {
         />
       )}
 
-      {/* BOTÓN SCROLL TOP */}
       {showScrollButton && (
         <button
           onClick={scrollToTop}
