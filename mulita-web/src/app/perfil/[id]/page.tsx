@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { motion, AnimatePresence } from "framer-motion";
 import ActividadesUsuario from "@/components/ui/ActividadesUsuario";
@@ -25,6 +25,7 @@ export default function PerfilPage() {
   const { id } = useParams();
   const { user, logout } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +34,14 @@ export default function PerfilPage() {
   const [mostrarInput, setMostrarInput] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [mensajeError, setMensajeError] = useState("");
+
+  // Leer la query 'vista' y actualizar el estado
+  useEffect(() => {
+    const vistaParam = searchParams.get("vista");
+    if (vistaParam === "actividades" || vistaParam === "colecciones" || vistaParam === "favoritos") {
+      setVista(vistaParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchPerfil = async () => {
