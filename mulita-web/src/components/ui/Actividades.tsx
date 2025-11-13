@@ -5,7 +5,7 @@ import MenuAccionesActividades from "@/components/ui/MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/ModalImagenActividades";
 import ComentarioInput from "@/components/ui/ComentarioInput";
 import ComentariosModal from "@/components/ui/ComentariosModal";
-import { FiltroCategoria, FiltroFecha } from "@/components/ui/Filtros";
+import { FiltroCategoriaMateria, FiltroCategoriaGrado, FiltroCategoriaDificultad, FiltroFecha } from "@/components/ui/Filtros";
 import ModalColecciones from "@/components/ui/ModalColecciones";
 import { useUser } from "@/context/UserContext";
 
@@ -49,7 +49,9 @@ export default function Actividades() {
   const limit = 5;
 
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("");
+  const [ materiaSeleccionada, setMateriaSeleccionada ] = useState<string>("");
+  const [ gradoSeleccionado, setGradoSeleccionado ] = useState<string>("");
+  const [ dificultadSeleccionada, setDificultadSeleccionada ] = useState<string>("");
   const [fechaSeleccionada, setFechaSeleccionada] = useState<string>("");
 
   // Debounce búsqueda
@@ -76,12 +78,21 @@ export default function Actividades() {
 
   // Fetch actividades
   const fetchActividades = useCallback(
-    async (newOffset = 0, searchTerm = "", categoria = "", fecha = "") => {
+    async (
+      newOffset = 0,
+      searchTerm = "",
+      materia = "",
+      grado = "",
+      dificultad = "",
+      fecha = ""
+    ) => {
       try {
         setLoading(true);
 
         let url = `/api/comunidad/actividades?offset=${newOffset}&limit=${limit}&search=${encodeURIComponent(searchTerm)}`;
-        if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+        if (materia) url += `&materia=${encodeURIComponent(materia)}`;
+        if (grado) url += `&grado=${encodeURIComponent(grado)}`;
+        if (dificultad) url += `&dificultad=${encodeURIComponent(dificultad)}`;
         if (fecha) url += `&fecha=${encodeURIComponent(fecha)}`;
 
         const res = await fetch(url);
@@ -125,14 +136,34 @@ export default function Actividades() {
 
   useEffect(() => {
     setOffset(0);
-    fetchActividades(0, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
+    fetchActividades(
+      0,
+      debouncedSearch,
+      materiaSeleccionada,
+      gradoSeleccionado,
+      dificultadSeleccionada,
+      fechaSeleccionada
+    );
     fetchFavoritos();
-  }, [debouncedSearch, categoriaSeleccionada, fechaSeleccionada, fetchActividades, fetchFavoritos]);
+  }, [
+    debouncedSearch,
+    materiaSeleccionada,
+    gradoSeleccionado,
+    dificultadSeleccionada,
+    fechaSeleccionada,
+    fetchActividades,
+    fetchFavoritos]);
 
   const handleVerMas = () => {
     const newOffset = offset + limit;
     setOffset(newOffset);
-    fetchActividades(newOffset, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
+    fetchActividades(
+      newOffset,
+      debouncedSearch,
+      materiaSeleccionada,
+      gradoSeleccionado,
+      dificultadSeleccionada,
+      fechaSeleccionada);
   };
 
   // Alternar like (añadir o quitar de favoritos)
@@ -209,9 +240,17 @@ export default function Actividades() {
           className="w-full sm:w-[55%] border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
         />
         <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center sm:justify-end">
-          <FiltroCategoria
-            categoriaSeleccionada={categoriaSeleccionada}
-            onChange={setCategoriaSeleccionada}
+          <FiltroCategoriaMateria
+            materiaSeleccionada={materiaSeleccionada}
+            onChange={setMateriaSeleccionada}
+          />
+          <FiltroCategoriaGrado
+            gradoSeleccionado={gradoSeleccionado}
+            onChange={setGradoSeleccionado}
+          />
+          <FiltroCategoriaDificultad
+            dificultadSeleccionada={dificultadSeleccionada}
+            onChange={setDificultadSeleccionada}
           />
           <FiltroFecha
             fechaSeleccionada={fechaSeleccionada}

@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-// GET: listar categorías
+// GET: listar categorías separadas por tipo
 export async function GET() {
-  const { data, error } = await supabase.from("categoria").select("*").order("created_at", { ascending: false });
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json(data);
+  const { data, error } = await supabase
+    .from("categoria")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  // Separar por tipo
+  const materias = data.filter((c) => c.tipo === "materia");
+  const grados = data.filter((c) => c.tipo === "grado");
+  const dificultades = data.filter((c) => c.tipo === "dificultad");
+
+  return NextResponse.json({
+    materias,
+    grados,
+    dificultades,
+  });
 }
+
 
 // POST: Crear categoría
 export async function POST(req: NextRequest) {

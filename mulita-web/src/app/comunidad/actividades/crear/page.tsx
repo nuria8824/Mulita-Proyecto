@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
 interface Categoria {
   id: string;
   nombre: string;
+}
+
+interface CategoriasPorTipo {
+  materias: Categoria[];
+  grados: Categoria[];
+  dificultades: Categoria[];
 }
 
 interface ErroresFormulario {
@@ -15,33 +20,53 @@ interface ErroresFormulario {
   categorias?: string;
 }
 
+interface CategoriasSeleccionadas {
+  materia?: string;
+  grado?: string;
+  dificultad?: string;
+}
+
 export default function CrearActividadPage() {
   const router = useRouter();
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [archivos, setArchivos] = useState<File[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
+  const [categorias, setCategorias] = useState<CategoriasPorTipo>({
+    materias: [],
+    grados: [],
+    dificultades: [],
+  });
+  const [categoriasSeleccionadas, setCategoriasSeleccionadas] =
+    useState<CategoriasSeleccionadas>({});
   const [cargandoCategorias, setCargandoCategorias] = useState(true);
   const [errores, setErrores] = useState<ErroresFormulario>({});
 
-  // Cargar categorías desde Supabase
+  // 🔹 Cargar categorías desde el endpoint
   useEffect(() => {
     const fetchCategorias = async () => {
-      const { data, error } = await supabase.from("categoria").select("id, nombre");
-      if (!error && data) setCategorias(data);
-      setCargandoCategorias(false);
+      try {
+        const res = await fetch("/api/categorias", { credentials: "include" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error al cargar categorías");
+        setCategorias(data);
+      } catch (err) {
+        console.error("Error cargando categorías:", err);
+      } finally {
+        setCargandoCategorias(false);
+      }
     };
     fetchCategorias();
   }, []);
 
-  const handleCategoriaChange = (id: string) => {
-    setCategoriasSeleccionadas((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
+  // 🔹 Seleccionar categoría única por tipo
+  const handleCategoriaChange = (tipo: keyof CategoriasSeleccionadas, id: string) => {
+    setCategoriasSeleccionadas((prev) => ({
+      ...prev,
+      [tipo]: prev[tipo] === id ? undefined : id,
+    }));
   };
 
-  // Manejo de archivos
+  // 🔹 Manejo de archivos
   const handleArchivosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nuevosArchivos = e.target.files ? Array.from(e.target.files) : [];
     setArchivos((prev) => [...prev, ...nuevosArchivos]);
@@ -51,25 +76,31 @@ export default function CrearActividadPage() {
     setArchivos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Enviar formulario
+  // 🔹 Enviar formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const nuevosErrores: ErroresFormulario = {};
     if (!titulo.trim()) nuevosErrores.titulo = "Debes completar el título.";
     if (!descripcion.trim()) nuevosErrores.descripcion = "Debes completar la descripción.";
-    if (categoriasSeleccionadas.length === 0)
-      nuevosErrores.categorias = "Debes seleccionar al menos una categoría.";
+    if (
+      !categoriasSeleccionadas.materia ||
+      !categoriasSeleccionadas.grado ||
+      !categoriasSeleccionadas.dificultad
+    ) {
+      nuevosErrores.categorias =
+        "Debes seleccionar una materia, un grado y una dificultad.";
+    }
 
     setErrores(nuevosErrores);
-
     if (Object.keys(nuevosErrores).length > 0) return;
 
     const formData = new FormData();
     formData.append("titulo", titulo);
     formData.append("descripcion", descripcion);
-    formData.append("categorias", JSON.stringify(categoriasSeleccionadas));
-
+    formData.append("categoria_materia", categoriasSeleccionadas.materia!);
+    formData.append("categoria_grado", categoriasSeleccionadas.grado!);
+    formData.append("categoria_dificultad", categoriasSeleccionadas.dificultad!);
     archivos.forEach((archivo) => formData.append("archivos", archivo));
 
     try {
@@ -95,21 +126,59 @@ export default function CrearActividadPage() {
 
   const handleCancel = () => router.push("/comunidad");
 
+  // 🔹 Componente reutilizable para cada grupo de categorías
+  const CategoriaGrupo = ({
+    titulo,
+    tipo,
+    lista,
+  }: {
+    titulo: string;
+    tipo: keyof CategoriasSeleccionadas;
+    lista: Categoria[];
+  }) => (
+    <div>
+      <h3 className="text-md font-semibold text-gray-700 mb-2">{titulo}</h3>
+      {lista.length === 0 ? (
+        <p className="text-gray-500 text-sm mb-3">No hay categorías de este tipo.</p>
+      ) : (
+        <div className="flex flex-wrap gap-3 mb-4">
+          {lista.map((cat) => (
+            <label
+              key={cat.id}
+              className={`flex items-center gap-2 border px-4 py-2 rounded-md cursor-pointer transition ${
+                categoriasSeleccionadas[tipo] === cat.id
+                  ? "bg-blue-100 border-blue-500"
+                  : "bg-gray-50 hover:bg-gray-100"
+              }`}
+            >
+              <input
+                type="radio"
+                name={tipo}
+                checked={categoriasSeleccionadas[tipo] === cat.id}
+                onChange={() => handleCategoriaChange(tipo, cat.id)}
+                className="accent-blue-600"
+              />
+              {cat.nombre}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">
       <div className="w-full max-w-3xl flex flex-col gap-6">
-        {/* Encabezado */}
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-semibold text-black">Crear Nueva Actividad</h1>
           <p className="text-base text-[#003c71]">Introduce los datos</p>
         </div>
 
-        {/* Formulario */}
         <form
           onSubmit={handleSubmit}
           className="flex flex-col gap-6 bg-white p-6 rounded-lg shadow-md border border-gray-200"
         >
-          {/* Título */}
+          {/* 🔹 Título */}
           <div>
             <label className="block text-lg font-semibold mb-2">Título *</label>
             <input
@@ -127,7 +196,7 @@ export default function CrearActividadPage() {
             {errores.titulo && <p className="text-red-500 text-sm mt-1">{errores.titulo}</p>}
           </div>
 
-          {/* Descripción */}
+          {/* 🔹 Descripción */}
           <div>
             <label className="block text-lg font-semibold mb-2">Descripción *</label>
             <textarea
@@ -146,42 +215,17 @@ export default function CrearActividadPage() {
             )}
           </div>
 
-          {/* Categorías */}
+          {/* 🔹 Categorías */}
           <div>
             <label className="block text-lg font-semibold mb-2">Categorías *</label>
             {cargandoCategorias ? (
               <p className="text-gray-500">Cargando categorías...</p>
-            ) : categorias.length === 0 ? (
-              <p className="text-gray-500">No hay categorías disponibles.</p>
             ) : (
-              <div
-                className={`flex flex-wrap gap-3 p-2 rounded-md border ${
-                  errores.categorias ? "border-red-500" : "border-gray-200"
-                }`}
-              >
-                {categorias.map((cat) => (
-                  <label
-                    key={cat.id}
-                    className={`flex items-center gap-2 border px-4 py-2 rounded-md cursor-pointer transition ${
-                      categoriasSeleccionadas.includes(cat.id)
-                        ? "bg-blue-100 border-blue-500"
-                        : "bg-gray-50 hover:bg-gray-100"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={categoriasSeleccionadas.includes(cat.id)}
-                      onChange={() => {
-                        handleCategoriaChange(cat.id);
-                        if (errores.categorias)
-                          setErrores({ ...errores, categorias: undefined });
-                      }}
-                      className="accent-blue-600"
-                    />
-                    {cat.nombre}
-                  </label>
-                ))}
-              </div>
+              <>
+                <CategoriaGrupo titulo="Materia" tipo="materia" lista={categorias.materias} />
+                <CategoriaGrupo titulo="Grado" tipo="grado" lista={categorias.grados} />
+                <CategoriaGrupo titulo="Dificultad" tipo="dificultad" lista={categorias.dificultades} />
+              </>
             )}
             {errores.categorias && (
               <p className="text-red-500 text-sm mt-1">{errores.categorias}</p>
@@ -194,12 +238,7 @@ export default function CrearActividadPage() {
 
             <label className="w-full h-32 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition">
               <span className="text-gray-500">Sube uno o varios archivos</span>
-              <input
-                type="file"
-                multiple
-                className="hidden"
-                onChange={handleArchivosChange}
-              />
+              <input type="file" multiple className="hidden" onChange={handleArchivosChange} />
             </label>
 
             {archivos.length > 0 && (
