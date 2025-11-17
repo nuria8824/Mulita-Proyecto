@@ -1,20 +1,38 @@
 import { NextResponse, NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-// GET: listar todas las noticias
-export async function GET() {
+// GET: listar todos los productos paginados
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const page = Number(searchParams.get("page")) || 1;
+  const limit = Number(searchParams.get("limit")) || 12;
+
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  // 1) Traer productos paginados
   const { data, error } = await supabase
     .from("producto")
-    .select("*")
+    .select(`
+      *,
+      producto_archivos (archivo_url)
+      `, { count: "exact" })
     .eq("eliminado", false)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  return NextResponse.json({
+    productos: data,
+    page,
+    limit,
+    total: error ? 0 : data?.length,
+  });
 }
+
 
 // Función para limpiar nombres de archivo
 function sanitizeFileName(fileName: string) {
@@ -24,7 +42,7 @@ function sanitizeFileName(fileName: string) {
     .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // reemplaza cualquier caracter no válido
 }
 
-// POST: crear noticia
+// POST: crear producto
 export async function POST(req: NextRequest) {
   try {
     // Validar autenticación desde cookie
@@ -84,7 +102,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (productoError) {
-      console.log("Error insertando noticia:", productoError);
+      console.log("Error insertando producto:", productoError);
       return NextResponse.json({ error: productoError.message }, { status: 400 });
     }
 
@@ -93,7 +111,7 @@ export async function POST(req: NextRequest) {
   
     for (const imagen of imagenes) {
       const sanitizedFileName = sanitizeFileName(imagen.name);
-      const filePath = `comunidad/productos/${producto.id}/${Date.now()}_${sanitizedFileName}`;
+      const filePath = `productos/${producto.id}/${Date.now()}_${sanitizedFileName}`;
   
       const { error: uploadError } = await supabase.storage
         .from("mulita-files")
@@ -124,10 +142,8 @@ export async function POST(req: NextRequest) {
         .from("producto_archivos")
         .insert(
           uploadedFiles.map((file) => ({
-            actividad_id: producto.id,
+            producto_id: producto.id,
             archivo_url: file.url,
-            nombre: file.name,
-            tipo: file.type,
           }))
         );
   
