@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import MenuAccionesActividades from "@/components/ui/MenuAccionesActividades";
-import ModalImagenActividades from "@/components/ui/ModalImagenActividades";
-import ComentarioInput from "@/components/ui/ComentarioInput";
-import ComentariosModal from "@/components/ui/ComentariosModal";
-import { FiltroCategoria, FiltroFecha } from "@/components/ui/Filtros";
-import ModalColecciones from "@/components/ui/ModalColecciones";
+import MenuAccionesActividades from "./MenuAccionesActividades";
+import ModalImagenActividades from "@/components/ui/comunidad/ModalImagenActividades";
+import ComentarioInput from "@/components/ui/comunidad/ComentarioInput";
+import ComentariosModal from "@/components/ui/comunidad/ComentariosModal";
+import { FiltroCategoria, FiltroFecha } from "@/components/ui/comunidad/Filtros";
+import ModalColecciones from "@/components/ui/comunidad/ModalColecciones";
 import { useUser } from "@/context/UserContext";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };

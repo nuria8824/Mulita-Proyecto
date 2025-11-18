@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Productos from "@/components/ui/Productos";
+import Productos from "@/components/ui/tienda/Productos";
 
 export default function TiendaPage() {
   const [productos, setProductos] = useState([]);

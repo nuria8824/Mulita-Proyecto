@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import EditRolModal from "./EditRolModal";
 import EditPermissionsModal from "./EditPermisosModal";
 import Link from "next/link";
-import { useUser } from "../../context/UserContext";
+import { useUser } from "../../../context/UserContext";
 
 interface Usuario {
   id: string;

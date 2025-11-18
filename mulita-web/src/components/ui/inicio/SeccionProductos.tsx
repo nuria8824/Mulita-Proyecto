@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import ProductoModal from "./ProductoModal";
+import ProductoModal from "./tienda/ProductoModal";
 
 export type Archivo = { archivo_url: string };
 
