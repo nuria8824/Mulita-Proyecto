@@ -144,6 +144,7 @@ export async function POST(req: NextRequest) {
           uploadedFiles.map((file) => ({
             producto_id: producto.id,
             archivo_url: file.url,
+            nombre: file.name,
           }))
         );
   
