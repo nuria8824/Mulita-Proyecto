@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
-import MenuAccionesProductos from "@/components/ui/MenuAccionesProductos";
+import MenuAccionesProductos from "@/components/ui/tienda/MenuAccionesProductos";
 
 interface Producto {
   id: number;

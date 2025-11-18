@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
-import MenuAccionesNoticias from "@/components/ui/MenuAccionesNoticias";
+import MenuAccionesNoticias from "@/components/ui/noticias/MenuAccionesNoticias";
 
 interface Noticia {
   id: number;

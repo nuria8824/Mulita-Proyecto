@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { SidebarComunidad } from "@/components/ui/SidebarComunidad";
-import Actividades from "../../components/ui/Actividades"
+import { SidebarComunidad } from "@/components/ui/comunidad/SidebarComunidad";
+import Actividades from "../../components/ui/comunidad/Actividades"
 
 export default function Comunidad() {
   const [isOpen, setIsOpen] = useState(false);
