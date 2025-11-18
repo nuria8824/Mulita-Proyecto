@@ -13,7 +13,8 @@ export function Footer() {
     pathname.startsWith("/comunidad") ||
     pathname.startsWith("/perfil") ||
     pathname.startsWith("/colecciones") ||
-    pathname.startsWith("/productos")
+    pathname.startsWith("/productos") ||
+    pathname.startsWith("/auth")
   ) {
     return null;
   }

@@ -65,8 +65,8 @@ export function SeccionProductos() {
           </p>
         </div>
 
-        {/* GRID ← mismo estilo que la página de productos */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* GRID */}
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(280px,280px))] gap-6 justify-center">
           {productos.map((p) => (
             <div
               key={p.id}
@@ -127,6 +127,7 @@ export function SeccionProductos() {
           producto={{
             nombre: productoSeleccionado?.nombre ?? "",
             descripcion: productoSeleccionado?.descripcion ?? "",
+            precio: productoSeleccionado?.precio ?? 0,
             imagenes: productoSeleccionado?.producto_archivos?.map(a => a.archivo_url) ?? ["/placeholder.png"]
           }}
         />

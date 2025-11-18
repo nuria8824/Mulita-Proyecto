@@ -95,6 +95,7 @@ export default function Productos({ productos }: { productos: Producto[] }) {
         producto={{
           nombre: productoSeleccionado?.nombre ?? "",
           descripcion: productoSeleccionado?.descripcion ?? "",
+          precio: productoSeleccionado?.precio ?? 0,
           imagenes: productoSeleccionado?.producto_archivos?.map(a => a.archivo_url) ?? ["/placeholder.png"]
         }}
       />

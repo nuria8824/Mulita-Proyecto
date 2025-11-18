@@ -46,7 +46,7 @@ export function Hero() {
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-primary drop-shadow-[0_4px_0_var(--uap-yellow)]">
               {hero.titulo}
             </h1>
-            <p className="mt-4 text-lg text-muted-foreground max-w-xl">{hero.descripcion}</p>
+            <p className="mt-4 text-gray-600 text-lg text-muted-foreground max-w-xl">{hero.descripcion}</p>
 
             <div className="mt-8 flex items-center gap-4">
               <Link href="/comunidad" className="btn btn--blue">

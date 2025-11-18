@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     .from("producto")
     .select(`
       *,
-      producto_archivos (archivo_url)
+      producto_archivos (archivo_url, nombre)
       `, { count: "exact" })
     .eq("eliminado", false)
     .order("created_at", { ascending: false })

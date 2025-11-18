@@ -46,7 +46,7 @@ export function HeroSobreNosotros() {
           {hero.titulo}
         </h2>
 
-        <p className="max-w-md text-[16px] leading-6 my-6">{hero.descripcion}</p>
+        <p className="max-w-md text-lg text-gray-600 leading-6 my-6">{hero.descripcion}</p>
 
         <div className="flex flex-col sm:flex-row gap-4 mt-6">
           <button

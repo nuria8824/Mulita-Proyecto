@@ -37,8 +37,8 @@ export function SeccionNoticias() {
   return (
     <section className="mt-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl md:text-3xl font-extrabold text-center">Noticias</h2>
-        <p className="text-center text-muted-foreground mt-2">
+        <h2 className="text-4xl font-bold text-center text-[#003C71]">Noticias</h2>
+        <p className="text-center text-gray-500 text-muted-foreground mt-2">
           Comunidad, experiencias en escuelas y mejoras de la plataforma.
         </p>
 
@@ -58,7 +58,7 @@ export function SeccionNoticias() {
                 </div>
               )}
 
-              <h3 className="mt-4 text-lg font-extrabold text-primary">{noticia.titulo}</h3>
+              <h3 className="mt-4 text-lg font-bold text-primary">{noticia.titulo}</h3>
               <p className="mt-2 text-sm text-muted-foreground line-clamp-3">
                 {noticia.descripcion}
               </p>

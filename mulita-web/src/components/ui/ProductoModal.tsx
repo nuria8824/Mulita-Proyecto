@@ -8,6 +8,7 @@ type ProductoModalProps = {
   producto: {
     nombre: string;
     descripcion: string;
+    precio: number;
     imagenes: string[];
   };
 };
@@ -72,9 +73,16 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
             max-h-[440px] pr-4
           "
         >
-          <h1 className="text-[48px] leading-[48px] font-extrabold text-[#003c71] text-left">
-            {producto.nombre}
-          </h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-[48px] leading-[48px] font-extrabold text-[#003c71] text-left">
+              {producto.nombre}
+            </h1>
+
+            <span className="text-[28px] font-bold text-[#003c71] bg-[#e8edf3] px-4 py-1 rounded-md">
+              ${producto.precio}
+            </span>
+          </div>
+
 
           <div className="mt-4" />
 
