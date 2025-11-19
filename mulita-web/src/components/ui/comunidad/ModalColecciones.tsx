@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SkeletonColecciones from "./skeletons/SkeletonColecciones";
 
 type ModalColeccionesProps = {
   isOpen: boolean;
@@ -60,7 +61,7 @@ export default function ModalColecciones({
     fetchData();
   }, [isOpen, actividadId]);
 
-  // 🔹 Alternar selección (agrega o quita actividad de la colección)
+  // Alternar selección (agrega o quita actividad de la colección)
   const toggleSeleccion = async (id: string) => {
     const yaSeleccionada = seleccionadas.includes(id);
     setLoading(true);
@@ -146,7 +147,7 @@ export default function ModalColecciones({
         {/* Lista de colecciones */}
         <div className="max-h-60 overflow-y-auto mb-4 border rounded-md">
           {loading ? (
-            <p className="text-center text-gray-500 py-4">Cargando...</p>
+            <SkeletonColecciones />
           ) : colecciones.length === 0 ? (
             <p className="text-center text-gray-500 py-4">
               No tienes colecciones aún.

@@ -5,17 +5,18 @@ import ComentarioInput from "./ComentarioInput";
 import ModalImagenActividades from "./ModalImagenActividades";
 import MenuAccionesActividades from "./MenuAccionesActividades";
 import { useUser } from "@/context/UserContext";
+import SkeletonComentarios from "./skeletons/SkeletonComentarios";
 
 export default function ComentariosModal({ actividad, onClose, onActualizarComentarios }: any) {
   const [comentarios, setComentarios] = useState<any[]>([]);
-  const [cargando, setCargando] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [modalImagenes, setModalImagenes] = useState(false);
   const [indexImagen, setIndexImagen] = useState(0);
 
   const { user, isSuperAdmin } = useUser();
 
   const cargarComentarios = async () => {
-    setCargando(true);
+    setLoading(true);
     try {
       const res = await fetch(`/api/comunidad/comentarios/${actividad.id}`);
       if (!res.ok) throw new Error("Error al obtener comentarios");
@@ -24,7 +25,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
     } catch (err) {
       console.error("Error cargando comentarios:", err);
     } finally {
-      setCargando(false);
+      setLoading(false);
     }
   };
 
@@ -218,8 +219,8 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
         <div className="border-t border-gray-200 pt-3">
           <h3 className="text-sm font-medium mb-2 text-black">Comentarios</h3>
 
-          {cargando ? (
-            <p className="text-sm text-gray-500">Cargando comentarios...</p>
+          {loading ? (
+            <SkeletonComentarios />
           ) : comentarios.length === 0 ? (
             <p className="text-sm text-gray-500">Sin comentarios aún.</p>
           ) : (

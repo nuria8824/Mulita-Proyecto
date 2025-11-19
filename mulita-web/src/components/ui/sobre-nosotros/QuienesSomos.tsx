@@ -41,7 +41,7 @@ export function QuienesSomos() {
     <section id="quienes-somos" className="w-full flex flex-col items-center px-6 md:px-20 lg:px-40 py-16 bg-white">
       <div className="flex flex-col items-center text-center">
         <h3 className="text-[#003c71] font-extrabold text-3xl md:text-4xl">{quienesSomos.titulo1}</h3>
-        <p className="max-w-md text-base md:text-lg leading-6 mt-6 text-gray-700">
+        <p className="max-w-md text-base md:text-lg leading-6 mt-6 text-gray-600">
           {quienesSomos.descripcion1}
         </p>
       </div>

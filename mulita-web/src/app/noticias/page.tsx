@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
+import { SkeletonNoticias } from "@/components/ui/inicio/skeletons/SkeletonNoticias";
 
 interface Noticia {
   id: number;
@@ -38,11 +39,11 @@ export default function NoticiasPage() {
 
 
   if (userLoading || loadingNoticias) {
-    return <p className="text-center mt-10">Cargando noticias...</p>;
+    return <SkeletonNoticias />;
   }
 
   return (
-    <div className="w-full bg-white overflow-hidden flex flex-col items-center justify-start py-0 px-4 md:px-16 lg:px-24 gap-[41px]">
+    <div className="w-full py-10 bg-white overflow-hidden flex flex-col items-center justify-start px-4 md:px-16 lg:px-24 gap-[41px]">
       {/* Encabezado */}
       <div className="relative w-full text-center text-xs text-[#6d758f]">
         <h1 className="text-4xl font-extrabold text-[#003c71] py-1">Noticias</h1>
@@ -70,7 +71,7 @@ export default function NoticiasPage() {
               <p className="text-sm text-gray-600">{noticia.introduccion}</p>
               <Link
                 href={`/noticias/${noticia.id}`}
-                className="mt-2 inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline"
+                className="mt-2 inline-flex items-center gap-1 text-[#003c71] font-semibold hover:underline"
               >
                 Conocé más →
               </Link>

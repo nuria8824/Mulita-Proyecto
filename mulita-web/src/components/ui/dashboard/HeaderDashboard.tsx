@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import { Menu } from "lucide-react";
-import MenuAccionesHeaderPrincipal from "./MenuAccionesHeaderPrincipal";
+import MenuAccionesHeaderPrincipal from "../MenuAccionesHeaderPrincipal";
 
 export default function HeaderDashboard({
   onMenuClick,
@@ -31,15 +31,6 @@ export default function HeaderDashboard({
       <div className="flex items-center gap-[30px]">
         <div className="flex items-center gap-2">
          <MenuAccionesHeaderPrincipal />
-        </div>
-
-        <div className="w-[59px] flex items-center gap-2 overflow-hidden">
-          <div className="relative w-6 h-6 flex-shrink-0">
-            <Image src="/icons/vector1.svg" alt="" fill />
-            <Image src="/icons/vector2.svg" alt="" fill />
-            <Image src="/icons/vector3.svg" alt="" fill />
-          </div>
-          <b className="uppercase tracking-[0.2px]">ES</b>
         </div>
       </div>
     </header>

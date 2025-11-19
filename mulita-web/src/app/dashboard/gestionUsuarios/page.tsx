@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import UserList from "../../../components/ui/UserList";
+import UserList from "../../../components/ui/dashboard/UserList";
 import UserSearch from "../../../components/ui/UserSearch";
-import Pagination from "../../../components/ui/Pagination";
+import Pagination from "../../../components/ui/dashboard/Pagination";
 
 export default function GestionUsuariosPage() {
   const [usuarios, setUsuarios] = useState<any[]>([]);

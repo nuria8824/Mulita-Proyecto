@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import SkeletonEditarActividad from "@/components/ui/comunidad/skeletons/SkeletonEditarActividad";
 
 interface Categoria {
   id: string;
@@ -35,7 +36,7 @@ export default function EditarActividadPage() {
   const [loading, setLoading] = useState(true);
   const [errores, setErrores] = useState<ErroresFormulario>({});
 
-  // 🔹 Cargar datos iniciales
+  // Cargar datos iniciales
   useEffect(() => {
     const fetchDatos = async () => {
       try {
@@ -71,14 +72,14 @@ export default function EditarActividadPage() {
     fetchDatos();
   }, [params.id, router]);
 
-  // 🔹 Manejo de categorías
+  // Manejo de categorías
   const handleCategoriaChange = (id: string) => {
     setCategoriasSeleccionadas((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
   };
 
-  // 🔹 Manejo de archivos
+  // Manejo de archivos
   const handleArchivosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nuevos = e.target.files ? Array.from(e.target.files) : [];
     setArchivosNuevos((prev) => [...prev, ...nuevos]);
@@ -96,7 +97,7 @@ export default function EditarActividadPage() {
     );
   };
 
-  // 🔹 Envío del formulario
+  // Envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -109,7 +110,7 @@ export default function EditarActividadPage() {
     setErrores(nuevosErrores);
     if (Object.keys(nuevosErrores).length > 0) return;
 
-    // 🔹 Filtramos los archivos que el usuario decidió mantener
+    // Filtramos los archivos que el usuario decidió mantener
     const urlsExistentes = archivosExistentes
       .filter((a) => !a.eliminado)
       .map((a) => a.archivo_url);
@@ -146,11 +147,7 @@ export default function EditarActividadPage() {
   const handleCancel = () => router.push("/comunidad");
 
   if (loading)
-    return (
-      <div className="w-full h-screen flex items-center justify-center text-[#003c71]">
-        Cargando actividad...
-      </div>
-    );
+    return <SkeletonEditarActividad />;
 
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">

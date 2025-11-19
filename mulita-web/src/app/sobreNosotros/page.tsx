@@ -1,9 +1,9 @@
 "use client";
 
-import { HeroSobreNosotros } from "@/components/ui/HeroSobreNosotros";
-import { QuienesSomos } from "@/components/ui/QuienesSomos";
-import { MisionVision } from "@/components/ui/MisionVision";
-import { DondeEstamos } from "@/components/ui/DondeEstamos";
+import { HeroSobreNosotros } from "@/components/ui/sobre-nosotros/HeroSobreNosotros";
+import { QuienesSomos } from "@/components/ui/sobre-nosotros/QuienesSomos";
+import { MisionVision } from "@/components/ui/sobre-nosotros/MisionVision";
+import { DondeEstamos } from "@/components/ui/sobre-nosotros/DondeEstamos";
 import { useEffect, useState } from "react";
 
 const COMPONENTS_MAP: Record<string, React.FC> = {

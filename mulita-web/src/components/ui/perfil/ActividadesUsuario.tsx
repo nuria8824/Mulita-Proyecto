@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import MenuAccionesActividades from "@/components/ui/MenuAccionesActividades";
-import ModalImagenActividades from "@/components/ui/ModalImagenActividades";
-import ComentarioInput from "@/components/ui/ComentarioInput";
-import ComentariosModal from "@/components/ui/ComentariosModal";
-import ModalColecciones from "@/components/ui/ModalColecciones";
+import MenuAccionesActividades from "@/components/ui/comunidad/MenuAccionesActividades";
+import ModalImagenActividades from "@/components/ui/comunidad/ModalImagenActividades";
+import ComentarioInput from "@/components/ui/comunidad/ComentarioInput";
+import ComentariosModal from "@/components/ui/comunidad/ComentariosModal";
+import ModalColecciones from "@/components/ui/comunidad/ModalColecciones";
 import { useUser } from "@/context/UserContext";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
@@ -79,7 +79,7 @@ export default function ActividadesUsuario({
         setLoading(true);
         let data: Actividad[] = [];
 
-        // --- 1️⃣ Obtener todas las colecciones del usuario ---
+        // Obtener todas las colecciones del usuario ---
         const resColecciones = await fetch(`/api/colecciones?userId=${usuarioId}`);
         if (!resColecciones.ok) throw new Error("Error al obtener las colecciones del usuario");
 
@@ -88,7 +88,7 @@ export default function ActividadesUsuario({
           (c: any) => c.nombre?.toLowerCase() === "favoritos"
         );
 
-        // --- 2️⃣ Si hay favoritos, traer sus actividades ---
+        // Si hay favoritos, traer sus actividades ---
         let idsFavoritos: string[] = [];
         if (coleccionFavoritos) {
           const resFav = await fetch(`/api/colecciones/${coleccionFavoritos.id}`);
@@ -99,7 +99,7 @@ export default function ActividadesUsuario({
           }
         }
 
-        // --- 3️⃣ Si se muestran solo favoritos, usar esos datos ---
+        // Si se muestran solo favoritos, usar esos datos ---
         if (mostrarSoloFavoritos && coleccionFavoritos) {
           const resFav = await fetch(`/api/colecciones/${coleccionFavoritos.id}`);
           if (!resFav.ok) throw new Error("Error al obtener actividades favoritas");
@@ -107,7 +107,7 @@ export default function ActividadesUsuario({
           const coleccionData = await resFav.json();
           data = coleccionData.actividades || [];
         } else {
-          // --- 4️⃣ Si no, traer las actividades del usuario ---
+          // Si no, traer las actividades del usuario ---
           const res = await fetch(
             `/api/perfil/${usuarioId}/actividades?offset=${newOffset}&limit=${limit}`
           );
@@ -116,17 +116,17 @@ export default function ActividadesUsuario({
           setHasMore(data.length === limit);
         }
 
-        // --- 5️⃣ Agregar campo 'isFav' a cada actividad ---
+        // Agregar campo 'isFav' a cada actividad ---
         const actividadesConLike = data.map((act) => ({
           ...act,
           isFav: idsFavoritos.includes(act.id),
         }));
 
-        // --- 6️⃣ Actualizar estado ---
+        // Actualizar estado ---
         if (newOffset === 0) setActividades(actividadesConLike);
         else setActividades((prev) => [...prev, ...actividadesConLike]);
 
-        // --- 7️⃣ Cargar cantidad de comentarios ---
+        // Cargar cantidad de comentarios ---
         const counts: Record<string, number> = {};
         await Promise.all(
           data.map(async (act) => {

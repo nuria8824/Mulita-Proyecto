@@ -1,8 +1,8 @@
 "use client";
 
-import { Hero } from "@/components/ui/Hero";
-import { SeccionNoticias } from "@/components/ui/SeccionNoticias";
-import { SeccionProductos } from "@/components/ui/SeccionProductos";
+import { Hero } from "@/components/ui/inicio/Hero";
+import { SeccionNoticias } from "@/components/ui/inicio/SeccionNoticias";
+import { SeccionProductos } from "@/components/ui/inicio/SeccionProductos";
 import { useEffect, useState } from "react";
 
 const COMPONENTS_MAP: Record<string, React.FC> = {

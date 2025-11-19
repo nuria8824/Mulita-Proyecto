@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import SkeletonNoticiaDetalle from "@/components/ui/noticias/skeletons/SkeletonNoticiaDetalle";
 
 interface Noticia {
   id: number;
@@ -47,7 +48,7 @@ export default function NoticiaDetalle() {
     fetchNoticia();
   }, [params.id]);
 
-  if (loading) return <div className="text-center py-10">Cargando noticia...</div>;
+  if (loading) return <SkeletonNoticiaDetalle /> ;
   if (!noticia) return <div className="text-center py-10">No se encontró la noticia</div>;
 
   return (
