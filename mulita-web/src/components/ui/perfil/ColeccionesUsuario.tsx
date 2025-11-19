@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import MenuAccionesColecciones from "./MenuAccionesColecciones";
+import SkeletonColeccionesUsuario from "./skeletons/SkeletonColeccionesUsuario";
 
 type Coleccion = {
   id: string;
@@ -90,7 +91,7 @@ export default function ColeccionesUsuario({ userPerfilId }: ColeccionesUsuarioP
     }
   };
 
-  if (loading) return <p className="text-center text-gray-500">Cargando colecciones...</p>;
+  if (loading) return <SkeletonColeccionesUsuario />;
   if (error) return <p className="text-center text-red-500">{error}</p>;
   if (colecciones.length === 0)
     return <p className="text-center text-gray-400">No hay colecciones para este usuario.</p>;

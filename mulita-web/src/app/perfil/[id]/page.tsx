@@ -6,6 +6,7 @@ import { useUser } from "@/context/UserContext";
 import { motion, AnimatePresence } from "framer-motion";
 import ActividadesUsuario from "@/components/ui/perfil/ActividadesUsuario";
 import ColeccionesUsuario from "@/components/ui/perfil/ColeccionesUsuario";
+import SkeletonPerfil from "@/components/ui/perfil/skeletons/SkeletonPerfil";
 
 interface Usuario {
   id: string;
@@ -63,11 +64,7 @@ export default function PerfilPage() {
   }, [id]);
 
   if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-screen text-gray-500">
-        Cargando perfil...
-      </div>
-    );
+    return <SkeletonPerfil />;
 
   if (!perfil)
     return (

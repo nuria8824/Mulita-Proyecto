@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SkeletonHeroSobreNosotros from "./skelentons/SkeletonHeroSobreNosotros";
+import { set } from "zod";
 
 interface HeroSobreNosotrosData {
   titulo: string;
@@ -14,6 +16,7 @@ export function HeroSobreNosotros() {
 
   useEffect(() => {
     const fetchHero = async () => {
+      setLoadingHero(true);
       try {
         const res = await fetch("/api/sobreNosotros/hero");
         const data = await res.json();
@@ -27,10 +30,10 @@ export function HeroSobreNosotros() {
     fetchHero();
   }, []);
 
-  if (loadingHero) return <p className="text-center mt-10">Cargando contenido...</p>;
+  if (loadingHero) return <SkeletonHeroSobreNosotros />;
   if (!hero) return <p className="text-center mt-10">No hay hero definido</p>;
 
-  // 👇 Funciones para hacer scroll suave a las secciones
+  // Funciones para hacer scroll suave a las secciones
   const scrollToSection = (id: string) => {
     const section = document.getElementById(id);
     if (section) {

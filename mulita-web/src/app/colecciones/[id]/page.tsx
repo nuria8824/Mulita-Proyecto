@@ -8,6 +8,7 @@ import ComentariosModal from "@/components/ui/comunidad/ComentariosModal";
 import ModalColecciones from "@/components/ui/comunidad/ModalColecciones";
 import { useUser } from "@/context/UserContext";
 import { useParams } from "next/navigation";
+import SkeletonColeccionDetalle from "@/components/ui/perfil/skeletons/SkeletonColeccionDetalle";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
 type Categoria = { categoria: { nombre: string } };
@@ -138,7 +139,7 @@ export default function ColeccionDetallePage() {
   };
 
   if (loading)
-    return <p className="text-center text-gray-500 mt-4">Cargando actividades...</p>;
+    return <SkeletonColeccionDetalle />;
   if (error) return <p className="text-center text-red-500 mt-4">{error}</p>;
   if (actividades.length === 0)
     return <p className="text-center text-gray-400 mt-4">No hay actividades en esta colección.</p>;
@@ -270,7 +271,7 @@ export default function ColeccionDetallePage() {
                   <img
                     src={
                       isFav
-                        ? "/images/icons/comunidad/favoritos-activo.svg"
+                        ? "/images/icons/comunidad/favoritos-fill.svg"
                         : "/images/icons/comunidad/favoritos.svg"
                     }
                     alt="Me gusta"
