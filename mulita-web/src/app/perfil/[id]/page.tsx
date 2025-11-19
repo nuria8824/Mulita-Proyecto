@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { motion, AnimatePresence } from "framer-motion";
-import ActividadesUsuario from "@/components/ui/ActividadesUsuario";
-import ColeccionesUsuario from "@/components/ui/ColeccionesUsuario";
+import ActividadesUsuario from "@/components/ui/perfil/ActividadesUsuario";
+import ColeccionesUsuario from "@/components/ui/perfil/ColeccionesUsuario";
 
 interface Usuario {
   id: string;

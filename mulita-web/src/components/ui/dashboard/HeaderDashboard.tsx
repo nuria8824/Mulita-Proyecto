@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import { Menu } from "lucide-react";
-import MenuAccionesHeaderPrincipal from "./MenuAccionesHeaderPrincipal";
+import MenuAccionesHeaderPrincipal from "../MenuAccionesHeaderPrincipal";
 
 export default function HeaderDashboard({
   onMenuClick,

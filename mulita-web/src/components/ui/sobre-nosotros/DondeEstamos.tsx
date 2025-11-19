@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SkeletonDondeEstamos from "./skelentons/SkeletonDondeEstamos";
 
 interface DondeEstamosData {
   id: number;
@@ -34,7 +35,7 @@ export function DondeEstamos() {
     fetchDondeEstamos();
   }, []);
 
-  if (loading) return <p className="text-center mt-10">Cargando contenido...</p>;
+  if (loading) return <SkeletonDondeEstamos />;
   if (!dondeEstamos)
     return <p className="text-center mt-10">No hay contenido disponible</p>;
 
@@ -45,7 +46,7 @@ export function DondeEstamos() {
         <h3 className="text-[#003c71] font-extrabold text-3xl md:text-4xl mb-3">
           {dondeEstamos.titulo}
         </h3>
-        <p className="max-w-lg mx-auto text-gray-600 text-base md:text-lg leading-7 text-gray-700">
+        <p className="max-w-lg mx-auto text-gray-600 text-base md:text-lg leading-7">
           {dondeEstamos.descripcion}
         </p>
         <div className="w-16 h-1 bg-yellow-400 mx-auto mt-4 rounded-full"></div>

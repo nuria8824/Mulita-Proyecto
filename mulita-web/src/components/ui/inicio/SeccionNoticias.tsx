@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { SkeletonNoticias } from "./skeletons/SkeletonNoticias";
+import { set } from "zod";
 
 interface Noticia {
   id: number;
@@ -12,19 +14,27 @@ interface Noticia {
 
 export function SeccionNoticias() {
   const [noticias, setNoticias] = useState<Noticia[]>([]);
+  const [loadingNoticias, setLoadingNoticias] = useState(true);
 
   useEffect(() => {
     const fetchNoticias = async () => {
+      setLoadingNoticias(true);
       try {
         const res = await fetch("/api/inicio/noticias");
         const data = await res.json();
         setNoticias(data ?? []);
       } catch (err) {
         console.error("Error al obtener noticias destacadas:", err);
+      } finally {
+        setLoadingNoticias(false);
       }
     };
     fetchNoticias();
   }, []);
+
+  if (loadingNoticias) {
+    return <SkeletonNoticias />;
+  }
 
   if (noticias.length === 0) {
     return (

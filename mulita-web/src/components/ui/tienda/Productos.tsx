@@ -31,17 +31,7 @@ export default function Productos({ productos }: { productos: Producto[] }) {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-10 px-4">
-
-      {/* Encabezado */}
-      <div className="text-center mb-12">
-        <h2 className="text-4xl font-bold text-[#003c71]">Productos</h2>
-        <p className="text-gray-500 max-w-xl mx-auto mt-4">
-          Lorem ipsum dolor sit amet consectetur adipiscing elit tortor eu 
-          egestas morbi sem vulputate etiam facilisis.
-        </p>
-      </div>
-
+    <div className="w-full max-w-7xl mx-auto">
       {/* GRID */}
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {productos.map((p) => (

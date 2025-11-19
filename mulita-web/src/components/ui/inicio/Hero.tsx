@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { SkeletonHero } from "./skeletons/SkeletonHero";
 
 interface HeroData {
   titulo: string;
@@ -29,7 +30,7 @@ export function Hero() {
   }, []);
 
   if (loadingHero) {
-    return <p className="text-center mt-10">Cargando contenido...</p>;
+    return <SkeletonHero />;
   }
 
   if (!hero) {

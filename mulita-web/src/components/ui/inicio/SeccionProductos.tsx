@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import ProductoModal from "./tienda/ProductoModal";
+import ProductoModal from "../tienda/ProductoModal";
+import { SkeletonProductos } from "./skeletons/SkeletonProductos";
+import { fi } from "zod/locales";
+import { set } from "zod";
 
 export type Archivo = { archivo_url: string };
 
@@ -19,19 +22,27 @@ export function SeccionProductos() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
+  const [loadingProductos, setLoadingProductos] = useState(true);
 
   useEffect(() => {
     const fetchProductos = async () => {
+      setLoadingProductos(true);
       try {
         const res = await fetch("/api/inicio/productos");
         const data = await res.json();
         setProductos(data ?? []);
       } catch (err) {
         console.error("Error al obtener productos destacados:", err);
+      } finally {
+        setLoadingProductos(false);
       }
     };
     fetchProductos();
   }, []);
+
+  if (loadingProductos) {
+    return <SkeletonProductos />;
+  }
 
   const abrirModal = (producto: Producto) => {
     setProductoSeleccionado(producto);

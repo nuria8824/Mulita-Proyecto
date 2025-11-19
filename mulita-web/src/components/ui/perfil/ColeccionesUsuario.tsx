@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
-import MenuAccionesColecciones from "../comunidad/MenuAccionesColecciones";
+import MenuAccionesColecciones from "./MenuAccionesColecciones";
 
 type Coleccion = {
   id: string;

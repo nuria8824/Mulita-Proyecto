@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import SkeletonEditarActividad from "@/components/ui/comunidad/skeletons/SkeletonEditarActividad";
 
 interface Categoria {
   id: string;
@@ -146,11 +147,7 @@ export default function EditarActividadPage() {
   const handleCancel = () => router.push("/comunidad");
 
   if (loading)
-    return (
-      <div className="w-full h-screen flex items-center justify-center text-[#003c71]">
-        Cargando actividad...
-      </div>
-    );
+    return <SkeletonEditarActividad />;
 
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">

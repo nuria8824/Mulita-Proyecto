@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, act } from "react";
 import MenuAccionesActividades from "./MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/comunidad/ModalImagenActividades";
 import ComentarioInput from "@/components/ui/comunidad/ComentarioInput";
@@ -8,6 +8,7 @@ import ComentariosModal from "@/components/ui/comunidad/ComentariosModal";
 import { FiltroCategoria, FiltroFecha } from "@/components/ui/comunidad/Filtros";
 import ModalColecciones from "@/components/ui/comunidad/ModalColecciones";
 import { useUser } from "@/context/UserContext";
+import SkeletonActividades from "./skeletons/SkeletonActividades";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
 type Categoria = { categoria: { nombre: string } };
@@ -30,7 +31,8 @@ export default function Actividades() {
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
+  const [loadingInicial, setLoadingInicial] = useState(false);
+  const [loadingVerMas, setLoadingVerMas] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -78,7 +80,11 @@ export default function Actividades() {
   const fetchActividades = useCallback(
     async (newOffset = 0, searchTerm = "", categoria = "", fecha = "") => {
       try {
-        setLoading(true);
+        if (newOffset === 0) {
+          setLoadingInicial(true);
+        } else {
+          setLoadingVerMas(true);
+        }
 
         let url = `/api/comunidad/actividades?offset=${newOffset}&limit=${limit}&search=${encodeURIComponent(searchTerm)}`;
         if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
@@ -103,7 +109,8 @@ export default function Actividades() {
       } catch (err: any) {
         setError(err.message);
       } finally {
-        setLoading(false);
+        setLoadingInicial(false);
+        setLoadingVerMas(false);
       }
     },
     []
@@ -174,12 +181,8 @@ export default function Actividades() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  if (loading && actividades.length === 0)
-    return (
-      <div className="flex justify-center items-center h-60">
-        <p className="text-gray-600 animate-pulse">Cargando actividades...</p>
-      </div>
-    );
+  if (loadingInicial)
+    return <SkeletonActividades />;
 
   if (error)
     return (
@@ -222,7 +225,7 @@ export default function Actividades() {
 
       {/* LISTADO DE ACTIVIDADES */}
       <div className="flex flex-col gap-8 max-w-xl w-full">
-        {actividades.length === 0 && !loading ? (
+        {actividades.length === 0 ? (
           <div className="text-center text-gray-600 mt-10">
             No hay actividades disponibles.
           </div>
@@ -395,17 +398,14 @@ export default function Actividades() {
           })
         )}
 
-        {hasMore && !loading && (
+        {hasMore && !loadingInicial && (
           <button
             onClick={handleVerMas}
+            disabled={loadingVerMas}
             className="px-5 py-2 bg-[#003c71] text-white rounded-full hover:bg-[#00509e] transition self-center"
           >
-            Ver más
+            {loadingVerMas ? "Cargando..." : "Ver más"}
           </button>
-        )}
-
-        {loading && (
-          <p className="text-gray-600 animate-pulse text-center mt-2">Cargando...</p>
         )}
       </div>
 
