@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Insertar en tabla usuario
-    const { error: userError } = await supabase.from("usuario").update([
+    const { error: userError } = await supabase.from("usuario").insert([
       {
         id: userId,
         nombre: data.nombre,

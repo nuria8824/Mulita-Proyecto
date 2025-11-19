@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SkeletonMisionVision from "./skelentons/SkeletonMisionVision";
+import { set } from "zod";
 
 interface MisionVisionData {
   id: number;
@@ -18,6 +20,7 @@ export function MisionVision() {
 
   useEffect(() => {
     const fetchMisionVision = async () => {
+      setLoading(true);
       try {
         const res = await fetch("/api/sobreNosotros/misionVision");
         const data = await res.json();
@@ -32,7 +35,7 @@ export function MisionVision() {
     fetchMisionVision();
   }, []);
 
-  if (loading) return <p className="text-center mt-10">Cargando contenido...</p>;
+  if (loading) return <SkeletonMisionVision />;
   if (!misionVision) return <p className="text-center mt-10">No hay contenido disponible</p>;
 
   return (

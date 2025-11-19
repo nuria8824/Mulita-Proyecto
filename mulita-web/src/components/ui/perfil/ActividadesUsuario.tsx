@@ -7,6 +7,7 @@ import ComentarioInput from "@/components/ui/comunidad/ComentarioInput";
 import ComentariosModal from "@/components/ui/comunidad/ComentariosModal";
 import ModalColecciones from "@/components/ui/comunidad/ModalColecciones";
 import { useUser } from "@/context/UserContext";
+import { SkeletonActividadesUsuario } from "./skeletons/SkeletonActividadesUsuario";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
 type Categoria = { categoria: { nombre: string } };
@@ -38,7 +39,8 @@ export default function ActividadesUsuario({
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
+  const [loadingInicial, setLoadingInicial] = useState(false);
+  const [loadingVerMas, setLoadingVerMas] = useState(true)
   const [error, setError] = useState<string | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -76,7 +78,11 @@ export default function ActividadesUsuario({
   const fetchActividades = useCallback(
     async (newOffset = 0) => {
       try {
-        setLoading(true);
+        if (newOffset === 0) {
+          setLoadingInicial(true);
+        } else {
+          setLoadingVerMas(true);
+        }
         let data: Actividad[] = [];
 
         // Obtener todas las colecciones del usuario ---
@@ -137,7 +143,8 @@ export default function ActividadesUsuario({
       } catch (err: any) {
         setError(err.message);
       } finally {
-        setLoading(false);
+        setLoadingInicial(false);
+        setLoadingVerMas(false);
       }
     },
     [usuarioId, mostrarSoloFavoritos]
@@ -191,17 +198,13 @@ export default function ActividadesUsuario({
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  if (loading && actividades.length === 0)
-    return (
-      <div className="flex justify-center items-center h-60">
-        <p className="text-gray-600 animate-pulse">Cargando actividades...</p>
-      </div>
-    );
+  if (loadingInicial)
+    return <SkeletonActividadesUsuario />;
 
   if (error)
     return <div className="text-red-600 text-center font-medium mt-10">{error}</div>;
 
-  if (actividades.length === 0 && !loading)
+  if (actividades.length === 0)
     return <div className="text-center text-gray-600 mt-10">No hay actividades para mostrar.</div>;
 
   if (!user)
@@ -379,17 +382,14 @@ export default function ActividadesUsuario({
           );
         })}
 
-        {hasMore && !loading && !mostrarSoloFavoritos && (
+        {hasMore && !loadingInicial && !mostrarSoloFavoritos && (
           <button
             onClick={handleVerMas}
+            disabled={loadingVerMas}
             className="px-5 py-2 bg-[#003c71] text-white rounded-full hover:bg-[#00509e] transition self-center"
           >
-            Ver más
+            {loadingVerMas ? "Cargando..." : "Ver más"}
           </button>
-        )}
-
-        {loading && (
-          <p className="text-gray-600 animate-pulse text-center mt-2">Cargando...</p>
         )}
       </div>
 

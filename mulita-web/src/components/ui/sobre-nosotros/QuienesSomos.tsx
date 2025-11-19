@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SkeletonQuienesSomos from "./skelentons/SkeletonQuienesSomos";
 
 interface QuienesSomosData {
   id: number;
@@ -34,7 +35,7 @@ export function QuienesSomos() {
     fetchQuienesSomos();
   }, []);
 
-  if (loading) return <p className="text-center mt-10">Cargando contenido...</p>;
+  if (loading) return <SkeletonQuienesSomos />;
   if (!quienesSomos) return <p className="text-center mt-10">No hay contenido disponible</p>;
 
   return (
