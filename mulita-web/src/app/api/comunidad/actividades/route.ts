@@ -129,13 +129,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(actividadesConUsuario);
 }
 
-// Función para limpiar nombres de archivo
-function sanitizeFileName(fileName: string) {
-  return fileName
-    .normalize("NFD") // separa letras y acentos
-    .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
-    .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // reemplaza cualquier caracter no válido
-}
 
 export async function POST(req: NextRequest) {
   const access_token = req.cookies.get("sb-access-token")?.value;
@@ -150,12 +143,9 @@ export async function POST(req: NextRequest) {
   if (userError || !user)
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-  // Leer formData
-  const formData = await req.formData();
-  const titulo = formData.get("titulo") as string;
-  const descripcion = formData.get("descripcion") as string;
-  const categorias = JSON.parse(formData.get("categorias") as string) as string[];
-  const archivos = formData.getAll("archivos") as File[];
+  // Leer datos JSON
+  const body = await req.json();
+  const { titulo, descripcion, categorias, archivos } = body;
 
   // Crear la actividad
   const { data: actividad, error: actividadError } = await supabase
@@ -174,42 +164,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: actividadError.message }, { status: 400 });
   }
 
-  // Subir archivos al bucket
-  const uploadedFiles: { url: string; name: string; type: string }[] = [];
-
-  for (const archivo of archivos) {
-    const sanitizedFileName = sanitizeFileName(archivo.name);
-    const filePath = `comunidad/actividades/${actividad.id}/${Date.now()}_${sanitizedFileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("mulita-files")
-      .upload(filePath, archivo, {
-        contentType: archivo.type,
-        upsert: false,
-      });
-
-    if (uploadError) {
-      console.error(`Error subiendo ${archivo.name}:`, uploadError.message);
-      continue;
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("mulita-files").getPublicUrl(filePath);
-
-    uploadedFiles.push({
-      url: publicUrl,
-      name: archivo.name,
-      type: archivo.type,
-    });
-  }
-
-  // Guardar las URLs, nombres y tipos en actividad_archivos
-  if (uploadedFiles.length) {
+  // Guardar las URLs de los archivos subidos desde el frontend
+  if (archivos && archivos.length > 0) {
     const { error: insertArchivosError } = await supabase
       .from("actividad_archivos")
       .insert(
-        uploadedFiles.map((file) => ({
+        archivos.map((file: any) => ({
           actividad_id: actividad.id,
           archivo_url: file.url,
           nombre: file.name,
@@ -217,12 +177,14 @@ export async function POST(req: NextRequest) {
         }))
       );
 
-    if (insertArchivosError)
+    if (insertArchivosError) {
       console.error("Error guardando archivos:", insertArchivosError.message);
+      return NextResponse.json({ error: "Error guardando archivos" }, { status: 500 });
+    }
   }
 
   // Asociar categorías existentes
-  if (categorias.length) {
+  if (categorias && categorias.length) {
     const { data: categoriasExistentes, error: catError } = await supabase
       .from("categoria")
       .select("id, nombre")
