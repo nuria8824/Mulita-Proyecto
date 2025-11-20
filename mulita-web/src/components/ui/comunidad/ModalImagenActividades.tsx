@@ -39,7 +39,7 @@ export default function ModalImagenActividades({
           onClick={onClose}
           className="absolute top-4 right-4 text-white text-3xl font-bold"
         >
-          &times;
+          ⨉
         </button>
 
         {/* Navegación entre imágenes */}
