@@ -31,7 +31,7 @@ export default function Header() {
         {/* Logo */}
         <div className="flex items-center gap-3">
           <img
-            src="/images/logosMulita/Logo Mulita-13.svg"
+            src="/images/logosMulita/logo Mulita-13.svg"
             alt="LogoMulita13"
             className="h-8 w-8 rounded-full object-contain"
           />

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { uploadFile } from "@/lib/subirArchivos";
 
 interface Categoria {
   id: string;
@@ -13,6 +14,12 @@ interface ErroresFormulario {
   titulo?: string;
   descripcion?: string;
   categorias?: string;
+}
+
+interface ArchivoSubido {
+  url: string;
+  name: string;
+  type: string;
 }
 
 export default function CrearActividadPage() {
@@ -51,6 +58,14 @@ export default function CrearActividadPage() {
     setArchivos((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Función para limpiar nombres de archivo
+  function sanitizeFileName(fileName: string) {
+    return fileName
+      .normalize("NFD") // separa letras y acentos
+      .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // reemplaza cualquier caracter no válido
+  }
+
   // Enviar formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,17 +80,40 @@ export default function CrearActividadPage() {
 
     if (Object.keys(nuevosErrores).length > 0) return;
 
-    const formData = new FormData();
-    formData.append("titulo", titulo);
-    formData.append("descripcion", descripcion);
-    formData.append("categorias", JSON.stringify(categoriasSeleccionadas));
-
-    archivos.forEach((archivo) => formData.append("archivos", archivo));
-
     try {
+      // Subir archivos directamente a Supabase primero
+      const archivosSubidos: ArchivoSubido[] = [];
+      
+      for (const archivo of archivos) {
+        try {
+          const sanitizedFileName = sanitizeFileName(archivo.name);
+          const filePath = `comunidad/actividades/temp/${Date.now()}_${sanitizedFileName}`;
+          
+          // Subir archivo usando la función uploadFile
+          const url = await uploadFile(archivo, filePath);
+          
+          archivosSubidos.push({
+            url,
+            name: archivo.name,
+            type: archivo.type,
+          });
+        } catch (error) {
+          console.error(`Error subiendo ${archivo.name}:`, error);
+        }
+      }
+      
+      // Enviar todos los datos en una sola llamada
       const res = await fetch("/api/comunidad/actividades", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          titulo,
+          descripcion,
+          categorias: categoriasSeleccionadas,
+          archivos: archivosSubidos,
+        }),
         credentials: "include",
       });
 
