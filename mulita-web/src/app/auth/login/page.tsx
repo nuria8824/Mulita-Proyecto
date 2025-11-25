@@ -3,40 +3,69 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import { createClientSupabase } from "@/lib/supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { setUser } = useUser();
 
   const onContinuarClick = async () => {
     setError("");
+    setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      // 1. Autenticar con Supabase SDK en el frontend
+      const supabase = createClientSupabase();
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password: contrasena,
+      });
+
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!authData.user || !authData.session) {
+        setError("No se pudo obtener la sesión");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Enviar tokens al backend para validar y crear cookies
+      const res = await fetch("/api/auth/validate-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, contrasena }),
+        body: JSON.stringify({
+          access_token: authData.session.access_token,
+          refresh_token: authData.session.refresh_token,
+        }),
         credentials: "include",
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setError(data.message || "Credenciales incorrectas");
+        setError(data.message || "Error al validar la sesión");
+        setLoading(false);
         return;
       }
 
-      // Actualizamos el contexto del usuario
+      // 3. Actualizamos el contexto del usuario
       setUser(data.user);
 
-      // Redirigimos al inicio
+      // 4. Redirigimos al inicio
       router.push("/");
     } catch (err) {
       console.error(err);
       setError("Error en el servidor");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,10 +114,10 @@ export default function Login() {
             type="button"
             className={buttonClass}
             onClick={onContinuarClick}
-            disabled={!email || !contrasena}
+            disabled={!email || !contrasena || loading}
           >
             <span className="font-medium text-white leading-[150%]">
-              Continuar
+              {loading ? "Iniciando sesión..." : "Continuar"}
             </span>
           </button>
         </div>
