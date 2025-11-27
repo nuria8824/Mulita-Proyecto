@@ -52,31 +52,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    // Procesar el formData
-    const formData = await req.formData();
-    const titulo = formData.get("titulo") as string;
-    const autor = formData.get("autor") as string;
-    const introduccion = formData.get("introduccion") as string;
-    const descripcion = formData.get("descripcion") as string;
-    const imagen_principal = formData.get("imagen_principal") as File;
-    const archivo = formData.get("archivo") as File | null;
+   // Leer datos JSON
+    const body = await req.json();
+    const { titulo, autor, introduccion, descripcion, imagen_principal } = body;
 
-    console.log({ titulo, autor, introduccion, descripcion, imagen_principal, archivo });
+    console.log({ titulo, autor, introduccion, descripcion, imagen_principal });
 
     if (!titulo || !autor || !introduccion || !descripcion || !imagen_principal) {
       return NextResponse.json({ error: "Campos faltantes" }, { status: 400 });
-    }
-
-    console.log("Intentando subir imagen...")
-    // Subir imagen principal
-    const imagenUrl = await uploadFile(imagen_principal, "noticias/imagenes");
-    console.log("Imagen subida:", imagenUrl);
-
-    // Subir archivo extra si existe
-    let archivoUrl = null;
-    if (archivo) {
-      archivoUrl = await uploadFile(archivo, "noticias/archivos");
-      console.log("Archivo subido:", archivoUrl);
     }
 
     // Insertar noticia en la DB
@@ -87,8 +70,7 @@ export async function POST(req: NextRequest) {
         autor,
         introduccion,
         descripcion,
-        imagen_principal: imagenUrl,
-        archivo: archivoUrl,
+        imagen_principal: imagen_principal.url,
       })
       .select()
       .single();
