@@ -2,16 +2,12 @@
 
 import { useEffect, useState } from "react";
 import UbicacionInput from "./ubicacion/UbicacionInput";
+import { useUser } from "@/context/UserContext";
+import { toast } from "react-hot-toast";
 
 export type CompraModalProps = {
   open: boolean;
   onClose: () => void;
-  usuario: {
-    id: string;
-    nombre: string;
-    apellido: string;
-    telefono: string;
-  };
   producto: {
     id: string;
     nombre: string;
@@ -47,7 +43,8 @@ function validarRazonSocial(nombre: string): boolean {
   return /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ ,.()\-]+$/.test(nombre.trim());
 }
 
-export default function CompraModal({ open, onClose, producto, usuario, onConfirm }: CompraModalProps) {
+export default function CompraModal({ open, onClose, producto, onConfirm }: CompraModalProps) {
+  const { user: usuario } = useUser();
   const [cantidad, setCantidad] = useState(1);
 
   // Datos fiscales
@@ -65,6 +62,17 @@ export default function CompraModal({ open, onClose, producto, usuario, onConfir
     cantidad: "",
     direccion: "",
   })
+
+  // Si el usuario no está logueado mostrar toast y cerrar modal
+  useEffect(() => {
+    if (open && !usuario) {
+      toast.error("Debes registrarte para poder comprar");
+      onClose();
+    }
+  }, [open, usuario, onClose]);
+
+  // Si no hay usuario, directamente no se renderiza el modal
+  if (!usuario) return null;
 
   const getWhatsAppUrl = ({
     codigo,
@@ -139,7 +147,7 @@ export default function CompraModal({ open, onClose, producto, usuario, onConfir
   if (!open) return null;
 
   const confirmarCompra = async () => {
-    let erroresTemp = {
+    const erroresTemp = {
       razonSocial: "",
       cuit: "",
       cantidad: "",

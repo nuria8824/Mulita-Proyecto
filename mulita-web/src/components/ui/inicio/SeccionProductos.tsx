@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductoModal from "../tienda/ProductoModal";
 import { SkeletonProductos } from "./skeletons/SkeletonProductos";
-import { fi } from "zod/locales";
-import { set } from "zod";
 
 export type Archivo = { archivo_url: string };
 
@@ -136,6 +134,7 @@ export function SeccionProductos() {
           open={modalOpen}
           onClose={cerrarModal}
           producto={{
+            id: productoSeleccionado?.id ?? "",
             nombre: productoSeleccionado?.nombre ?? "",
             descripcion: productoSeleccionado?.descripcion ?? "",
             precio: productoSeleccionado?.precio ?? 0,
