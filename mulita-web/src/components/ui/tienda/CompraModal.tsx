@@ -5,21 +5,12 @@ import { useRouter } from "next/navigation";
 import UbicacionInput from "./ubicacion/UbicacionInput";
 import { useUser } from "@/context/UserContext";
 import { toast } from "react-hot-toast";
+import { CartItem } from "@/context/CartContext";
 
 export type CompraModalProps = {
   open: boolean;
   onClose: () => void;
-  producto: {
-    id: string;
-    nombre: string;
-    precio: number;
-  };
-  onConfirm?: (data: {
-    producto_id: string;
-    cantidad: number;
-    razon_social: string;
-    cuit: string;
-  }) => void;
+  items: CartItem[];
 };
 
 function validarCuit(cuit: string): boolean {
@@ -44,7 +35,7 @@ function validarRazonSocial(nombre: string): boolean {
   return /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ ,.()\-]+$/.test(nombre.trim());
 }
 
-export default function CompraModal({ open, onClose, producto, onConfirm }: CompraModalProps) {
+export default function CompraModal({ open, onClose, items }: CompraModalProps) {
   const { user: usuario } = useUser();
   const router = useRouter();
   const [cantidad, setCantidad] = useState(1);
@@ -99,29 +90,28 @@ export default function CompraModal({ open, onClose, producto, onConfirm }: Comp
   }) => {
     const telefonoWhatsApp = "59896401738";
 
-    const mensaje = `
-      Hola! Quiero confirmar esta compra:
+    const mensaje = `Hola! Quiero confirmar esta compra:
 
-      *Orden:* ${codigo}
-      *Fecha:* ${new Date(fecha).toLocaleDateString()}
-      *Nombre:* ${nombre}
-      *Teléfono:* ${telefono}
+    *Orden:* ${codigo}
+    *Fecha:* ${new Date(fecha).toLocaleDateString()}
+    *Nombre:* ${nombre}
+    *Teléfono:* ${telefono}
 
-      *Razón social:* ${razonSocial}
-      *CUIT/CUIL:* ${cuit}
+    *Razón social:* ${razonSocial}
+    *CUIT/CUIL:* ${cuit}
 
-      *Dirección:* ${direccion}
+    *Dirección:* ${direccion}
 
-      Mi pedido es
+    Mi pedido es
 
-      ${items.map((i) => 
-        `• ${i.cantidad}x *${i.nombre}*: $${i.precio_unitario}`
-      )
-      .join("\n")}
+    ${items.map((i) => 
+      `• ${i.cantidad}x *${i.nombre}*: $${i.precio_unitario}`
+    )
+    .join("\n")}
 
-      *TOTAL: $${total}*
+    *TOTAL: $${total}*
 
-      _Espero tu confirmación. ¡Gracias!_
+    _Espero tu confirmación. ¡Gracias!_
     `;
 
     return `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
@@ -237,6 +227,13 @@ export default function CompraModal({ open, onClose, producto, onConfirm }: Comp
       return;
     }
 
+    const itemsPayload = items.map((item) => ({
+      producto_id: item.producto_id,
+      nombre: item.producto?.nombre ?? "Producto",
+      cantidad: item.cantidad,
+      precio_unitario: item.producto?.precio ?? item.precio,
+    }));
+
     // Crear la orden
     const res = await fetch("/api/orden", {
       method: "POST",
@@ -247,35 +244,30 @@ export default function CompraModal({ open, onClose, producto, onConfirm }: Comp
         ubicacion,
         lat: coordenadas?.lat ?? null,
         lon: coordenadas?.lon ?? null,
-        items: [
-          {
-            producto_id: producto.id,
-            nombre: producto.nombre,
-            cantidad,
-            precio_unitario: producto.precio,
-          },
-        ],
+        items: itemsPayload,
       }),
     });
 
-    const { orden, items } = await res.json();
+    const data = await res.json();
+    console.log("orden", data.orden);
+    console.log("itemsOrden", data.items);
 
-    if (!orden) {
+    if (!data) {
       console.error("Error creando la orden");
       return;
     }
 
     // Generar URL de WhatsApp
     const waUrl = getWhatsAppUrl({
-      codigo: orden.id,
-      fecha: orden.created_at,
+      codigo: data.orden.id,
+      fecha: data.orden.created_at,
       nombre: `${usuario.nombre} ${usuario.apellido}`,
       telefono: usuario.telefono,
-      direccion: orden.direccion,
+      direccion: data.orden.direccion,
       razonSocial,
       cuit,
-      items,
-      total: orden.total,
+      items: data.items,
+      total: data.orden.total,
     });
 
     window.open(waUrl, "_blank");
@@ -293,7 +285,7 @@ export default function CompraModal({ open, onClose, producto, onConfirm }: Comp
         {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-[#003C71]">
-            Comprar {producto.nombre}
+            Comprar
           </h2>
           <button onClick={onClose} className="text-2xl hover:text-red-500">
             ✕
@@ -301,7 +293,7 @@ export default function CompraModal({ open, onClose, producto, onConfirm }: Comp
         </div>
 
         {/* CANTIDAD */}
-        <label className="block font-semibold text-gray-700 mb-2">
+        {/* <label className="block font-semibold text-gray-700 mb-2">
           Cantidad
         </label>
         <input
@@ -314,7 +306,7 @@ export default function CompraModal({ open, onClose, producto, onConfirm }: Comp
         />
         {errores.cantidad && (
           <p className="text-red-600 text-sm mt-1">{errores.cantidad}</p>
-        )}
+        )} */}
 
         {/* RAZÓN SOCIAL */}
         <label className="block font-semibold text-gray-700 mt-4">
