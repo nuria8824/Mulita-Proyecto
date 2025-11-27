@@ -1,20 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import CompraModal from "./CompraModal";
 
 type ProductoModalProps = {
   open: boolean;
   onClose: () => void;
   producto: {
+    id: string;
     nombre: string;
     descripcion: string;
     precio: number;
     imagenes: string[];
   };
+  usuario: {
+    id: string;
+    nombre: string;
+    apellido: string;
+    telefono: string;
+  };
 };
 
-export default function ProductoModal({ open, onClose, producto }: ProductoModalProps) {
+export default function ProductoModal({ open, onClose, producto, usuario }: ProductoModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const [compraOpen, setCompraOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -105,6 +115,9 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
                 transition-all duration-200
                 hover:bg-[#004a8d] hover:scale-[1.02] hover:shadow-md
               "
+              onClick={(e) => {
+                setCompraOpen(true)
+              }}
             >
               Comprar
               <img
@@ -175,6 +188,26 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
           )}
         </div>
       </div>
+
+      {/* MODAL DE COMPRA */}
+      <CompraModal
+        open={compraOpen}
+        onClose={() => setCompraOpen(false)}
+        producto={{
+          id: producto?.id ?? "",
+          nombre: producto?.nombre ?? "",
+          precio: producto?.precio ?? 0,
+        }}
+        onConfirm={(data) => {
+          console.log("Datos listos para enviar:", data);
+        }}
+        usuario={{
+          id: usuario.id,
+          nombre: usuario.nombre,
+          apellido: usuario.apellido,
+          telefono: usuario.telefono,
+        }}
+      />
     </div>
   );
 }

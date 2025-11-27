@@ -50,7 +50,7 @@ export default function Productos({ productos }: { productos: Producto[] }) {
         {productos.map((p) => (
           <div
             key={p.id}
-            className="rounded-xl border border-light bg-card p-5 flex flex-col shadow-sm hover:shadow-lg transition"
+            className="rounded-xl border border-light bg-card p-5 flex flex-col shadow-sm hover:shadow-lg transition cursor-pointer"
             onClick={() => abrirModal(p)}
           >
             {/* Imagen con precio encima */}
@@ -105,10 +105,17 @@ export default function Productos({ productos }: { productos: Producto[] }) {
         open={modalOpen}
         onClose={cerrarModal}
         producto={{
+          id: productoSeleccionado?.id ?? "",
           nombre: productoSeleccionado?.nombre ?? "",
           descripcion: productoSeleccionado?.descripcion ?? "",
           precio: productoSeleccionado?.precio ?? 0,
           imagenes: productoSeleccionado?.producto_archivos?.map(a => a.archivo_url) ?? ["/placeholder.png"]
+        }}
+        usuario={{
+          id: user.id,
+          nombre: user.nombre,
+          apellido: user.apellido,
+          telefono: user.telefono,
         }}
       />
 
@@ -124,7 +131,12 @@ export default function Productos({ productos }: { productos: Producto[] }) {
         onConfirm={(data) => {
           console.log("Datos listos para enviar:", data);
         }}
-        usuarioId={user.id}
+        usuario={{
+          id: user.id,
+          nombre: user.nombre,
+          apellido: user.apellido,
+          telefono: user.telefono,
+        }}
       />
     </div>
   );
