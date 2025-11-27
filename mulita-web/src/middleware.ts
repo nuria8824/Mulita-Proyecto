@@ -122,7 +122,6 @@ async function checkPermissions(req: NextRequest, res: NextResponse, user: any, 
 // Define en qué rutas aplica el middleware
 export const config = {
   matcher: [
-    "/comunidad/:path*",
     "/dashboard/:path*",
   ],
 };
