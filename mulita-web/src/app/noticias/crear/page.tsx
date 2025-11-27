@@ -64,7 +64,7 @@ export default function CrearNoticiaPage() {
         autor,
         introduccion,
         descripcion,
-        imagen_principal: archivoSubido,
+        imagen_principal: archivoSubido?.[0],
       }),
       credentials: "include",
     });

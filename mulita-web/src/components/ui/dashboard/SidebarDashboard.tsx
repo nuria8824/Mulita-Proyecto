@@ -46,13 +46,13 @@ export default function SidebarDashboard({
       iconActive: "/images/icons/dashboard/usuarios azul.svg",
       isActive: () => pathname === "/dashboard/gestionUsuarios",
     },
-    {
-      href: "/dashboard/configuracion",
-      label: "Configuración",
-      icon: "/images/icons/dashboard/configuracion.svg",
-      iconActive: "/images/icons/dashboard/configuracion azul.svg",
-      isActive: () => pathname === "/dashboard/configuracion",
-    },
+    // {
+    //   href: "/dashboard/configuracion",
+    //   label: "Configuración",
+    //   icon: "/images/icons/dashboard/configuracion.svg",
+    //   iconActive: "/images/icons/dashboard/configuracion azul.svg",
+    //   isActive: () => pathname === "/dashboard/configuracion",
+    // },
   ];
 
   return (
