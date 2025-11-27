@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 export interface CartItem {
   id: string;
@@ -115,7 +116,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       console.error("Error adding item:", err);
-      setError(err instanceof Error ? err.message : "Error al agregar item al carrito");
+      const message = err instanceof Error ? err.message : "Error al agregar item al carrito";
+      setError(message);
+      toast.error(message);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -138,6 +142,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("Error removing item:", err);
       setError("Error al eliminar item");
+      toast.error("Error al eliminar producto del carrito");
     } finally {
       setLoading(false);
     }
@@ -164,6 +169,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("Error updating quantity:", err);
       setError("Error al actualizar cantidad");
+      toast.error("Error al actualizar cantidad");
     } finally {
       setLoading(false);
     }
@@ -187,6 +193,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("Error clearing cart:", err);
       setError("Error al vaciar carrito");
+      toast.error("Error al vaciar el carrito");
     } finally {
       setLoading(false);
     }

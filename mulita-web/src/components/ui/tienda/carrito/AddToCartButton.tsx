@@ -1,8 +1,11 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
+import { useUser } from "@/context/UserContext";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface AddToCartButtonProps {
   productoId: string;
@@ -17,27 +20,31 @@ export function AddToCartButton({
   precio,
   className = "",
 }: AddToCartButtonProps) {
-  const { addItem, error: cartError } = useCart();
+  const { addItem } = useCart();
+  const { user } = useUser();
+  const router = useRouter();
   const [cantidad, setCantidad] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
-  const [showError, setShowError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   const handleAddToCart = async () => {
+    // Verificar si el usuario está logueado
+    if (!user) {
+      toast.error("Debes iniciar sesión para agregar productos al carrito");
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 1500);
+      return;
+    }
+
     setLoading(true);
-    setShowError(false);
     try {
       await addItem(productoId, cantidad, precio);
-      setShowNotification(true);
+      toast.success(`"${nombre}" añadido al carrito`);
       setCantidad(1);
-      setTimeout(() => setShowNotification(false), 3000);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error al agregar al carrito";
-      setErrorMessage(message);
-      setShowError(true);
+      toast.error(message);
       console.error("Error al agregar al carrito:", error);
-      setTimeout(() => setShowError(false), 5000);
     } finally {
       setLoading(false);
     }
@@ -55,18 +62,6 @@ export function AddToCartButton({
           {loading ? "Agregando..." : "Carrito"}
         </button>
       </div>
-
-      {showNotification && (
-        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-          ✓ "{nombre}" añadido al carrito
-        </div>
-      )}
-
-      {showError && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          ✗ {errorMessage || "Error al agregar al carrito"}
-        </div>
-      )}
     </div>
   );
 }

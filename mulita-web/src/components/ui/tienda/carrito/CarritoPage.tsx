@@ -5,6 +5,7 @@ import { Trash2, Plus, Minus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useMemo, useEffect, useRef } from "react";
+import { toast } from "react-hot-toast";
 
 export function CarritoPage() {
   const { items, loading, removeItem, updateItemQuantity, clearCart, getTotalPrice } = useCart();
@@ -16,14 +17,23 @@ export function CarritoPage() {
 
   const handleRemoveItem = async (itemId: string) => {
     setProcessing(true);
-    await removeItem(itemId);
+    try {
+      await removeItem(itemId);
+      toast.success("Producto eliminado del carrito");
+    } catch (error) {
+      // Error ya manejado en CartContext
+    }
     setProcessing(false);
   };
 
   const handleQuantityChange = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     setProcessing(true);
-    await updateItemQuantity(itemId, newQuantity);
+    try {
+      await updateItemQuantity(itemId, newQuantity);
+    } catch (error) {
+      // Error ya manejado en CartContext
+    }
     setProcessing(false);
   };
 
@@ -55,7 +65,12 @@ export function CarritoPage() {
   const handleClearCart = async () => {
     if (confirm("¿Estás seguro de que deseas vaciar el carrito?")) {
       setProcessing(true);
-      await clearCart();
+      try {
+        await clearCart();
+        toast.success("Carrito vaciado exitosamente");
+      } catch (error) {
+        // Error ya manejado en CartContext
+      }
       setProcessing(false);
     }
   };

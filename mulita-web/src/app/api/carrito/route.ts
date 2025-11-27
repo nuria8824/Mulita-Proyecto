@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 // Obtener el carrito actual del usuario
@@ -12,8 +13,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    // Crear cliente de Supabase con el token del usuario
+    const supabaseWithAuth = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${access_token}`
+          }
+        }
+      }
+    );
+
     // Obtener usuario de Supabase usando el token
-    const { data: { user }, error: userError } = await supabase.auth.getUser(access_token);
+    const { data: { user }, error: userError } = await supabaseWithAuth.auth.getUser();
     
     if (userError || !user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -22,7 +36,7 @@ export async function GET(req: NextRequest) {
     const userId = user.id;
 
     // Obtener o crear carrito
-    let { data: carrito, error: carritoError } = await supabase
+    let { data: carrito, error: carritoError } = await supabaseWithAuth
       .from("carritos")
       .select("*")
       .eq("usuario_id", userId)
@@ -37,7 +51,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Obtener items del carrito con datos del producto
-    const { data: items, error: itemsError } = await supabase
+    const { data: items, error: itemsError } = await supabaseWithAuth
       .from("carrito_items")
       .select("*")
       .eq("carrito_id", carrito.id);
@@ -50,7 +64,7 @@ export async function GET(req: NextRequest) {
       const productoIds = items.map(item => item.producto_id);
       console.log("Buscando productos con IDs:", productoIds);
       
-      const { data: productos, error: productosError } = await supabase
+      const { data: productos, error: productosError } = await supabaseWithAuth
         .from("producto")
         .select("*")
         .in("id", productoIds);
@@ -96,8 +110,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    // Crear cliente de Supabase con el token del usuario
+    const supabaseWithAuth = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${access_token}`
+          }
+        }
+      }
+    );
+
     // Obtener usuario de Supabase usando el token
-    const { data: { user }, error: userError } = await supabase.auth.getUser(access_token);
+    const { data: { user }, error: userError } = await supabaseWithAuth.auth.getUser();
     
     if (userError || !user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -115,7 +142,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Obtener o crear carrito
-    let { data: carrito, error: carritoError } = await supabase
+    let { data: carrito, error: carritoError } = await supabaseWithAuth
       .from("carritos")
       .select("*")
       .eq("usuario_id", userId)
@@ -129,7 +156,7 @@ export async function POST(req: NextRequest) {
 
     if (!carrito) {
       console.log("POST - Creando carrito para usuario:", userId);
-      const { data: nuevoCarrito, error: crearError } = await supabase
+      const { data: nuevoCarrito, error: crearError } = await supabaseWithAuth
         .from("carritos")
         .upsert(
           [{ usuario_id: userId, total: 0, cantidad_items: 0 }],
@@ -147,7 +174,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verificar si el item ya existe en el carrito
-    const { data: existingItem } = await supabase
+    const { data: existingItem } = await supabaseWithAuth
       .from("carrito_items")
       .select("*")
       .eq("carrito_id", carrito.id)
@@ -156,7 +183,7 @@ export async function POST(req: NextRequest) {
 
     if (existingItem) {
       // Actualizar cantidad
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseWithAuth
         .from("carrito_items")
         .update({ cantidad: existingItem.cantidad + cantidad })
         .eq("id", existingItem.id);
@@ -164,7 +191,7 @@ export async function POST(req: NextRequest) {
       if (updateError) throw updateError;
     } else {
       // Insertar nuevo item
-      const { error: insertError } = await supabase
+      const { error: insertError } = await supabaseWithAuth
         .from("carrito_items")
         .insert([
           {
@@ -179,7 +206,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Actualizar total y cantidad de items del carrito
-    const { data: items } = await supabase
+    const { data: items } = await supabaseWithAuth
       .from("carrito_items")
       .select("*")
       .eq("carrito_id", carrito.id);
@@ -188,7 +215,7 @@ export async function POST(req: NextRequest) {
       items?.reduce((sum, item) => sum + item.precio * item.cantidad, 0) || 0;
     const newCantidad = items?.reduce((sum, item) => sum + item.cantidad, 0) || 0;
 
-    await supabase
+    await supabaseWithAuth
       .from("carritos")
       .update({
         total: newTotal,
@@ -218,8 +245,21 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    // Crear cliente de Supabase con el token del usuario
+    const supabaseWithAuth = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${access_token}`
+          }
+        }
+      }
+    );
+
     // Obtener usuario de Supabase usando el token
-    const { data: { user }, error: userError } = await supabase.auth.getUser(access_token);
+    const { data: { user }, error: userError } = await supabaseWithAuth.auth.getUser();
     
     if (userError || !user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -227,7 +267,7 @@ export async function DELETE(req: NextRequest) {
 
     const userId = user.id;
 
-    const { data: carrito } = await supabase
+    const { data: carrito } = await supabaseWithAuth
       .from("carritos")
       .select("*")
       .eq("usuario_id", userId)
@@ -241,13 +281,13 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Eliminar todos los items
-    await supabase
+    await supabaseWithAuth
       .from("carrito_items")
       .delete()
       .eq("carrito_id", carrito.id);
 
     // Actualizar carrito
-    await supabase
+    await supabaseWithAuth
       .from("carritos")
       .update({
         total: 0,

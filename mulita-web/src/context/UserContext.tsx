@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClientSupabase } from "@/lib/supabase";
+import { toast } from "react-hot-toast";
 
 interface User {
   id: string;
@@ -109,9 +110,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       // 3. Limpiar estado
       setUser(null);
+      toast.success("Sesión cerrada exitosamente");
       router.push("/");
     } catch (err) {
       console.error("Error cerrando sesión:", err);
+      toast.error("Error al cerrar sesión");
       setUser(null);
       router.push("/");
     }

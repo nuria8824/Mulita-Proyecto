@@ -1,4 +1,4 @@
--- Script para Reparar/Crear Políticas RLS SOLO para el Carrito
+-- Script para Reparar/Crear Políticas RLS para Carrito y Perfil
 
 -- ============================================
 -- 1. HABILITAR RLS EN TABLAS
@@ -7,6 +7,7 @@
 ALTER TABLE IF EXISTS carritos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS carrito_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS producto ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS perfil ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- 2. ELIMINAR SOLO POLÍTICAS DEL CARRITO (antiguas)
@@ -113,6 +114,34 @@ CREATE POLICY "producto_select_all"
   USING (true);
 
 -- ============================================
+-- 5. POLÍTICAS RLS PARA PERFIL (HABILITAR RLS)
+-- ============================================
+
+-- Las políticas ya existen, solo habilitamos RLS en la tabla
+-- No necesitamos recrearlas porque ya están:
+-- - "Cada usuario puede actualizar su perfil"
+-- - "Cada usuario solo puede insertar su perfil"
+-- - "Usuarios autenticados pueden ver cualquier perfil"
+
+-- Si necesitas recrearlas, aquí están los comandos:
+-- DROP POLICY IF EXISTS "Cada usuario puede actualizar su perfil" ON perfil;
+-- DROP POLICY IF EXISTS "Cada usuario solo puede insertar su perfil" ON perfil;
+-- DROP POLICY IF EXISTS "Usuarios autenticados pueden ver cualquier perfil" ON perfil;
+
+-- CREATE POLICY "Usuarios autenticados pueden ver cualquier perfil"
+--   ON perfil FOR SELECT
+--   USING (auth.uid() IS NOT NULL);
+
+-- CREATE POLICY "Cada usuario solo puede insertar su perfil"
+--   ON perfil FOR INSERT
+--   WITH CHECK (auth.uid() = id);
+
+-- CREATE POLICY "Cada usuario puede actualizar su perfil"
+--   ON perfil FOR UPDATE
+--   USING (auth.uid() = id)
+--   WITH CHECK (auth.uid() = id);
+
+-- ============================================
 -- 6. VERIFICAR QUE RLS ESTÉ ACTIVO
 -- ============================================
 
@@ -120,13 +149,14 @@ CREATE POLICY "producto_select_all"
 SELECT tablename, rowsecurity 
 FROM pg_tables 
 WHERE schemaname = 'public' 
-AND tablename IN ('carritos', 'carrito_items', 'producto');
+AND tablename IN ('carritos', 'carrito_items', 'producto', 'perfil');
 
 -- Debería mostrar:
 -- tablename    | rowsecurity
 -- carritos     | t
 -- carrito_items | t
 -- producto     | t
+-- perfil       | t
 
 -- ============================================
 -- 6. VER TODAS LAS POLÍTICAS ACTUALES
