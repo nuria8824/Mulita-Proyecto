@@ -7,6 +7,7 @@ import ProductoModal from "./ProductoModal";
 import { AddToCartButton } from "./carrito/AddToCartButton";
 import CompraModal from "./CompraModal";
 import { toast } from "react-hot-toast";
+import { CartItem } from "@/context/CartContext";
 
 export type Archivo = { archivo_url: string };
 
@@ -52,6 +53,24 @@ export default function Productos({ productos }: { productos: Producto[] }) {
     setProductoCompra(producto);
     setCompraOpen(true);
   };
+
+  // Item único para comprar directamente
+  const itemUnico: CartItem | null = productoCompra
+    ? {
+      id: crypto.randomUUID(),
+      producto_id: productoCompra.id,
+      carrito_id: "direct-purchase",
+      cantidad: 1, // SIEMPRE 1
+      precio: productoCompra.precio,
+      producto: {
+        id: productoCompra.id,
+        nombre: productoCompra.nombre,
+        descripcion: productoCompra.descripcion,
+        imagen: "",
+        precio: productoCompra.precio,
+      },
+    }
+  : null;
   
   if (productos.length === 0) {
     return (
@@ -141,14 +160,7 @@ export default function Productos({ productos }: { productos: Producto[] }) {
       <CompraModal
         open={compraOpen}
         onClose={() => setCompraOpen(false)}
-        producto={{
-          id: productoCompra?.id ?? "",
-          nombre: productoCompra?.nombre ?? "",
-          precio: productoCompra?.precio ?? 0,
-        }}
-        onConfirm={(data) => {
-          console.log("Datos listos para enviar:", data);
-        }}
+        items={itemUnico ? [itemUnico] : []}
       />
     </div>
   );

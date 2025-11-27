@@ -124,6 +124,9 @@ export async function POST(req: Request) {
       );
     }
 
+    console.log("ordenBack", orden);
+    console.log("itemsBack", itemsPayload);
+
     return NextResponse.json(
       {
         message: "Orden creada con éxito",

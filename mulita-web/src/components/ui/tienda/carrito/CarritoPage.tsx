@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
+import CompraModal from "../CompraModal";
 
 export function CarritoPage() {
   const { items, loading, removeItem, updateItemQuantity, clearCart, getTotalPrice } = useCart();
@@ -14,6 +15,8 @@ export function CarritoPage() {
   const [localQuantities, setLocalQuantities] = useState<Record<string, number>>({});
   // Refs para los timeouts de debounce
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
+
+  const [compraOpen, setCompraOpem] = useState(false);
 
   const handleRemoveItem = async (itemId: string) => {
     setProcessing(true);
@@ -241,7 +244,10 @@ export function CarritoPage() {
                 </div>
 
                 {/* Botón checkout */}
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition mb-3">
+                <button 
+                  onClick={() => setCompraOpem(true)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition mb-3"
+                >
                   Proceder al pago
                 </button>
 
@@ -254,6 +260,13 @@ export function CarritoPage() {
                 </Link>
               </div>
             </div>
+
+            {/* MODAL DE COMPRA */}
+            <CompraModal
+              open={compraOpen}
+              onClose={() => setCompraOpem(false)}
+              items={items}
+            />
           </div>
         )}
       </div>

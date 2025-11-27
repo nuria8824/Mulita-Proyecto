@@ -6,6 +6,7 @@ import { useUser } from "@/context/UserContext";
 import { AddToCartButton } from "./carrito/AddToCartButton";
 import CompraModal from "./CompraModal";
 import { toast } from "react-hot-toast";
+import { CartItem } from "@/context/CartContext";
 
 type ProductoModalProps = {
   open: boolean;
@@ -34,6 +35,22 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
       return;
     }
     setCompraOpen(true);
+  };
+
+  // Item único para comprar directamente
+  const itemUnico: CartItem = {
+    id: crypto.randomUUID(),
+    producto_id: producto.id,
+    carrito_id: "direct-purchase",
+    cantidad: 1, // SIEMPRE 1
+    precio: producto.precio,
+    producto: {
+      id: producto.id,
+      nombre: producto.nombre,
+      descripcion: producto.descripcion,
+      imagen: "",
+      precio: producto.precio,
+    },
   };
 
   useEffect(() => {
@@ -197,14 +214,7 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
       <CompraModal
         open={compraOpen}
         onClose={() => setCompraOpen(false)}
-        producto={{
-          id: producto?.id ?? "",
-          nombre: producto?.nombre ?? "",
-          precio: producto?.precio ?? 0,
-        }}
-        onConfirm={(data) => {
-          console.log("Datos listos para enviar:", data);
-        }}
+        items={[itemUnico]}
       />
     </div>
   );
