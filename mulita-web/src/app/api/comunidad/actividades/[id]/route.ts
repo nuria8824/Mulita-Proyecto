@@ -48,14 +48,6 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   return NextResponse.json(respuesta);
 }
 
-// Función para limpiar nombres de archivo
-function sanitizeFileName(fileName: string) {
-  return fileName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9.\-_]/g, "_");
-}
-
 export async function PATCH(
   req: NextRequest,
   props: { params: Promise<{ id: string }> }
@@ -76,6 +68,9 @@ export async function PATCH(
   if (userError || !user)
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
+  const body = await req.json();
+  const { titulo, descripcion, categorias, archivosNuevos, archivosExistentes } = body;
+
   // Obtener la actividad
   const { data: actividad, error: actError } = await supabase
     .from("actividad")
@@ -95,20 +90,6 @@ export async function PATCH(
       { error: "No tienes permisos para editar esta actividad" },
       { status: 403 }
     );
-
-  // Procesar FormData
-  const formData = await req.formData();
-  const titulo = formData.get("titulo") as string;
-  const descripcion = formData.get("descripcion") as string;
-  const categorias = JSON.parse(formData.get("categorias") as string) as string[];
-
-  // Archivos nuevos subidos
-  const archivosNuevos = formData.getAll("archivos") as File[];
-
-  // Archivos que el usuario decidió mantener (URLs)
-  const archivosExistentes = JSON.parse(
-    (formData.get("archivosExistentes") as string) || "[]"
-  ) as string[];
 
   // Actualizar actividad
   const { data, error: actividadError } = await supabase
@@ -145,47 +126,30 @@ export async function PATCH(
       .in("archivo_url", archivosAEliminar);
   }
 
-  // Subir y registrar los nuevos archivos
-  const uploadedFiles: { url: string; name: string; type: string }[] = [];
-  for (const archivo of archivosNuevos) {
-    const sanitizedFileName = sanitizeFileName(archivo.name);
-    const filePath = `comunidad/actividades/${id}/${Date.now()}_${sanitizedFileName}`;
-    const { error: uploadError } = await supabase.storage
-      .from("mulita-files")
-      .upload(filePath, archivo, {
-        contentType: archivo.type,
-        upsert: false,
-      });
+  // Guardar las URLs de los archivos subidos desde el frontend
+  if (archivosNuevos && archivosNuevos.length > 0) {
+    const { error: insertArchivosError } = await supabase
+      .from("actividad_archivos")
+      .insert(
+        archivosNuevos.map((file: any) => ({
+          actividad_id: id,
+          archivo_url: file.url,
+          nombre: file.name,
+          tipo: file.type,
+        }))
+      );
 
-    if (uploadError) continue;
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("mulita-files").getPublicUrl(filePath);
-
-    uploadedFiles.push({
-      url: publicUrl,
-      name: archivo.name,
-      type: archivo.type,
-    });
-  }
-
-  if (uploadedFiles.length) {
-    await supabase.from("actividad_archivos").insert(
-      uploadedFiles.map((f) => ({
-        actividad_id: id,
-        archivo_url: f.url,
-        nombre: f.name,
-        tipo: f.type,
-      }))
-    );
+    if (insertArchivosError) {
+      console.error("Error guardando archivos:", insertArchivosError.message);
+      return NextResponse.json({ error: "Error guardando archivos" }, { status: 500 });
+    }
   }
 
   // Actualizar categorías
   if (categorias.length) {
     await supabase.from("actividad_categoria").delete().eq("actividad_id", id);
     await supabase.from("actividad_categoria").insert(
-      categorias.map((categoriaId) => ({
+      categorias.map((categoriaId: string) => ({
         actividad_id: id,
         categoria_id: categoriaId,
       }))

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import ProductoModal from "./ProductoModal";
+import CompraModal from "./CompraModal";
+import { useUser } from "@/context/UserContext";
 
 export type Archivo = { archivo_url: string };
 
@@ -17,8 +19,12 @@ export type Producto = {
 };
 
 export default function Productos({ productos }: { productos: Producto[] }) {
+  const { user } = useUser();
   const [modalOpen, setModalOpen] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
+
+  const [compraOpen, setCompraOpen] = useState(false);
+  const [productoCompra, setProductoCompra] = useState<Producto | null>(null);
 
   const abrirModal = (producto: Producto) => {
     setProductoSeleccionado(producto);
@@ -30,6 +36,13 @@ export default function Productos({ productos }: { productos: Producto[] }) {
     setProductoSeleccionado(null);
   }
 
+  const abrirModalCompra = (producto: Producto) => {
+    setProductoCompra(producto);
+    setCompraOpen(true);
+  };
+
+  if (!user) return null;
+
   return (
     <div className="w-full max-w-7xl mx-auto">
       {/* GRID */}
@@ -37,7 +50,7 @@ export default function Productos({ productos }: { productos: Producto[] }) {
         {productos.map((p) => (
           <div
             key={p.id}
-            className="rounded-xl border border-light bg-card p-5 flex flex-col shadow-sm hover:shadow-lg transition"
+            className="rounded-xl border border-light bg-card p-5 flex flex-col shadow-sm hover:shadow-lg transition cursor-pointer"
             onClick={() => abrirModal(p)}
           >
             {/* Imagen con precio encima */}
@@ -71,7 +84,16 @@ export default function Productos({ productos }: { productos: Producto[] }) {
 
             {/* Botones */}
             <div className="mt-4 flex gap-2">
-              <button className="btn btn--blue flex-1">Comprar</button>
+              <button
+                className="btn btn--blue flex-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  abrirModalCompra(p);
+                }}
+              >
+                Comprar
+              </button>
+
               <button className="btn btn--outline flex-1">Carrito</button>
             </div>
           </div>
@@ -83,10 +105,37 @@ export default function Productos({ productos }: { productos: Producto[] }) {
         open={modalOpen}
         onClose={cerrarModal}
         producto={{
+          id: productoSeleccionado?.id ?? "",
           nombre: productoSeleccionado?.nombre ?? "",
           descripcion: productoSeleccionado?.descripcion ?? "",
           precio: productoSeleccionado?.precio ?? 0,
           imagenes: productoSeleccionado?.producto_archivos?.map(a => a.archivo_url) ?? ["/placeholder.png"]
+        }}
+        usuario={{
+          id: user.id,
+          nombre: user.nombre,
+          apellido: user.apellido,
+          telefono: user.telefono,
+        }}
+      />
+
+      {/* MODAL DE COMPRA */}
+      <CompraModal
+        open={compraOpen}
+        onClose={() => setCompraOpen(false)}
+        producto={{
+          id: productoCompra?.id ?? "",
+          nombre: productoCompra?.nombre ?? "",
+          precio: productoCompra?.precio ?? 0,
+        }}
+        onConfirm={(data) => {
+          console.log("Datos listos para enviar:", data);
+        }}
+        usuario={{
+          id: user.id,
+          nombre: user.nombre,
+          apellido: user.apellido,
+          telefono: user.telefono,
         }}
       />
     </div>

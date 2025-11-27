@@ -87,7 +87,7 @@ export default function CrearActividadPage() {
       for (const archivo of archivos) {
         try {
           const sanitizedFileName = sanitizeFileName(archivo.name);
-          const filePath = `comunidad/actividades/temp/${Date.now()}_${sanitizedFileName}`;
+          const filePath = `comunidad/actividades/${Date.now()}_${sanitizedFileName}`;
           
           // Subir archivo usando la función uploadFile
           const url = await uploadFile(archivo, filePath);

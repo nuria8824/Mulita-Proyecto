@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const search = searchParams.get("search")?.trim() || "";
   const categoria = searchParams.get("categoria")?.trim() || "";
-  const fechaFiltro = searchParams.get("fecha")?.trim() || ""; // nuevo parámetro
+  const fechaFiltro = searchParams.get("fecha")?.trim() || "";
 
   // --- Construir filtro por categoría ---
   let actividadIdsFiltradas: string[] | null = null;
