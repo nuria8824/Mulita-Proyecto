@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClientSupabase } from "@/lib/supabase";
 
 interface User {
   id: string;
@@ -12,6 +13,7 @@ interface User {
   telefono: string;
   acceso_comunidad: boolean;
   imagen?: string;
+  docente?: any;
 }
 
 interface UserContextType {
@@ -51,32 +53,71 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Sincronizar sesión de Supabase con el estado del usuario
+  const syncSupabaseSession = async () => {
+    try {
+      const supabase = createClientSupabase();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session && !user) {
+        // Si hay sesión en Supabase pero no en el contexto, intentar recuperar usuario
+        await fetchUser();
+      } else if (!session && user) {
+        // Si no hay sesión en Supabase pero sí en el contexto, limpiar contexto
+        setUser(null);
+      }
+    } catch (err) {
+      console.error("Error sincronizando sesión de Supabase:", err);
+    }
+  };
+
   useEffect(() => {
     fetchUser();
     
+    // Sincronizar con Supabase cada vez que cambie el estado de autenticación
+    const supabase = createClientSupabase();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          await fetchUser();
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+
     const interval = setInterval(fetchUser, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      clearInterval(interval);
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Cerrar sesión
   const logout = async () => {
     try {
+      // 1. Cerrar sesión en Supabase
+      const supabase = createClientSupabase();
+      await supabase.auth.signOut();
+      
+      // 2. Cerrar sesión en el backend (limpiar cookies)
       const res = await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
 
-      const data = await res.json();
-      setUser(data.user);
+      // 3. Limpiar estado
+      setUser(null);
       router.push("/");
     } catch (err) {
       console.error("Error cerrando sesión:", err);
       setUser(null);
+      router.push("/");
     }
   };
 
   const isSuperAdmin = () => user?.rol === "superAdmin";
-  console.log("isSuperAdmin check:", isSuperAdmin());
 
   return (
     <UserContext.Provider value={{ user, setUser, logout, loading, isSuperAdmin }}>

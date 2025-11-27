@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 
 // Definimos rutas especiales
 const comunidadPaths = ["/comunidad"];
@@ -8,7 +8,43 @@ const adminOnlyPaths = ["/dashboard", "/dashboard/gestionUsuarios"];
 
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
-  const access_token = req.cookies.get("sb-access-token")?.value;
+  let access_token = req.cookies.get("sb-access-token")?.value;
+  const refresh_token = req.cookies.get("sb-refresh-token")?.value;
+
+  // Si no hay access token pero hay refresh token, intentar refrescar
+  if (!access_token && refresh_token) {
+    try {
+      const { data, error } = await supabaseServer.auth.refreshSession({ refresh_token });
+      if (!error && data.session && data.user) {
+        access_token = data.session.access_token;
+        
+        // Crear respuesta con las nuevas cookies
+        const res = NextResponse.next();
+        res.cookies.set("sb-access-token", data.session.access_token, {
+          httpOnly: true,
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 30, // 30 días
+        });
+        
+        if (data.session.refresh_token) {
+          res.cookies.set("sb-refresh-token", data.session.refresh_token, {
+            httpOnly: true,
+            path: "/",
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60 * 24 * 30, // 30 días
+          });
+        }
+        
+        // Continuar con la verificación de permisos
+        return await checkPermissions(req, res, data.user, access_token!);
+      }
+    } catch (error) {
+      console.error("Error refrescando token:", error);
+    }
+  }
 
   // Si no hay token → redirigir al inicio con mensaje
   if (!access_token) {
@@ -18,55 +54,69 @@ export async function middleware(req: NextRequest) {
   }
 
   // Intentar obtener el usuario desde Supabase
-  const { data: { user }, error } = await supabase.auth.getUser(access_token);
+  const { data: { user }, error } = await supabaseServer.auth.getUser(access_token);
   if (error || !user) {
     url.pathname = "/";
     url.searchParams.set("mensaje", "Sesión cerrada o inválida");
     return NextResponse.redirect(url);
   }
 
-  // Buscar información extra en la tabla usuario
-  const { data: usuario, error: usuarioError } = await supabase
-    .from("usuario")
-    .select("rol, acceso_comunidad, eliminado")
-    .eq("id", user.id)
-    .single();
+  // Continuar con la verificación de permisos
+  return await checkPermissions(req, NextResponse.next(), user, access_token);
+}
 
-  // Si hay error o usuario no encontrado
-  if (usuarioError || !usuario) {
-    url.pathname = "/";
-    url.searchParams.set("mensaje", "Acceso restringido");
-    return NextResponse.redirect(url);
-  }
+async function checkPermissions(req: NextRequest, res: NextResponse, user: any, access_token: string) {
+  const url = req.nextUrl.clone();
 
-  // Bloquear si el usuario está eliminado (soft delete)
-  if (usuario.eliminado) {
-    url.pathname = "/";
-    url.searchParams.set("mensaje", "Tu cuenta está deshabilitada");
-    return NextResponse.redirect(url);
-  }
+  try {
+    // Buscar información extra en la tabla usuario
+    const { data: usuario, error: usuarioError } = await supabaseServer
+      .from("usuario")
+      .select("rol, acceso_comunidad, eliminado")
+      .eq("id", user.id)
+      .single();
 
-  // REGLAS DE ACCESO
-  // Comunidad: solo si acceso_comunidad = true
-  if (comunidadPaths.some((p) => url.pathname.startsWith(p))) {
-    if (!usuario.acceso_comunidad) {
+    // Si hay error o usuario no encontrado
+    if (usuarioError || !usuario) {
       url.pathname = "/";
-      url.searchParams.set("mensaje", "Acceso restringido a la comunidad");
+      url.searchParams.set("mensaje", "Acceso restringido");
       return NextResponse.redirect(url);
     }
-  }
 
-  // Dashboard: solo admins y superAdmins
-  if (adminOnlyPaths.some((p) => url.pathname.startsWith(p))) {
-    if (usuario.rol !== "admin" && usuario.rol !== "superAdmin") {
+    // Bloquear si el usuario está eliminado (soft delete)
+    if (usuario.eliminado) {
       url.pathname = "/";
-      url.searchParams.set("mensaje", "No tenés permisos para acceder al panel");
+      url.searchParams.set("mensaje", "Tu cuenta está deshabilitada");
       return NextResponse.redirect(url);
     }
-  }
 
-  // Si todo está bien, permite continuar
-  return NextResponse.next();
+    // REGLAS DE ACCESO
+    // Comunidad: solo si acceso_comunidad = true
+    if (comunidadPaths.some((p) => url.pathname.startsWith(p))) {
+      if (!usuario.acceso_comunidad) {
+        url.pathname = "/";
+        url.searchParams.set("mensaje", "Acceso restringido a la comunidad");
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // Dashboard: solo admins y superAdmins
+    if (adminOnlyPaths.some((p) => url.pathname.startsWith(p))) {
+      if (usuario.rol !== "admin" && usuario.rol !== "superAdmin") {
+        url.pathname = "/";
+        url.searchParams.set("mensaje", "No tenés permisos para acceder al panel");
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // Si todo está bien, permite continuar
+    return res;
+  } catch (error) {
+    console.error("Error en checkPermissions:", error);
+    url.pathname = "/";
+    url.searchParams.set("mensaje", "Error de autenticación");
+    return NextResponse.redirect(url);
+  }
 }
 
 // Define en qué rutas aplica el middleware

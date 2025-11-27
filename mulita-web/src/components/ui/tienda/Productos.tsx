@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ProductoModal from "./ProductoModal";
 import { AddToCartButton } from "../AddToCartButton";
+import CompraModal from "./CompraModal";
 
 export type Archivo = { archivo_url: string };
 
@@ -21,6 +22,9 @@ export default function Productos({ productos }: { productos: Producto[] }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
+  const [compraOpen, setCompraOpen] = useState(false);
+  const [productoCompra, setProductoCompra] = useState<Producto | null>(null);
+
   const abrirModal = (producto: Producto) => {
     setProductoSeleccionado(producto);
     setModalOpen(true);
@@ -30,11 +34,13 @@ export default function Productos({ productos }: { productos: Producto[] }) {
     setModalOpen(false);
     setProductoSeleccionado(null);
   }
-
-  // Validar que productos es un array
-  const productosArray = Array.isArray(productos) ? productos : [];
-
-  if (productosArray.length === 0) {
+  
+  const abrirModalCompra = (producto: Producto) => {
+    setProductoCompra(producto);
+    setCompraOpen(true);
+  };
+  
+  if (productos.length === 0) {
     return (
       <div className="w-full max-w-7xl mx-auto text-center py-12">
         <p className="text-gray-500">No hay productos disponibles</p>
@@ -46,10 +52,10 @@ export default function Productos({ productos }: { productos: Producto[] }) {
     <div className="w-full max-w-7xl mx-auto">
       {/* GRID */}
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {productosArray.map((p) => (
+        {productos.map((p) => (
           <div
             key={p.id}
-            className="rounded-xl border border-light bg-card p-5 flex flex-col shadow-sm hover:shadow-lg transition"
+            className="rounded-xl border border-light bg-card p-5 flex flex-col shadow-sm hover:shadow-lg transition cursor-pointer"
             onClick={() => abrirModal(p)}
           >
             {/* Imagen con precio encima */}
@@ -82,13 +88,25 @@ export default function Productos({ productos }: { productos: Producto[] }) {
             </div>
 
             {/* Botones */}
-            <div className="mt-4 w-full" onClick={(e) => e.stopPropagation()}>
-              <AddToCartButton 
-                productoId={p.id}
-                nombre={p.nombre}
-                precio={p.precio}
-                className="w-full"
-              />
+            <div className="mt-4 flex gap-2">
+              <button
+                className="btn btn--blue flex-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  abrirModalCompra(p);
+                }}
+              >
+                Comprar
+              </button>
+
+              <div className="mt-4 w-full" onClick={(e) => e.stopPropagation()}>
+                <AddToCartButton 
+                  productoId={p.id}
+                  nombre={p.nombre}
+                  precio={p.precio}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
         ))}
@@ -104,6 +122,20 @@ export default function Productos({ productos }: { productos: Producto[] }) {
           descripcion: productoSeleccionado?.descripcion ?? "",
           precio: productoSeleccionado?.precio ?? 0,
           imagenes: productoSeleccionado?.producto_archivos?.map(a => a.archivo_url) ?? ["/placeholder.png"]
+        }}
+      />
+
+      {/* MODAL DE COMPRA */}
+      <CompraModal
+        open={compraOpen}
+        onClose={() => setCompraOpen(false)}
+        producto={{
+          id: productoCompra?.id ?? "",
+          nombre: productoCompra?.nombre ?? "",
+          precio: productoCompra?.precio ?? 0,
+        }}
+        onConfirm={(data) => {
+          console.log("Datos listos para enviar:", data);
         }}
       />
     </div>

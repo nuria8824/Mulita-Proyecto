@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AddToCartButton } from "../AddToCartButton";
+import CompraModal from "./CompraModal";
 
 type ProductoModalProps = {
   open: boolean;
@@ -17,6 +18,8 @@ type ProductoModalProps = {
 
 export default function ProductoModal({ open, onClose, producto }: ProductoModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const [compraOpen, setCompraOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -97,13 +100,38 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
           <div className="mt-6" />
 
           {/* BOTONES */}
-          <div className="w-full mt-4" onClick={(e) => e.stopPropagation()}>
-            <AddToCartButton 
-              productoId={producto.id}
-              nombre={producto.nombre}
-              precio={producto.precio}
-              className="w-full"
-            />
+          <div className="flex items-center gap-4 text-[16px] text-white mt-4">
+            <button
+              className="
+                bg-[#003c71] shadow-[0px_1px_4px_rgba(25,33,61,0.08)]
+                rounded-md px-[28px] py-[10px] 
+                flex items-center justify-center gap-[6px]
+                cursor-pointer font-semibold flex-1
+                transition-all duration-200
+                hover:bg-[#004a8d] hover:scale-[1.02] hover:shadow-md
+              "
+              onClick={(e) => {
+                setCompraOpen(true)
+              }}
+            >
+              Comprar
+              <img
+                src="/images/icons/productos/flecha.svg"
+                width={14}
+                height={14}
+                alt="Ir"
+                className="transition-transform duration-200 group-hover:translate-x-1"
+              />
+            </button>
+
+            <div onClick={(e) => e.stopPropagation()}>
+              <AddToCartButton 
+                productoId={producto.id}
+                nombre={producto.nombre}
+                precio={producto.precio}
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
 
@@ -152,6 +180,20 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
           )}
         </div>
       </div>
+
+      {/* MODAL DE COMPRA */}
+      <CompraModal
+        open={compraOpen}
+        onClose={() => setCompraOpen(false)}
+        producto={{
+          id: producto?.id ?? "",
+          nombre: producto?.nombre ?? "",
+          precio: producto?.precio ?? 0,
+        }}
+        onConfirm={(data) => {
+          console.log("Datos listos para enviar:", data);
+        }}
+      />
     </div>
   );
 }

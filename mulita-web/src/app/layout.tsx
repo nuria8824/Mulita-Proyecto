@@ -4,6 +4,7 @@ import { UserProvider } from "@/context/UserContext";
 import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
 
+import { Toaster } from "react-hot-toast";
 
 export const metadata = {
   title: "Mulita",
@@ -18,8 +19,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <UserProvider>
             {/* Top bar */}
             <Header />
-
             <main className="flex-1">{children}</main>
+            <Toaster position="top-right" />
             <Footer />
           </UserProvider>
         </CartProvider>
