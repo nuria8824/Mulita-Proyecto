@@ -139,7 +139,7 @@ export default function CompraModal({ open, onClose, producto, usuario, onConfir
   if (!open) return null;
 
   const confirmarCompra = async () => {
-    let erroresTemp = {
+    const erroresTemp = {
       razonSocial: "",
       cuit: "",
       cantidad: "",
