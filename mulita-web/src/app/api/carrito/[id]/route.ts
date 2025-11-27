@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase, supabaseAdmin } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { cookies } from "next/headers";
 
 // Actualizar cantidad o eliminar item del carrito
@@ -36,7 +36,7 @@ export async function PUT(
     }
 
     // Verificar que el item pertenezca al usuario
-    const { data: item } = await supabaseAdmin
+    const { data: item } = await supabase
       .from("carrito_items")
       .select(
         `
@@ -55,7 +55,7 @@ export async function PUT(
     }
 
     // Actualizar cantidad
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await supabase
       .from("carrito_items")
       .update({ cantidad })
       .eq("id", itemId);
@@ -63,7 +63,7 @@ export async function PUT(
     if (updateError) throw updateError;
 
     // Recalcular total del carrito
-    const { data: items } = await supabaseAdmin
+    const { data: items } = await supabase
       .from("carrito_items")
       .select("*")
       .eq("carrito_id", item.carrito_id);
@@ -72,7 +72,7 @@ export async function PUT(
       items?.reduce((sum, i) => sum + i.precio * i.cantidad, 0) || 0;
     const newCantidad = items?.reduce((sum, i) => sum + i.cantidad, 0) || 0;
 
-    await supabaseAdmin
+    await supabase
       .from("carritos")
       .update({
         total: newTotal,
@@ -117,7 +117,7 @@ export async function DELETE(
     const itemId = resolvedParams.id;
 
     // Verificar que el item pertenezca al usuario
-    const { data: item } = await supabaseAdmin
+    const { data: item } = await supabase
       .from("carrito_items")
       .select(
         `
@@ -136,7 +136,7 @@ export async function DELETE(
     }
 
     // Eliminar item
-    const { error: deleteError } = await supabaseAdmin
+    const { error: deleteError } = await supabase
       .from("carrito_items")
       .delete()
       .eq("id", itemId);
@@ -144,7 +144,7 @@ export async function DELETE(
     if (deleteError) throw deleteError;
 
     // Recalcular total del carrito
-    const { data: items } = await supabaseAdmin
+    const { data: items } = await supabase
       .from("carrito_items")
       .select("*")
       .eq("carrito_id", item.carrito_id);
@@ -153,7 +153,7 @@ export async function DELETE(
       items?.reduce((sum, i) => sum + i.precio * i.cantidad, 0) || 0;
     const newCantidad = items?.reduce((sum, i) => sum + i.cantidad, 0) || 0;
 
-    await supabaseAdmin
+    await supabase
       .from("carritos")
       .update({
         total: newTotal,

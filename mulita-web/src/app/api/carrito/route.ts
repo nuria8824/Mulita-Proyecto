@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase, supabaseAdmin } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { cookies } from "next/headers";
 
 // Obtener el carrito actual del usuario
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const userId = user.id;
 
     // Obtener o crear carrito
-    let { data: carrito, error: carritoError } = await supabaseAdmin
+    let { data: carrito, error: carritoError } = await supabase
       .from("carritos")
       .select("*")
       .eq("usuario_id", userId)
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Obtener items del carrito con datos del producto
-    const { data: items, error: itemsError } = await supabaseAdmin
+    const { data: items, error: itemsError } = await supabase
       .from("carrito_items")
       .select("*")
       .eq("carrito_id", carrito.id);
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       const productoIds = items.map(item => item.producto_id);
       console.log("Buscando productos con IDs:", productoIds);
       
-      const { data: productos, error: productosError } = await supabaseAdmin
+      const { data: productos, error: productosError } = await supabase
         .from("producto")
         .select("*")
         .in("id", productoIds);
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Obtener o crear carrito
-    let { data: carrito, error: carritoError } = await supabaseAdmin
+    let { data: carrito, error: carritoError } = await supabase
       .from("carritos")
       .select("*")
       .eq("usuario_id", userId)
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
 
     if (!carrito) {
       console.log("POST - Creando carrito para usuario:", userId);
-      const { data: nuevoCarrito, error: crearError } = await supabaseAdmin
+      const { data: nuevoCarrito, error: crearError } = await supabase
         .from("carritos")
         .upsert(
           [{ usuario_id: userId, total: 0, cantidad_items: 0 }],
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verificar si el item ya existe en el carrito
-    const { data: existingItem } = await supabaseAdmin
+    const { data: existingItem } = await supabase
       .from("carrito_items")
       .select("*")
       .eq("carrito_id", carrito.id)
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
 
     if (existingItem) {
       // Actualizar cantidad
-      const { error: updateError } = await supabaseAdmin
+      const { error: updateError } = await supabase
         .from("carrito_items")
         .update({ cantidad: existingItem.cantidad + cantidad })
         .eq("id", existingItem.id);
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
       if (updateError) throw updateError;
     } else {
       // Insertar nuevo item
-      const { error: insertError } = await supabaseAdmin
+      const { error: insertError } = await supabase
         .from("carrito_items")
         .insert([
           {
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Actualizar total y cantidad de items del carrito
-    const { data: items } = await supabaseAdmin
+    const { data: items } = await supabase
       .from("carrito_items")
       .select("*")
       .eq("carrito_id", carrito.id);
@@ -188,7 +188,7 @@ export async function POST(req: NextRequest) {
       items?.reduce((sum, item) => sum + item.precio * item.cantidad, 0) || 0;
     const newCantidad = items?.reduce((sum, item) => sum + item.cantidad, 0) || 0;
 
-    await supabaseAdmin
+    await supabase
       .from("carritos")
       .update({
         total: newTotal,
@@ -227,7 +227,7 @@ export async function DELETE(req: NextRequest) {
 
     const userId = user.id;
 
-    const { data: carrito } = await supabaseAdmin
+    const { data: carrito } = await supabase
       .from("carritos")
       .select("*")
       .eq("usuario_id", userId)
@@ -241,13 +241,13 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Eliminar todos los items
-    await supabaseAdmin
+    await supabase
       .from("carrito_items")
       .delete()
       .eq("carrito_id", carrito.id);
 
     // Actualizar carrito
-    await supabaseAdmin
+    await supabase
       .from("carritos")
       .update({
         total: 0,
