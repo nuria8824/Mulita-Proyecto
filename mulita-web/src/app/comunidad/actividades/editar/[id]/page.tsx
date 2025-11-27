@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { uploadFile } from "@/lib/subirArchivos";
 import SkeletonEditarActividad from "@/components/ui/comunidad/skeletons/SkeletonEditarActividad";
+import { toast } from "react-hot-toast";
 
 interface Categoria {
   id: string;
@@ -54,7 +55,7 @@ export default function EditarActividadPage() {
 
         if (!res.ok) {
           console.error("Error al obtener la actividad", data.error);
-          alert("No se pudo cargar la actividad.");
+          toast.error("No se pudo cargar la actividad.");
           router.push("/comunidad");
           return;
         }
@@ -169,14 +170,15 @@ export default function EditarActividadPage() {
       if (!res.ok) {
         const error = await res.json();
         console.error(error.detail || error.message);
-        alert("Error actualizando actividad");
+        toast.error("Error actualizando actividad");
         return;
       }
 
+      toast.success("Actividad actualizada exitosamente");
       router.push("/comunidad");
     } catch (err) {
       console.error("Error en fetch:", err);
-      alert("Error actualizando actividad");
+      toast.error("Error actualizando actividad");
     }
   };
 

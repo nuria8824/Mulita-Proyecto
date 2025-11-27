@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { uploadFile } from "@/lib/subirArchivos";
+import { toast } from "react-hot-toast";
 
 interface Categoria {
   id: string;
@@ -120,14 +121,15 @@ export default function CrearActividadPage() {
       if (!res.ok) {
         const error = await res.json();
         console.error(error.detail || error.message);
-        alert("Error creando actividad");
+        toast.error("Error creando actividad");
         return;
       }
 
+      toast.success("Actividad creada exitosamente");
       router.push("/comunidad");
     } catch (err) {
       console.error("Error en fetch:", err);
-      alert("Error creando actividad");
+      toast.error("Error creando actividad");
     }
   };
 

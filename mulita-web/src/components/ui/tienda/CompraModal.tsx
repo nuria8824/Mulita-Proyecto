@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import UbicacionInput from "./ubicacion/UbicacionInput";
 import { useUser } from "@/context/UserContext";
 import { toast } from "react-hot-toast";
@@ -45,6 +46,7 @@ function validarRazonSocial(nombre: string): boolean {
 
 export default function CompraModal({ open, onClose, producto, onConfirm }: CompraModalProps) {
   const { user: usuario } = useUser();
+  const router = useRouter();
   const [cantidad, setCantidad] = useState(1);
 
   // Datos fiscales
@@ -63,16 +65,16 @@ export default function CompraModal({ open, onClose, producto, onConfirm }: Comp
     direccion: "",
   })
 
-  // Si el usuario no está logueado mostrar toast y cerrar modal
+  // Si el usuario no está logueado mostrar toast y redirigir a login
   useEffect(() => {
     if (open && !usuario) {
-      toast.error("Debes registrarte para poder comprar");
+      toast.error("Debes iniciar sesión para poder comprar");
       onClose();
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 1500);
     }
-  }, [open, usuario, onClose]);
-
-  // Si no hay usuario, directamente no se renderiza el modal
-  if (!usuario) return null;
+  }, [open, usuario, onClose, router]);
 
   const getWhatsAppUrl = ({
     codigo,
@@ -128,7 +130,7 @@ export default function CompraModal({ open, onClose, producto, onConfirm }: Comp
 
   // Cargar datos fiscales al abrir
   useEffect(() => {
-    if (!open) return;
+    if (!open || !usuario) return;
 
     (async () => {
       const res = await fetch("/api/datosFiscales", {
@@ -142,9 +144,11 @@ export default function CompraModal({ open, onClose, producto, onConfirm }: Comp
         setCuit(data.datosFiscales.cuit_cuil);
       }
     })();
-  }, [open, usuario.id]);
+  }, [open, usuario]);
 
+  // Early returns después de todos los hooks
   if (!open) return null;
+  if (!usuario) return null;
 
   const confirmarCompra = async () => {
     const erroresTemp = {
@@ -279,6 +283,8 @@ export default function CompraModal({ open, onClose, producto, onConfirm }: Comp
     onClose();
   };
 
+  // Si no hay usuario, no renderizar el modal
+  if (!usuario) return null;
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">

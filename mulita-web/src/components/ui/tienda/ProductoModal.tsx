@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 import { AddToCartButton } from "./carrito/AddToCartButton";
 import CompraModal from "./CompraModal";
+import { toast } from "react-hot-toast";
 
 type ProductoModalProps = {
   open: boolean;
@@ -18,8 +21,20 @@ type ProductoModalProps = {
 
 export default function ProductoModal({ open, onClose, producto }: ProductoModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-
   const [compraOpen, setCompraOpen] = useState(false);
+  const { user } = useUser();
+  const router = useRouter();
+
+  const handleComprar = () => {
+    if (!user) {
+      toast.error("Debes iniciar sesión para poder comprar");
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 1500);
+      return;
+    }
+    setCompraOpen(true);
+  };
 
   useEffect(() => {
     if (open) {
@@ -110,9 +125,7 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
                 transition-all duration-200
                 hover:bg-[#004a8d] hover:scale-[1.02] hover:shadow-md
               "
-              onClick={(e) => {
-                setCompraOpen(true)
-              }}
+              onClick={handleComprar}
             >
               Comprar
               <img

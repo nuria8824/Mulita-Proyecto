@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 export default function EditarPerfilPage() {
   console.log("Rendering EditarPerfilPage");
@@ -50,10 +51,11 @@ export default function EditarPerfilPage() {
 
       if (!res.ok) throw new Error("Error actualizando el perfil");
 
+      toast.success("Perfil actualizado exitosamente");
       router.push(`/perfil/${params.id}`);
     } catch (err) {
       console.error("Error en fetch:", err);
-      alert("Error actualizando el perfil");
+      toast.error("Error actualizando el perfil");
     } finally {
       setSubmitting(false);
     }
