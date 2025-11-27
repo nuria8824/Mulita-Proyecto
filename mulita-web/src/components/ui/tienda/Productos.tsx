@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ProductoModal from "./ProductoModal";
+import { AddToCartButton } from "../AddToCartButton";
 import CompraModal from "./CompraModal";
 
 export type Archivo = { archivo_url: string };
@@ -33,11 +34,19 @@ export default function Productos({ productos }: { productos: Producto[] }) {
     setModalOpen(false);
     setProductoSeleccionado(null);
   }
-
+  
   const abrirModalCompra = (producto: Producto) => {
     setProductoCompra(producto);
     setCompraOpen(true);
   };
+  
+  if (productos.length === 0) {
+    return (
+      <div className="w-full max-w-7xl mx-auto text-center py-12">
+        <p className="text-gray-500">No hay productos disponibles</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto">
@@ -90,7 +99,14 @@ export default function Productos({ productos }: { productos: Producto[] }) {
                 Comprar
               </button>
 
-              <button className="btn btn--outline flex-1">Carrito</button>
+              <div className="mt-4 w-full" onClick={(e) => e.stopPropagation()}>
+                <AddToCartButton 
+                  productoId={p.id}
+                  nombre={p.nombre}
+                  precio={p.precio}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
         ))}

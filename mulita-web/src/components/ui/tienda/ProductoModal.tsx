@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AddToCartButton } from "../AddToCartButton";
 import CompraModal from "./CompraModal";
 
 type ProductoModalProps = {
@@ -123,17 +124,14 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
               />
             </button>
 
-            <button
-              className="
-                bg-[#f8faff] border border-[#e1e4ed] text-[#6d758f]
-                rounded-md px-[28px] py-[10px] 
-                flex items-center justify-center cursor-pointer font-semibold flex-1
-                transition-all duration-200
-                hover:border-[#c7ccda] hover:shadow-sm hover:scale-[1.02]
-              "
-            >
-              Carrito
-            </button>
+            <div onClick={(e) => e.stopPropagation()}>
+              <AddToCartButton 
+                productoId={producto.id}
+                nombre={producto.nombre}
+                precio={producto.precio}
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
 
