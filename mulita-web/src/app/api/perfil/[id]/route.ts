@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseServer } from "@/lib/supabase-server";
 
 // GET: obtener cualquier perfil (visible para todos los autenticados)
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
@@ -11,28 +10,15 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   if (!access_token)
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-  // Crear cliente autenticado
-  const supabaseWithAuth = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        headers: {
-          Authorization: `Bearer ${access_token}`
-        }
-      }
-    }
-  );
-
   // Obtener usuario autenticado
   const {
     data: { user },
     error: userError,
-  } = await supabaseWithAuth.auth.getUser();
+  } = await supabaseServer.auth.getUser(access_token);
   if (userError || !user)
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
-  const { data, error } = await supabaseWithAuth
+  const { data, error } = await supabaseServer
     .from("perfil")
     .select("*, usuario(id,nombre,apellido,email,rol)")
     .eq("id", id)
@@ -52,20 +38,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
   const access_token = req.cookies.get("sb-access-token")?.value;
   if (!access_token) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-  // Crear cliente autenticado
-  const supabaseWithAuth = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        headers: {
-          Authorization: `Bearer ${access_token}`
-        }
-      }
-    }
-  );
-
-  const { data: { user } } = await supabaseWithAuth.auth.getUser();
+  const { data: { user } } = await supabaseServer.auth.getUser(access_token);
   if (!user) return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
   // Chequear que el usuario solo edite su propio perfil
@@ -81,7 +54,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
   console.log("Datos recibidos para actualizar perfil:", { biografia, imagen_url });
 
   // Obtener imagen actual
-  const { data: perfilActual } = await supabaseWithAuth
+  const { data: perfilActual } = await supabaseServer
     .from("perfil")
     .select("imagen")
     .eq("id", user.id)
@@ -89,7 +62,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
 
   if (imagen_url instanceof File) {
     const file = imagen_url;
-    const { data, error } = await supabaseWithAuth.storage
+    const { data, error } = await supabaseServer.storage
       .from("mulita-files")
       .upload(`perfiles/${user.id}/${Date.now()}_${file.name}`, file);
 
@@ -97,14 +70,14 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    imagen_url = supabaseWithAuth.storage.from("mulita-files").getPublicUrl(data.path).data.publicUrl;
+    imagen_url = supabaseServer.storage.from("mulita-files").getPublicUrl(data.path).data.publicUrl;
   } else {
     imagen_url = perfilActual?.imagen;
   }
 
   console.log("imagen_url final para actualizar:", imagen_url);
 
-  const { data: perfil, error } = await supabaseWithAuth
+  const { data: perfil, error } = await supabaseServer
     .from("perfil")
     .update({
       biografia,
