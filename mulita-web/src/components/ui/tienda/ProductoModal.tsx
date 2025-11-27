@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AddToCartButton } from "../AddToCartButton";
+import { AddToCartButton } from "./carrito/AddToCartButton";
 import CompraModal from "./CompraModal";
 
 type ProductoModalProps = {
@@ -129,7 +129,6 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
                 productoId={producto.id}
                 nombre={producto.nombre}
                 precio={producto.precio}
-                className="w-full"
               />
             </div>
           </div>

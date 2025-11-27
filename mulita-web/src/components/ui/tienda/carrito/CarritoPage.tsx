@@ -150,6 +150,7 @@ export function CarritoPage() {
                     {/* Cantidad */}
                     <div className="flex items-center gap-2">
                       <button
+                        aria-label="menos"
                         onClick={() => handleQuantityChange(item.id, item.cantidad - 1)}
                         disabled={processing}
                         className="p-1 hover:bg-gray-200 rounded transition disabled:opacity-50"
@@ -157,6 +158,7 @@ export function CarritoPage() {
                         <Minus className="w-5 h-5" />
                       </button>
                       <input
+                        aria-label="cantidad"
                         type="number"
                         min="1"
                         value={getItemQuantity(item.id, item.cantidad)}
@@ -168,6 +170,7 @@ export function CarritoPage() {
                         className="w-12 text-center border rounded px-2 py-1 disabled:opacity-50"
                       />
                       <button
+                        aria-label="mas"
                         onClick={() => handleQuantityChange(item.id, item.cantidad + 1)}
                         disabled={processing}
                         className="p-1 hover:bg-gray-200 rounded transition disabled:opacity-50"
@@ -186,6 +189,7 @@ export function CarritoPage() {
 
                     {/* Eliminar */}
                     <button
+                      aria-label="eliminar"
                       onClick={() => handleRemoveItem(item.id)}
                       disabled={processing}
                       className="p-2 text-red-600 hover:bg-red-50 rounded transition disabled:opacity-50"

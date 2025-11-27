@@ -46,38 +46,13 @@ export function AddToCartButton({
   return (
     <div className={className}>
       <div className="flex items-center gap-4">
-        <div className="flex items-center border rounded-lg">
-          <button
-            onClick={() => setCantidad(Math.max(1, cantidad - 1))}
-            disabled={loading}
-            className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-          >
-            −
-          </button>
-          <input
-            type="number"
-            min="1"
-            value={cantidad}
-            onChange={(e) => setCantidad(Math.max(1, parseInt(e.target.value) || 1))}
-            disabled={loading}
-            className="w-12 text-center border-0 disabled:opacity-50"
-          />
-          <button
-            onClick={() => setCantidad(cantidad + 1)}
-            disabled={loading}
-            className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-          >
-            +
-          </button>
-        </div>
-
         <button
           onClick={handleAddToCart}
           disabled={loading}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition flex items-center justify-center gap-2"
+          className="btn btn--outline flex-1"
         >
           <ShoppingCart className="w-5 h-5" />
-          {loading ? "Agregando..." : "Agregar al carrito"}
+          {loading ? "Agregando..." : "Carrito"}
         </button>
       </div>
 

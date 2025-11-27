@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ProductoModal from "./ProductoModal";
-import { AddToCartButton } from "../AddToCartButton";
+import { AddToCartButton } from "./carrito/AddToCartButton";
 import CompraModal from "./CompraModal";
 
 export type Archivo = { archivo_url: string };
@@ -99,12 +99,11 @@ export default function Productos({ productos }: { productos: Producto[] }) {
                 Comprar
               </button>
 
-              <div className="mt-4 w-full" onClick={(e) => e.stopPropagation()}>
+              <div onClick={(e) => e.stopPropagation()}>
                 <AddToCartButton 
                   productoId={p.id}
                   nombre={p.nombre}
                   precio={p.precio}
-                  className="w-full"
                 />
               </div>
             </div>

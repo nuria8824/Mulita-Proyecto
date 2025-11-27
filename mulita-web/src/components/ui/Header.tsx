@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useUser } from "@/context/UserContext";
 import { usePathname } from "next/navigation";
 import MenuAccionesHeaderPrincipal from "./MenuAccionesHeaderPrincipal";
-import { CartIcon } from "@/components/ui/CartIcon";
+import { CartIcon } from "@/components/ui/tienda/carrito/CartIcon";
 
 
 
@@ -78,7 +78,6 @@ export default function Header() {
 
         {/* Acciones (registro/login o menú usuario) */}
         <div className="flex items-center gap-4">
-          <CartIcon />
           {!user ? (
             <>
               <Link href="/auth/register" className="btn btn--yellow">
@@ -89,7 +88,10 @@ export default function Header() {
               </Link>
             </>
           ) : (
-            <MenuAccionesHeaderPrincipal />
+            <>
+              <CartIcon />
+              <MenuAccionesHeaderPrincipal />
+            </>
           )}
         </div>
       </nav>
