@@ -2,6 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "react-hot-toast"
 
 export default function EditarNoticiaPage() {
   const params = useParams();
@@ -60,8 +61,10 @@ export default function EditarNoticiaPage() {
         credentials: "include",
       });
 
+      toast.error("Error actualizando noticia")
       if (!res.ok) throw new Error("Error actualizando noticia");
 
+      toast.success("Noticia actualizada exitosamente")
       router.push(`/dashboard/gestionLanding/gestionNoticias`);
     } catch (err) {
       console.error(err);

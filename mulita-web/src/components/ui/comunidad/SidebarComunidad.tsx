@@ -59,13 +59,13 @@ export function SidebarComunidad({
         return pathname === `/perfil/${userId}` && vista === "favoritos";
       },
     },
-    {
-      href: "/configuracion",
-      label: "Configuración",
-      icon: "/images/icons/comunidad/configuracion.svg",
-      iconActive: "/images/icons/comunidad/configuracion.svg",
-      isActive: () => pathname === "/configuracion",
-    },
+    // {
+    //   href: "/configuracion",
+    //   label: "Configuración",
+    //   icon: "/images/icons/comunidad/configuracion.svg",
+    //   iconActive: "/images/icons/comunidad/configuracion.svg",
+    //   isActive: () => pathname === "/configuracion",
+    // },
   ];
 
   return (

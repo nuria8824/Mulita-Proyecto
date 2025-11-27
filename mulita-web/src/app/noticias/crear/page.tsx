@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { uploadFile } from "@/lib/subirArchivos";
+import { toast } from "react-hot-toast"
+
+interface ArchivoSubido {
+  url: string;
+  name: string;
+  type: string;
+}
 
 export default function CrearNoticiaPage() {
   const router = useRouter();
@@ -10,7 +18,14 @@ export default function CrearNoticiaPage() {
   const [introduccion, setIntroduccion] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [imagen_principal, setImagenPrincipal] = useState<File | null>(null);
-  const [archivo, setArchivo] = useState<File | null>(null);
+
+  // Función para limpiar nombres de archivo
+  function sanitizeFileName(fileName: string) {
+    return fileName
+      .normalize("NFD") // separa letras y acentos
+      .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // reemplaza cualquier caracter no válido
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     console.log("Llegue a /noticias/crear/page");
@@ -21,32 +36,51 @@ export default function CrearNoticiaPage() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("titulo", titulo);
-    formData.append("autor", autor);
-    formData.append("introduccion", introduccion);
-    formData.append("descripcion", descripcion);
-    formData.append("imagen_principal", imagen_principal);
-    if (archivo) formData.append("archivo", archivo);
-
     try {
-      const res = await fetch("/api/noticias", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
+      const archivoSubido: ArchivoSubido[] = [];
+      try {
+        const sanitizedFileName = sanitizeFileName(imagen_principal.name);
+        const filePath = `noticias/imagenes/${Date.now()}_${sanitizedFileName}`;
 
-      if (!res.ok) {
-        const error = await res.json();
-        console.log(error.detail);
-        alert("Error creando noticia");
-        return;
+        // Subir archivo usando la función uploadFile
+        const url = await uploadFile(imagen_principal, filePath);
+
+        archivoSubido.push({
+          url,
+          name: imagen_principal.name,
+          type: imagen_principal.type,
+        });
+      } catch (error) {
+        console.error(`Error subiendo ${imagen_principal.name}:`, error);
       }
 
-      router.push("/dashboard/gestionLanding/gestionNoticias");
+    const res = await fetch("/api/noticias", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        titulo,
+        autor,
+        introduccion,
+        descripcion,
+        imagen_principal: archivoSubido?.[0],
+      }),
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      console.log(error.detail);
+      toast.error("Error creando noticia");
+      return;
+    }
+
+    toast.success("Noticia creada exitosamente");
+    router.push("/dashboard/gestionLanding/gestionNoticias");
     } catch (err) {
       console.log("Error en fetch:", err);
-      alert("Error creando noticia");
+      toast.error("Error creando noticia");
     }
   };
 
@@ -131,20 +165,6 @@ export default function CrearNoticiaPage() {
               placeholder="Descripción"
               required
             />
-          </div>
-
-          {/* Archivos/Imágenes extra */}
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold text-lg">Archivos</label>
-            <label className="w-full h-32 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition">
-              <span className="text-gray-500">Sube archivos desde tu dispositivo</span>
-              <input
-                type="file"
-                className="hidden"
-                onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-              />
-            </label>
-            {archivo && <p className="text-sm text-gray-600 mt-1">Archivo seleccionado: {archivo.name}</p>}
           </div>
 
           {/* Botones de acción */}
