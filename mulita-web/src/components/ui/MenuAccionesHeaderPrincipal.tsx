@@ -48,13 +48,13 @@ export default function MenuAccionesHeaderPrincipal() {
           >
             Perfil
           </Link>
-          <Link
+          {/* <Link
             href="/configuracion"
             onClick={() => setOpen(false)}
             className="block px-4 py-2 text-sm hover:bg-muted"
           >
             Configuración
-          </Link>
+          </Link> */}
           <button
             type="button"
             onClick={async () => {
