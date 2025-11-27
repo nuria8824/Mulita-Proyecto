@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   const {
     data: { user },
     error: userError,
-  } = await supabase.auth.getUser(access_token);
+  } = await supabaseServer.auth.getUser(access_token);
 
   if (userError || !user)
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   const offset = parseInt(searchParams.get("offset") || "0");
 
   // Consultar las actividades con paginación
-  const { data: actividades, error: actividadError } = await supabase
+  const { data: actividades, error: actividadError } = await supabaseServer
     .from("actividad")
     .select(`
       *,
@@ -40,13 +40,13 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     return NextResponse.json({ error: actividadError.message }, { status: 500 });
 
   // Obtener usuario y perfil
-  const { data: usuario, error: usuarioError } = await supabase
+  const { data: usuario, error: usuarioError } = await supabaseServer
     .from("usuario")
     .select("id, nombre, apellido")
     .eq("id", id)
     .single();
 
-  const { data: perfil, error: perfilError } = await supabase
+  const { data: perfil, error: perfilError } = await supabaseServer
     .from("perfil")
     .select("id, imagen")
     .eq("id", id)
