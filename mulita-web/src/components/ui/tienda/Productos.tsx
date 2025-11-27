@@ -3,7 +3,6 @@
 import { useState } from "react";
 import ProductoModal from "./ProductoModal";
 import CompraModal from "./CompraModal";
-import { useUser } from "@/context/UserContext";
 
 export type Archivo = { archivo_url: string };
 
@@ -19,7 +18,6 @@ export type Producto = {
 };
 
 export default function Productos({ productos }: { productos: Producto[] }) {
-  const { user } = useUser();
   const [modalOpen, setModalOpen] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
@@ -40,8 +38,6 @@ export default function Productos({ productos }: { productos: Producto[] }) {
     setProductoCompra(producto);
     setCompraOpen(true);
   };
-
-  if (!user) return null;
 
   return (
     <div className="w-full max-w-7xl mx-auto">
@@ -111,12 +107,6 @@ export default function Productos({ productos }: { productos: Producto[] }) {
           precio: productoSeleccionado?.precio ?? 0,
           imagenes: productoSeleccionado?.producto_archivos?.map(a => a.archivo_url) ?? ["/placeholder.png"]
         }}
-        usuario={{
-          id: user.id,
-          nombre: user.nombre,
-          apellido: user.apellido,
-          telefono: user.telefono,
-        }}
       />
 
       {/* MODAL DE COMPRA */}
@@ -130,12 +120,6 @@ export default function Productos({ productos }: { productos: Producto[] }) {
         }}
         onConfirm={(data) => {
           console.log("Datos listos para enviar:", data);
-        }}
-        usuario={{
-          id: user.id,
-          nombre: user.nombre,
-          apellido: user.apellido,
-          telefono: user.telefono,
         }}
       />
     </div>

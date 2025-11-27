@@ -3,6 +3,7 @@ import "./globals.css";
 import Link from "next/link";
 import { Footer } from "@/components/ui/Footer";
 import { UserProvider } from "@/context/UserContext";
+import { Toaster } from "react-hot-toast";
 
 export const metadata = {
   title: "Mulita",
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
 
           <main className="flex-1">{children}</main>
+          <Toaster position="top-right" />
           <Footer />
         </UserProvider>
 

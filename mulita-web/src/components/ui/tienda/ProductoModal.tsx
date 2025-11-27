@@ -13,15 +13,9 @@ type ProductoModalProps = {
     precio: number;
     imagenes: string[];
   };
-  usuario: {
-    id: string;
-    nombre: string;
-    apellido: string;
-    telefono: string;
-  };
 };
 
-export default function ProductoModal({ open, onClose, producto, usuario }: ProductoModalProps) {
+export default function ProductoModal({ open, onClose, producto }: ProductoModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const [compraOpen, setCompraOpen] = useState(false);
@@ -200,12 +194,6 @@ export default function ProductoModal({ open, onClose, producto, usuario }: Prod
         }}
         onConfirm={(data) => {
           console.log("Datos listos para enviar:", data);
-        }}
-        usuario={{
-          id: usuario.id,
-          nombre: usuario.nombre,
-          apellido: usuario.apellido,
-          telefono: usuario.telefono,
         }}
       />
     </div>
