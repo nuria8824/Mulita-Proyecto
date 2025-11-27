@@ -20,9 +20,11 @@ export default function GestionCategoriasPage() {
       try {
         const res = await fetch("/api/categorias");
         const data = await res.json();
-        setCategorias((data ?? []).reverse());
+        const categoriasArray = Array.isArray(data) ? data : (data?.categorias || []);
+        setCategorias(categoriasArray.reverse());
       } catch (err) {
         console.error("Error fetching categorias:", err);
+        setCategorias([]);
       } finally {
         setLoadingCategorias(false);
       }

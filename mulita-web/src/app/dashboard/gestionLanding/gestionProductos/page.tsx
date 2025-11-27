@@ -21,9 +21,11 @@ export default function GestionproductosPage() {
       try {
         const res = await fetch("/api/productos");
         const data = await res.json();
-        setProductos((data.productos ?? []).reverse()); // Las más recientes primero
+        const productosArray = Array.isArray(data) ? data : (data?.productos || []);
+        setProductos(productosArray.reverse()); // Las más recientes primero
       } catch (err) {
         console.error("Error fetching productos:", err);
+        setProductos([]);
       } finally {
         setLoadingProductos(false);
       }

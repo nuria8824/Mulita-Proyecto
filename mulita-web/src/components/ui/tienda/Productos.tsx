@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ProductoModal from "./ProductoModal";
+import { AddToCartButton } from "../AddToCartButton";
 
 export type Archivo = { archivo_url: string };
 
@@ -30,11 +31,22 @@ export default function Productos({ productos }: { productos: Producto[] }) {
     setProductoSeleccionado(null);
   }
 
+  // Validar que productos es un array
+  const productosArray = Array.isArray(productos) ? productos : [];
+
+  if (productosArray.length === 0) {
+    return (
+      <div className="w-full max-w-7xl mx-auto text-center py-12">
+        <p className="text-gray-500">No hay productos disponibles</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-7xl mx-auto">
       {/* GRID */}
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {productos.map((p) => (
+        {productosArray.map((p) => (
           <div
             key={p.id}
             className="rounded-xl border border-light bg-card p-5 flex flex-col shadow-sm hover:shadow-lg transition"
@@ -70,9 +82,13 @@ export default function Productos({ productos }: { productos: Producto[] }) {
             </div>
 
             {/* Botones */}
-            <div className="mt-4 flex gap-2">
-              <button className="btn btn--blue flex-1">Comprar</button>
-              <button className="btn btn--outline flex-1">Carrito</button>
+            <div className="mt-4 w-full" onClick={(e) => e.stopPropagation()}>
+              <AddToCartButton 
+                productoId={p.id}
+                nombre={p.nombre}
+                precio={p.precio}
+                className="w-full"
+              />
             </div>
           </div>
         ))}
@@ -83,6 +99,7 @@ export default function Productos({ productos }: { productos: Producto[] }) {
         open={modalOpen}
         onClose={cerrarModal}
         producto={{
+          id: productoSeleccionado?.id ?? "",
           nombre: productoSeleccionado?.nombre ?? "",
           descripcion: productoSeleccionado?.descripcion ?? "",
           precio: productoSeleccionado?.precio ?? 0,

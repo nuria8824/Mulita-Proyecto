@@ -27,9 +27,11 @@ export default function NoticiasPage() {
       try {
         const res = await fetch("/api/noticias");
         const data = await res.json();
-        setNoticias((data ?? []).reverse()); // Las más recientes primero
+        const noticiasArray = Array.isArray(data) ? data : (data?.noticias || []);
+        setNoticias(noticiasArray.reverse()); // Las más recientes primero
       } catch (err) {
         console.error("Error fetching noticias:", err);
+        setNoticias([]);
       } finally {
         setLoadingNoticias(false);
       }

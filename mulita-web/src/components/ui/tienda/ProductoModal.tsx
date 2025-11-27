@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AddToCartButton } from "../AddToCartButton";
 
 type ProductoModalProps = {
   open: boolean;
   onClose: () => void;
   producto: {
+    id: string;
     nombre: string;
     descripcion: string;
     precio: number;
@@ -95,38 +97,13 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
           <div className="mt-6" />
 
           {/* BOTONES */}
-          <div className="flex items-center gap-4 text-[16px] text-white mt-4">
-            <button
-              className="
-                bg-[#003c71] shadow-[0px_1px_4px_rgba(25,33,61,0.08)]
-                rounded-md px-[28px] py-[10px] 
-                flex items-center justify-center gap-[6px]
-                cursor-pointer font-semibold flex-1
-                transition-all duration-200
-                hover:bg-[#004a8d] hover:scale-[1.02] hover:shadow-md
-              "
-            >
-              Comprar
-              <img
-                src="/images/icons/productos/flecha.svg"
-                width={14}
-                height={14}
-                alt="Ir"
-                className="transition-transform duration-200 group-hover:translate-x-1"
-              />
-            </button>
-
-            <button
-              className="
-                bg-[#f8faff] border border-[#e1e4ed] text-[#6d758f]
-                rounded-md px-[28px] py-[10px] 
-                flex items-center justify-center cursor-pointer font-semibold flex-1
-                transition-all duration-200
-                hover:border-[#c7ccda] hover:shadow-sm hover:scale-[1.02]
-              "
-            >
-              Carrito
-            </button>
+          <div className="w-full mt-4" onClick={(e) => e.stopPropagation()}>
+            <AddToCartButton 
+              productoId={producto.id}
+              nombre={producto.nombre}
+              precio={producto.precio}
+              className="w-full"
+            />
           </div>
         </div>
 

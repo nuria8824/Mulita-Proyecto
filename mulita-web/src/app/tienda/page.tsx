@@ -8,17 +8,25 @@ export default function TiendaPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const limit = 12;
 
   const fetchProductos = async () => {
     setLoading(true);
-    const res = await fetch(`/api/productos?page=${page}&limit=${limit}`);
-    const data = await res.json();
+    setError(null);
+    try {
+      const res = await fetch(`/api/productos?page=${page}&limit=${limit}`);
+      const data = await res.json();
 
-    setProductos(data.productos);
-    setTotal(data.total);
-
-    setLoading(false);
+      setProductos(data?.productos || []);
+      setTotal(data?.total || 0);
+    } catch (err) {
+      console.error("Error fetching productos:", err);
+      setError("Error al cargar productos");
+      setProductos([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
