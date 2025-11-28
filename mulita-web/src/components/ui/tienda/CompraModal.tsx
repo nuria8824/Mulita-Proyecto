@@ -14,6 +14,8 @@ export type CompraModalProps = {
   items: CartItem[];
 };
 
+
+
 function validarCuit(cuit: string): boolean {
   if (!/^\d{11}$/.test(cuit)) return false;
 
@@ -43,7 +45,7 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
   const [cantidad, setCantidad] = useState(1);
 
   // Datos fiscales
-  const [razonSocial, setRazonSocial] = useState("");
+  const [razonSocial, setRazonSocial] = useState<"consumidor-final" | "responsable-inscripto">("consumidor-final");
   const [cuit, setCuit] = useState("");
   const [fiscalId, setFiscalId] = useState<string | null>(null);
 
@@ -68,6 +70,19 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
       }, 1500);
     }
   }, [open, usuario, onClose, router]);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
 
   const getWhatsAppUrl = ({
     codigo,
@@ -113,7 +128,7 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
 
     *TOTAL: $${total}*
 
-    _Espero tu confirmación. ¡Gracias!_
+    _Espero tu confirmación y los datos bancarios para el pago. ¡Gracias!_
     `;
 
     return `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
@@ -157,9 +172,18 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
       valido = false;
     }
 
-    if (!validarCuit(cuit)) {
-      erroresTemp.cuit = "El CUIT/CUIL debe tener 11 dígitos y ser válido.";
-      valido = false;
+    // Validación condicional del CUIT según tipo fiscal
+    if (razonSocial === "responsable-inscripto") {
+      if (!validarCuit(cuit)) {
+        erroresTemp.cuit = "El CUIT es obligatorio para Responsable Inscripto y debe ser válido.";
+        valido = false;
+      }
+    } else {
+      // Consumidor final → CUIT no obligatorio, pero si lo escribe debe ser válido
+      if (cuit.trim() !== "" && !validarCuit(cuit)) {
+        erroresTemp.cuit = "El CUIT ingresado no es válido.";
+        valido = false;
+      }
     }
 
     if (!cantidad || cantidad <= 0) {
@@ -285,8 +309,14 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
   if (!usuario) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg">
+    <div
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+      className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg"
+      onClick={(e) => e.stopPropagation()}
+    >
 
         {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
@@ -298,35 +328,22 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
           </button>
         </div>
 
-        {/* CANTIDAD */}
-        {/* <label className="block font-semibold text-gray-700 mb-2">
-          Cantidad
-        </label>
-        <input
-          aria-label="Cantidad"
-          type="number"
-          min={1}
-          value={cantidad}
-          onChange={(e) => setCantidad(Number(e.target.value))}
-          className="w-full border rounded-md px-3 py-2"
-        />
-        {errores.cantidad && (
-          <p className="text-red-600 text-sm mt-1">{errores.cantidad}</p>
-        )} */}
-
         {/* RAZÓN SOCIAL */}
         <label className="block font-semibold text-gray-700 mt-4">
-          Razón social
+          Razón Social
         </label>
-        <input
-          aria-label="Razón social"
-          type="text"
+        <select
+          aria-label="Razon social"
           value={razonSocial}
-          onChange={(e) => setRazonSocial(e.target.value)}
-          className="w-full border rounded-md px-3 py-2"
-        />
+          onChange={(e) => setRazonSocial(e.target.value as any)}
+          className="border rounded p-2 w-full"
+        >
+          <option value="consumidor-final">Consumidor Final</option>
+          <option value="responsable-inscripto">Responsable Inscripto</option>
+        </select>
+
         {errores.razonSocial && (
-          <p className="text-red-600 text-sm mt-1">{errores.razonSocial}</p>
+          <p className="text-red-500 text-sm">{errores.razonSocial}</p>
         )}
 
         {/* CUIT */}
