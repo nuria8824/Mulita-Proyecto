@@ -37,12 +37,6 @@ export async function GET(
   return NextResponse.json(producto);
 }
 
-function sanitizeFileName(fileName: string) {
-  return fileName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9.\-_]/g, "_");
-}
 
 // PATCH: actualizar producto
 export async function PATCH(
@@ -70,6 +64,9 @@ export async function PATCH(
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
+  const body = await req.json();
+  const { nombre, descripcion, precio, archivosNuevos, archivosExistentes } = body;
+
   // Obtener producto
   const { data: producto, error: productoError } = await supabase
     .from("producto")
@@ -79,17 +76,6 @@ export async function PATCH(
 
   if (productoError || !producto)
     return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
-
-  // Procesar FormData
-  const formData = await req.formData();
-  const nombre = formData.get("nombre") as string;
-  const descripcion = formData.get("descripcion") as string;
-  const precio = Number(formData.get("precio"));
-
-  const archivosNuevos = formData.getAll("archivos") as File[];
-  const archivosExistentes = JSON.parse(
-    (formData.get("archivosExistentes") as string) || "[]"
-  ) as string[];
 
   // Actualizar producto
   const { data, error: updateError } = await supabase
@@ -125,40 +111,19 @@ export async function PATCH(
       .in("archivo_url", archivosAEliminar);
   }
 
-  // Subir archivos nuevos
-  const uploadedFiles: { url: string; type: string; name: string }[] = [];
-
-  for (const archivo of archivosNuevos) {
-    const sanitized = sanitizeFileName(archivo.name);
-    const filePath = `productos/${id}/${Date.now()}_${sanitized}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("mulita-files")
-      .upload(filePath, archivo, {
-        contentType: archivo.type,
-        upsert: false,
-      });
-
-    if (uploadError) continue;
-
-    const { data: { publicUrl } } =
-      supabase.storage.from("mulita-files").getPublicUrl(filePath);
-
-    uploadedFiles.push({
-      url: publicUrl,
-      name: archivo.name,
-      type: archivo.type,
-    });
-  }
-
-  if (uploadedFiles.length > 0) {
-    await supabase.from("producto_archivos").insert(
-      uploadedFiles.map((f) => ({
+  if (archivosNuevos && archivosNuevos.length > 0) {
+    const { error: insertArchivosError } = await supabase.from("producto_archivos").insert(
+      archivosNuevos.map((file: any) => ({
         producto_id: id,
-        archivo_url: f.url,
-        nombre: f.name,
+        archivo_url: file.url,
+        nombre: file.name,
       }))
     );
+
+    if (insertArchivosError) {
+      console.error("Error guardando archivos:", insertArchivosError.message);
+      return NextResponse.json({ error: "Error guardando archivos" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ message: "Producto actualizado", data });
