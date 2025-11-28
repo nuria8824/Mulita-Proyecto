@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 import { z } from "zod";
 
 const registerSchema = z.object({
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     const data = registerSchema.parse(body);
 
     // 1. Crear usuario en Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabaseServer.auth.signUp({
       email: data.email,
       password: data.contrasena,
     });
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Insertar en tabla usuario
-    const { error: userError } = await supabase.from("usuario").update([
+    const { error: userError } = await supabaseServer.from("usuario").update([
       {
         id: userId,
         nombre: data.nombre,
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
     // 3. Si es docente, insertar en tabla docente
     if (data.rol === "docente") {
-      const { error: docenteError } = await supabase.from("docente").insert([
+      const { error: docenteError } = await supabaseServer.from("docente").insert([
         {
           id_usuario: userId,
           institucion: data.institucion || "",
@@ -79,25 +79,9 @@ export async function POST(req: Request) {
       user: { id: userId, email: data.email, rol: data.rol },
     });
 
-    // res.cookies.set("sb-access-token", authData.session?.access_token!, {
-    //   httpOnly: true,
-    //   path: "/",
-    //   secure: process.env.NODE_ENV === "production",
-    //   sameSite: "lax",
-    //   maxAge: 60 * 60 * 24 * 30, // 30 días
-    // });
-
-    // res.cookies.set("sb-refresh-token", authData.session?.refresh_token!, {
-    //   httpOnly: true,
-    //   path: "/",
-    //   secure: process.env.NODE_ENV === "production",
-    //   sameSite: "lax",
-    //   maxAge: 60 * 60 * 24 * 30,
-    // });
-
     return res;
   } catch (error: any) {
-    console.error("Error en register:", error)
-    return NextResponse.json({ success: false, message: error.message }, { status: 400 });
+    console.error("Error en register:", error);
+    return NextResponse.json({ success: false, message: error.message || "Error al registrar" }, { status: 400 });
   }
 }

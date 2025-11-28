@@ -9,19 +9,19 @@
       }
 
       .cls-1, .cls-2 {
-        fill: #fff;
+        fill: #003c71;
       }
 
       .cls-3 {
-        fill: #003865;
+        fill: #fff;
       }
 
       .cls-4 {
-        fill: #036;
+        fill: #fff;
       }
 
       .cls-5 {
-        fill: #003264;
+        fill: #003c71;
       }
     </style>
   </defs>

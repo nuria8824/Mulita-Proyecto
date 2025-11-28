@@ -2,19 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
+import { useQueryClient } from "@tanstack/react-query";
 import { createClientSupabase } from "@/lib/supabase";
+import { toast } from "react-hot-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { setUser } = useUser();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
 
   const onContinuarClick = async () => {
-    setError("");
     setLoading(true);
 
     try {
@@ -26,13 +27,20 @@ export default function Login() {
       });
 
       if (authError) {
-        setError(authError.message);
+        // Traducir mensajes comunes de Supabase
+        let mensaje = authError.message;
+        if (mensaje.includes("Invalid login credentials")) {
+          mensaje = "Email o contraseña incorrectos";
+        } else if (mensaje.includes("Email not confirmed")) {
+          mensaje = "Debes confirmar tu email antes de iniciar sesión";
+        }
+        toast.error(mensaje);
         setLoading(false);
         return;
       }
 
       if (!authData.user || !authData.session) {
-        setError("No se pudo obtener la sesión");
+        toast.error("No se pudo obtener la sesión");
         setLoading(false);
         return;
       }
@@ -51,19 +59,20 @@ export default function Login() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setError(data.message || "Error al validar la sesión");
+        toast.error(data.message || "Error al validar la sesión");
         setLoading(false);
         return;
       }
 
-      // 3. Actualizamos el contexto del usuario
-      setUser(data.user);
-
+      // 3. Invalidar el query de usuario para que se revalide
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      
       // 4. Redirigimos al inicio
+      toast.success("¡Sesión iniciada correctamente!");
       router.push("/");
     } catch (err) {
       console.error(err);
-      setError("Error en el servidor");
+      toast.error("Error en el servidor");
     } finally {
       setLoading(false);
     }
@@ -106,8 +115,6 @@ export default function Login() {
             onChange={(e) => setContrasena(e.target.value)}
           />
         </div>
-
-        {error && <p className="text-red-500">{error}</p>}
 
         <div className="w-full">
           <button

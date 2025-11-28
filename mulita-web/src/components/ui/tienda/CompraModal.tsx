@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import UbicacionInput from "./ubicacion/UbicacionInput";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
+import { useCart } from "@/hooks/queries";
 import { toast } from "react-hot-toast";
 import { CartItem } from "@/context/CartContext";
 
@@ -37,6 +38,7 @@ function validarRazonSocial(nombre: string): boolean {
 
 export default function CompraModal({ open, onClose, items }: CompraModalProps) {
   const { user: usuario } = useUser();
+  const { clearCart } = useCart();
   const router = useRouter();
   const [cantidad, setCantidad] = useState(1);
 
@@ -271,6 +273,10 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
     });
 
     window.open(waUrl, "_blank");
+
+    // Vaciar el carrito después de crear la orden
+    await clearCart();
+    toast.success("Orden enviada a WhatsApp. Carrito vaciado.");
 
     onClose();
   };

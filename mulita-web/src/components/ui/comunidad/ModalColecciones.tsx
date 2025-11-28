@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import SkeletonColecciones from "./skeletons/SkeletonColecciones";
 
 type ModalColeccionesProps = {
@@ -77,6 +78,7 @@ export default function ModalColecciones({
           }
         );
         if (!res.ok) throw new Error("Error al eliminar de la colección");
+        toast.success("Actividad removida de colección");
         setSeleccionadas((prev) => prev.filter((c) => c !== id));
       } else {
         // Agregar la actividad a la colección
@@ -86,9 +88,11 @@ export default function ModalColecciones({
           body: JSON.stringify({ actividadIds: [actividadId] }),
         });
         if (!res.ok) throw new Error("Error al agregar a la colección");
+        toast.success("Actividad agregada a colección");
         setSeleccionadas((prev) => [...prev, id]);
       }
     } catch (err: any) {
+      toast.error(err.message || "Error al actualizar colección");
       setError(err.message);
     } finally {
       setLoading(false);
@@ -122,10 +126,12 @@ export default function ModalColecciones({
         throw new Error("Error al asociar actividad a la nueva colección");
 
       // Actualizar estado local
+      toast.success("Colección creada y actividad agregada");
       setSeleccionadas((prev) => [...prev, nueva.id]);
       setNuevaColeccion("");
       setCreating(false);
     } catch (err: any) {
+      toast.error(err.message || "Error al crear colección");
       setError(err.message);
     } finally {
       setLoading(false);

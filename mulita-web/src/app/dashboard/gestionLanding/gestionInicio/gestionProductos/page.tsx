@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 
 interface Producto {
   id: number;
@@ -10,7 +10,7 @@ interface Producto {
 }
 
 export default function GestionProductosPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loadingProductos, setLoadingProductos] = useState(true);
 
@@ -54,7 +54,7 @@ export default function GestionProductosPage() {
     }
   };
 
-  if (userLoading || loadingProductos) {
+  if (isUserLoading || loadingProductos) {
     return <p className="text-center mt-10">Cargando productos...</p>;
   }
 

@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUser } from "@/hooks/queries";
 
 export function Footer() {
   const pathname = usePathname();
+  const { user } = useUser();
 
   if (
     pathname.startsWith("/dashboard") ||
@@ -28,7 +30,7 @@ export function Footer() {
             Un lugar para aprender, compartir y construir. Sé parte de la comunidad.
           </p>
           <Link
-            href="/auth/register"
+            href={user ? "/comunidad" : "/auth/register"}
             className="btn btn--yellow mt-4"
           >
             ¡Únete!

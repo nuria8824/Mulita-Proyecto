@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import { Menu } from "lucide-react";
 import MenuAccionesHeaderPrincipal from "../MenuAccionesHeaderPrincipal";
 

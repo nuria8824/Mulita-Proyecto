@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
+import { toast } from "react-hot-toast";
+import { PhoneInput } from "react-international-phone";
 
 export default function RegisterPage() {
   const [esDocente, setEsDocente] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [telefono, setTelefono] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
   const onContinuarClick = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
@@ -14,12 +17,54 @@ export default function RegisterPage() {
     const rol: "usuario" | "docente" = esDocente ? "docente" : "usuario";
 
     const formData = new FormData(e.currentTarget);
+    const nombre = formData.get("nombre")?.toString() ?? "";
+    const apellido = formData.get("apellido")?.toString() ?? "";
+    const email = formData.get("email")?.toString() ?? "";
+    const contrasena = formData.get("contrasena")?.toString() ?? "";
+    
+    // Validar nombre - no debe contener números
+    if (/\d/.test(nombre)) {
+      toast.error("El nombre no puede contener números");
+      setLoading(false);
+      return;
+    }
+
+    // Validar apellido - no debe contener números
+    if (/\d/.test(apellido)) {
+      toast.error("El apellido no puede contener números");
+      setLoading(false);
+      return;
+    }
+
+    // Validar email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("El email no es válido");
+      setLoading(false);
+      return;
+    }
+
+    // Validar teléfono - debe tener mínimo 7 caracteres sin espacios ni símbolos especiales
+    const phoneDigits = telefono.replace(/\D/g, "");
+    if (phoneDigits.length < 7) {
+      toast.error("El teléfono es muy corto");
+      setLoading(false);
+      return;
+    }
+
+    // Validar contraseña - debe tener mínimo 6 caracteres
+    if (contrasena.length < 6) {
+      toast.error("La contraseña es muy corta");
+      setLoading(false);
+      return;
+    }
+
     const data = {
-      nombre: formData.get("nombre")?.toString() ?? "",
-      apellido: formData.get("apellido")?.toString() ?? "",
-      email: formData.get("email")?.toString() ?? "",
-      telefono: formData.get("telefono")?.toString() ?? "",
-      contrasena: formData.get("contrasena")?.toString() ?? "",
+      nombre,
+      apellido,
+      email,
+      telefono,
+      contrasena,
       rol,
       institucion: formData.get("institucion")?.toString() ?? "",
       pais: formData.get("pais")?.toString() ?? "",
@@ -38,17 +83,18 @@ export default function RegisterPage() {
 
       if (!result.success) throw new Error(result.message || "Error al registrar usuario");
 
-      alert("Usuario registrado. Revisa tu email para confirmar tu cuenta.");
+      toast.success("Usuario registrado. Revisa tu email para confirmar tu cuenta.");
 
       formRef.current?.reset();
       setEsDocente(false);
+      setTelefono("");
     } catch (err: any) {
       console.error(err);
-      alert("Error al registrar usuario: " + err.message);
+      toast.error("Error al registrar usuario: " + err.message);
     } finally {
       setLoading(false);
     }
-  }, [esDocente]);
+  }, [esDocente, telefono]);
 
   const inputClass =
     "w-full shadow-[0_4px_4px_rgba(0,0,0,0.25)] rounded-lg border border-gray-300 h-10 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600";
@@ -74,7 +120,13 @@ export default function RegisterPage() {
           <input name="nombre" type="text" placeholder="Nombre" className={inputClass} required />
           <input name="apellido" type="text" placeholder="Apellido" className={inputClass} required />
           <input name="email" type="email" placeholder="Email" className={inputClass} required />
-          <input name="telefono" type="tel" placeholder="Teléfono" className={inputClass} />
+          <div className="phone-input-wrapper">
+            <PhoneInput
+              defaultCountry="ar"
+              value={telefono}
+              onChange={(value) => setTelefono(value)}
+            />
+          </div>
           <input name="contrasena" type="password" placeholder="Contraseña" className={inputClass} required />
 
           <label className="flex items-center gap-2 cursor-pointer">
@@ -90,10 +142,10 @@ export default function RegisterPage() {
 
           {esDocente && (
             <>
-              <input name="institucion" type="text" placeholder="Institución" className={inputClass} />
               <input name="pais" type="text" placeholder="País" className={inputClass} />
               <input name="provincia" type="text" placeholder="Provincia" className={inputClass} />
               <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} />
+              <input name="institucion" type="text" placeholder="Institución" className={inputClass} />
             </>
           )}
 

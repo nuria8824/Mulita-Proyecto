@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 
 export function SidebarComunidad({
   isOpen,

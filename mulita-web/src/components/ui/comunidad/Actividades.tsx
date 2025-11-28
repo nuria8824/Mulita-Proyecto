@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback, act } from "react";
+import toast from "react-hot-toast";
 import MenuAccionesActividades from "./MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/comunidad/ModalImagenActividades";
 import ComentarioInput from "@/components/ui/comunidad/ComentarioInput";
 import ComentariosModal from "@/components/ui/comunidad/ComentariosModal";
 import { FiltroCategoria, FiltroFecha } from "@/components/ui/comunidad/Filtros";
 import ModalColecciones from "@/components/ui/comunidad/ModalColecciones";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import SkeletonActividades from "./skeletons/SkeletonActividades";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
@@ -151,13 +152,16 @@ export default function Actividades() {
       });
       if (!res.ok) throw new Error("Error al actualizar like");
 
+      const isFav = favoritos.includes(actividadId);
       setFavoritos((prev) =>
         prev.includes(actividadId)
           ? prev.filter((id) => id !== actividadId)
           : [...prev, actividadId]
       );
+      toast.success(isFav ? "Removido de favoritos" : "Agregado a favoritos");
     } catch (err) {
       console.error("Error al dar like:", err);
+      toast.error("Error al actualizar favorito");
     }
   };
 

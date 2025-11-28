@@ -1,6 +1,7 @@
 "use client";
 
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/queries";
+import type { CartItem } from "@/hooks/queries/useCart";
 import { Trash2, Plus, Minus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +10,7 @@ import { toast } from "react-hot-toast";
 import CompraModal from "../CompraModal";
 
 export function CarritoPage() {
-  const { items, loading, removeItem, updateItemQuantity, clearCart, getTotalPrice } = useCart();
+  const { items, isLoading, removeItem, updateItemQuantity, clearCart, getTotalPrice } = useCart();
   const [processing, setProcessing] = useState(false);
   // Estado local para los inputs de cantidad
   const [localQuantities, setLocalQuantities] = useState<Record<string, number>>({});
@@ -18,26 +19,36 @@ export function CarritoPage() {
 
   const [compraOpen, setCompraOpem] = useState(false);
 
-  const handleRemoveItem = async (itemId: string) => {
+  const handleRemoveItem = (itemId: string) => {
     setProcessing(true);
-    try {
-      await removeItem(itemId);
-      toast.success("Producto eliminado del carrito");
-    } catch (error) {
-      // Error ya manejado en CartContext
-    }
-    setProcessing(false);
+    removeItem(
+      { itemId },
+      {
+        onSuccess: () => {
+          toast.success("Producto eliminado del carrito");
+          setProcessing(false);
+        },
+        onError: (error) => {
+          toast.error("Error al eliminar producto");
+          setProcessing(false);
+        },
+      }
+    );
   };
 
-  const handleQuantityChange = async (itemId: string, newQuantity: number) => {
+  const handleQuantityChange = (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     setProcessing(true);
-    try {
-      await updateItemQuantity(itemId, newQuantity);
-    } catch (error) {
-      // Error ya manejado en CartContext
-    }
-    setProcessing(false);
+    updateItemQuantity(
+      { itemId, newQuantity },
+      {
+        onSuccess: () => setProcessing(false),
+        onError: (error) => {
+          toast.error("Error al actualizar cantidad");
+          setProcessing(false);
+        },
+      }
+    );
   };
 
   const handleQuantityInput = (itemId: string, value: number) => {
@@ -51,7 +62,7 @@ export function CarritoPage() {
       
       // Crear un nuevo timeout para actualizar después de 800ms
       debounceTimers.current[itemId] = setTimeout(async () => {
-        const item = items.find((i) => i.id === itemId);
+        const item = items.find((i: any) => i.id === itemId);
         if (item && value !== item.cantidad) {
           await handleQuantityChange(itemId, value);
         }
@@ -65,16 +76,22 @@ export function CarritoPage() {
     }
   };
 
-  const handleClearCart = async () => {
+  const handleClearCart = () => {
     if (confirm("¿Estás seguro de que deseas vaciar el carrito?")) {
       setProcessing(true);
-      try {
-        await clearCart();
-        toast.success("Carrito vaciado exitosamente");
-      } catch (error) {
-        // Error ya manejado en CartContext
-      }
-      setProcessing(false);
+      clearCart(
+        {},
+        {
+          onSuccess: () => {
+            toast.success("Carrito vaciado exitosamente");
+            setProcessing(false);
+          },
+          onError: (error) => {
+            toast.error("Error al vaciar carrito");
+            setProcessing(false);
+          },
+        }
+      );
     }
   };
 
@@ -83,7 +100,7 @@ export function CarritoPage() {
     return localQuantities[itemId] !== undefined ? localQuantities[itemId] : defaultQuantity;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin">
@@ -133,7 +150,7 @@ export function CarritoPage() {
             {/* Items */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow overflow-hidden">
-                {items.map((item) => (
+                {items.map((item: CartItem) => (
                   <div
                     key={item.id}
                     className="flex items-center gap-4 p-6 border-b last:border-b-0 hover:bg-gray-50 transition"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import MenuAccionesProductos from "@/components/ui/tienda/MenuAccionesProductos";
 
 interface Producto {
@@ -11,7 +11,7 @@ interface Producto {
 }
 
 export default function GestionproductosPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loadingProductos, setLoadingProductos] = useState(true);
 
@@ -43,7 +43,7 @@ export default function GestionproductosPage() {
     }
   };
 
-  if (userLoading || loadingProductos) {
+  if (isUserLoading || loadingProductos) {
     return <p className="text-center mt-10">Cargando productos...</p>;
   }
 

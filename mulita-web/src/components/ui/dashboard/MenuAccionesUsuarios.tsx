@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import EditRolModal from "./EditRolModal";
 import EditPermissionsModal from "./EditPermisosModal";
 import Link from "next/link";
-import { useUser } from "../../../context/UserContext";
+import { useUser } from "@/hooks/queries";
 
 interface Usuario {
   id: string;
@@ -27,7 +27,7 @@ export default function MenuAccionesUsuarios({ user, onUpdate }: Props) {
   const [modal, setModal] = useState<null | "perfil" | "rol" | "permisos">(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const { isSuperAdmin, user: currentUser, loading } = useUser();
+  const { isSuperAdmin, user: currentUser, isLoading } = useUser();
 
   // Cierra el menú al hacer clic afuera
   useEffect(() => {

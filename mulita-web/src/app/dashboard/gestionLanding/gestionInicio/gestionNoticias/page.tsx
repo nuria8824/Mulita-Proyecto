@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 
 interface Noticia {
   id: number;
@@ -10,7 +10,7 @@ interface Noticia {
 }
 
 export default function GestionNoticiasPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const [noticias, setNoticias] = useState<Noticia[]>([]);
   const [loadingNoticias, setLoadingNoticias] = useState(true);
 
@@ -54,7 +54,7 @@ export default function GestionNoticiasPage() {
     }
   };
 
-  if (userLoading || loadingNoticias) {
+  if (isUserLoading || loadingNoticias) {
     return <p className="text-center mt-10">Cargando noticias...</p>;
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function ComentarioInput({
   actividadId,
@@ -25,15 +26,24 @@ export default function ComentarioInput({
         }),
       });
       if (res.ok) {
+        toast.success("Comentario enviado");
         setContenido("");
         onNuevoComentario?.();
       } else {
-        console.error("Error al agregar comentario");
+        toast.error("Error al agregar comentario");
       }
     } catch (err) {
       console.error("Error en el envío:", err);
+      toast.error("Error al enviar comentario");
     } finally {
       setCargando(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleEnviar();
     }
   };
 
@@ -44,6 +54,7 @@ export default function ComentarioInput({
         placeholder="Escribe un comentario..."
         value={contenido}
         onChange={(e) => setContenido(e.target.value)}
+        onKeyDown={handleKeyDown}
         className="flex-1 border rounded-full px-3 py-1 text-sm"
         disabled={cargando}
       />
