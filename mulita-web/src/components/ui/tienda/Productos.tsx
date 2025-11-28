@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/queries";
 import ProductoModal from "./ProductoModal";
@@ -22,7 +22,7 @@ export type Producto = {
   producto_archivos: Archivo[];
 };
 
-export default function Productos({ productos }: { productos: Producto[] }) {
+export default function Productos({ productos, initialProductId }: { productos: Producto[], initialProductId?: string | null }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
@@ -31,6 +31,17 @@ export default function Productos({ productos }: { productos: Producto[] }) {
   
   const { user } = useUser();
   const router = useRouter();
+
+  // Cuando el componente carga y hay un initialProductId, abre el modal de ese producto
+  useEffect(() => {
+    if (initialProductId && productos.length > 0) {
+      const producto = productos.find(p => p.id === initialProductId);
+      if (producto) {
+        setProductoSeleccionado(producto);
+        setModalOpen(true);
+      }
+    }
+  }, [initialProductId, productos]);
 
   const abrirModal = (producto: Producto) => {
     setProductoSeleccionado(producto);
@@ -161,6 +172,7 @@ export default function Productos({ productos }: { productos: Producto[] }) {
         open={compraOpen}
         onClose={() => setCompraOpen(false)}
         items={itemUnico ? [itemUnico] : []}
+        source="product"
       />
     </div>
   );

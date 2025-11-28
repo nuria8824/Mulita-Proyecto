@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* Top bar */}
               <Header />
               <main className="flex-1">{children}</main>
-              <Toaster position="top-right" />
+              <Toaster position="bottom-right" />
               <Footer />
             </UserProvider>
           </CartProvider>

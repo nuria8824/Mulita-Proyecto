@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface Usuario {
   id: string;
@@ -29,11 +30,11 @@ export default function EditRoleModal({ user, onClose, onUpdated }: Props) {
     setLoading(false);
 
     if (res.ok) {
-      alert("Rol actualizado correctamente");
+      toast.success("Rol actualizado correctamente");
       onUpdated();
       onClose();
     } else {
-      alert("Error al actualizar el rol");
+      toast.error("Error al actualizar el rol");
     }
   };
 

@@ -103,7 +103,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (res.ok) {
-        await fetchCart();
+        const data = await res.json();
+        if (data.items) {
+          setItems(data.items);
+          if (data.carrito) {
+            setCart(data.carrito);
+          }
+        } else {
+          await fetchCart();
+        }
       } else {
         try {
           const errorData = await res.json();
@@ -135,7 +143,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (res.ok) {
-        await fetchCart();
+        const data = await res.json();
+        if (data.items) {
+          setItems(data.items);
+        } else {
+          await fetchCart();
+        }
       } else {
         throw new Error("Error al eliminar item");
       }
@@ -162,7 +175,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (res.ok) {
-        await fetchCart();
+        const data = await res.json();
+        if (data.items) {
+          setItems(data.items);
+        } else {
+          await fetchCart();
+        }
       } else {
         throw new Error("Error al actualizar cantidad");
       }

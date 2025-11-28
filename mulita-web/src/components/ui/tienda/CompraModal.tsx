@@ -12,6 +12,7 @@ export type CompraModalProps = {
   open: boolean;
   onClose: () => void;
   items: CartItem[];
+  source?: "cart" | "product"; // 'cart' = desde el carrito, 'product' = desde un producto
 };
 
 function validarCuit(cuit: string): boolean {
@@ -36,7 +37,7 @@ function validarRazonSocial(nombre: string): boolean {
   return /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ ,.()\-]+$/.test(nombre.trim());
 }
 
-export default function CompraModal({ open, onClose, items }: CompraModalProps) {
+export default function CompraModal({ open, onClose, items, source = "cart" }: CompraModalProps) {
   const { user: usuario } = useUser();
   const { clearCart } = useCart();
   const router = useRouter();
@@ -274,9 +275,13 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
 
     window.open(waUrl, "_blank");
 
-    // Vaciar el carrito después de crear la orden
-    await clearCart();
-    toast.success("Orden enviada a WhatsApp. Carrito vaciado.");
+    // Vaciar el carrito solo si la compra es desde el carrito
+    if (source === "cart") {
+      await clearCart();
+      toast.success("Orden enviada a WhatsApp. Carrito vaciado.");
+    } else {
+      toast.success("Orden enviada a WhatsApp.");
+    }
 
     onClose();
   };

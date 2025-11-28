@@ -78,9 +78,16 @@ export function useCart() {
 
       return res.json();
     },
-    onSuccess: () => {
-      // Revalidar carrito
-      queryClient.invalidateQueries({ queryKey: ["carrito"] });
+    onSuccess: (data) => {
+      // Actualizar cache directamente con los datos que vienen de la API
+      if (data.items && data.carrito) {
+        queryClient.setQueryData(["carrito"], {
+          carrito: data.carrito,
+          items: data.items,
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["carrito"] });
+      }
     },
   });
 
@@ -98,8 +105,32 @@ export function useCart() {
 
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["carrito"] });
+    onSuccess: (data) => {
+      // Actualizar cache directamente con los datos que vienen de la API
+      if (data.items !== undefined) {
+        const currentData = queryClient.getQueryData<{ carrito: Cart; items: CartItem[] }>([
+          "carrito",
+        ]);
+        if (currentData?.carrito) {
+          // Calcular nuevo total y cantidad
+          const newTotal = data.items.reduce(
+            (sum: number, item: CartItem) => sum + item.precio * item.cantidad,
+            0
+          );
+          const newCantidad = data.items.reduce((sum: number, item: CartItem) => sum + item.cantidad, 0);
+
+          queryClient.setQueryData(["carrito"], {
+            carrito: {
+              ...currentData.carrito,
+              total: newTotal,
+              cantidad_items: newCantidad,
+            },
+            items: data.items,
+          });
+        }
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["carrito"] });
+      }
     },
   });
 
@@ -119,8 +150,32 @@ export function useCart() {
 
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["carrito"] });
+    onSuccess: (data) => {
+      // Actualizar cache directamente con los datos que vienen de la API
+      if (data.items !== undefined) {
+        const currentData = queryClient.getQueryData<{ carrito: Cart; items: CartItem[] }>([
+          "carrito",
+        ]);
+        if (currentData?.carrito) {
+          // Calcular nuevo total y cantidad
+          const newTotal = data.items.reduce(
+            (sum: number, item: CartItem) => sum + item.precio * item.cantidad,
+            0
+          );
+          const newCantidad = data.items.reduce((sum: number, item: CartItem) => sum + item.cantidad, 0);
+
+          queryClient.setQueryData(["carrito"], {
+            carrito: {
+              ...currentData.carrito,
+              total: newTotal,
+              cantidad_items: newCantidad,
+            },
+            items: data.items,
+          });
+        }
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["carrito"] });
+      }
     },
   });
 
@@ -139,7 +194,11 @@ export function useCart() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["carrito"] });
+      // Actualizar cache para reflejar el carrito vacío
+      queryClient.setQueryData(["carrito"], {
+        carrito: null,
+        items: [],
+      });
     },
   });
 

@@ -18,12 +18,13 @@ interface Producto {
 interface ProductosWrapperProps {
   productos: Producto[];
   loading: boolean;
+  initialProductId?: string | null;
 }
 
-export default function ProductosWrapper({ productos, loading }: ProductosWrapperProps) {
+export default function ProductosWrapper({ productos, loading, initialProductId }: ProductosWrapperProps) {
   if (loading) {
     return <SkeletonProductos />;
   }
 
-  return <Productos productos={productos} />;
+  return <Productos productos={productos} initialProductId={initialProductId} />;
 }

@@ -158,11 +158,26 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
   if (userError || !user)
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
 
+  // Obtener la colección para verificar que no sea favoritos
+  const { data: coleccion, error: coleccionError } = await supabase
+    .from("coleccion")
+    .select("tipo")
+    .eq("id", params.id)
+    .eq("usuario_id", user.id)
+    .single();
+
+  if (coleccionError || !coleccion)
+    return NextResponse.json({ error: "Colección no encontrada" }, { status: 404 });
+
+  // Validar que no sea la colección de favoritos
+  if (coleccion.tipo === "favoritos")
+    return NextResponse.json({ error: "No puedes eliminar la carpeta de Favoritos" }, { status: 403 });
+
   const { error } = await supabase
     .from("coleccion")
     .update({ eliminado: true })
     .eq("id", params.id)
-    .eq("usuario_id", user?.id)
+    .eq("usuario_id", user.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ message: "Colección eliminada correctamente" });
