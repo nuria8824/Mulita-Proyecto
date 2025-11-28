@@ -1,7 +1,6 @@
 "use client";
 
-import { useCart } from "@/context/CartContext";
-import { useUser } from "@/context/UserContext";
+import { useCart, useUser } from "@/hooks/queries";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
@@ -20,13 +19,12 @@ export function AddToCartButton({
   precio,
   className = "",
 }: AddToCartButtonProps) {
-  const { addItem } = useCart();
+  const { addItem, isAddingItem } = useCart();
   const { user } = useUser();
   const router = useRouter();
   const [cantidad, setCantidad] = useState(1);
-  const [loading, setLoading] = useState(false);
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = () => {
     // Verificar si el usuario está logueado
     if (!user) {
       toast.error("Debes iniciar sesión para agregar productos al carrito");
@@ -36,18 +34,20 @@ export function AddToCartButton({
       return;
     }
 
-    setLoading(true);
-    try {
-      await addItem(productoId, cantidad, precio);
-      toast.success(`"${nombre}" añadido al carrito`);
-      setCantidad(1);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Error al agregar al carrito";
-      toast.error(message);
-      console.error("Error al agregar al carrito:", error);
-    } finally {
-      setLoading(false);
-    }
+    addItem(
+      { productoId, cantidad, precio },
+      {
+        onSuccess: () => {
+          toast.success(`"${nombre}" añadido al carrito`);
+          setCantidad(1);
+        },
+        onError: (error) => {
+          const message = error instanceof Error ? error.message : "Error al agregar al carrito";
+          toast.error(message);
+          console.error("Error al agregar al carrito:", error);
+        },
+      }
+    );
   };
 
   return (
@@ -55,11 +55,11 @@ export function AddToCartButton({
       <div className="flex items-center gap-4">
         <button
           onClick={handleAddToCart}
-          disabled={loading}
+          disabled={isAddingItem}
           className="btn btn--outline flex-1"
         >
           <ShoppingCart className="w-5 h-5" />
-          {loading ? "Agregando..." : "Carrito"}
+          {isAddingItem ? "Agregando..." : "Carrito"}
         </button>
       </div>
     </div>

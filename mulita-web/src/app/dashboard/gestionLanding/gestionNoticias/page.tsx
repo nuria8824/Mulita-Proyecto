@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import MenuAccionesNoticias from "@/components/ui/noticias/MenuAccionesNoticias";
 
 interface Noticia {
@@ -11,7 +11,7 @@ interface Noticia {
 }
 
 export default function GestionNoticiasPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const [noticias, setNoticias] = useState<Noticia[]>([]);
   const [loadingNoticias, setLoadingNoticias] = useState(true);
 
@@ -43,7 +43,7 @@ export default function GestionNoticiasPage() {
     }
   };
 
-  if (userLoading || loadingNoticias) {
+  if (isUserLoading || loadingNoticias) {
     return <p className="text-center mt-10">Cargando noticias...</p>;
   }
 

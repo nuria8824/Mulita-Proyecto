@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import ProductoModal from "./ProductoModal";
 import { AddToCartButton } from "./carrito/AddToCartButton";
 import CompraModal from "./CompraModal";

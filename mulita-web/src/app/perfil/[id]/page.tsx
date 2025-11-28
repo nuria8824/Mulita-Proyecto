@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import { motion, AnimatePresence } from "framer-motion";
+import BackButton from "@/components/ui/dashboard/BackButton";
 import ActividadesUsuario from "@/components/ui/perfil/ActividadesUsuario";
 import ColeccionesUsuario from "@/components/ui/perfil/ColeccionesUsuario";
 import SkeletonPerfil from "@/components/ui/perfil/skeletons/SkeletonPerfil";
@@ -108,6 +109,9 @@ export default function PerfilPage() {
 
   return (
     <div className="w-full min-h-screen bg-white flex flex-col items-center justify-start text-xs text-[#6d758f] font-inter">
+      <div className="w-full max-w-6xl px-4 py-4">
+        <BackButton />
+      </div>
       {/* Sección superior del perfil */}
       <div className="w-full flex flex-col items-center text-center p-[60px_170px] relative">
         <div className="flex items-center justify-center gap-10 text-left text-2xl text-black font-roboto">
@@ -137,7 +141,7 @@ export default function PerfilPage() {
           {esPropietario && (
             <div className="flex flex-col items-start gap-3 text-base text-[#003c71]">
               <button
-                onClick={logout}
+                onClick={() => logout()}
                 className="w-[160px] rounded-lg border border-[#fedd00] flex items-center justify-center py-3 cursor-pointer"
               >
                 <span className="leading-6 font-medium">Cerrar sesión</span>

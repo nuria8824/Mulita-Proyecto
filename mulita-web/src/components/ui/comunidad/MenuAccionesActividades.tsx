@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import ModalColecciones from "./ModalColecciones";
 
 type Actividad = {
@@ -51,12 +52,12 @@ export default function MenuAccionesActividades({ actividad, userId, rol }: Acci
 
       if (!res.ok) throw new Error("Error eliminando la actividad");
 
-      console.log("Actividad eliminada correctamente:", actividad.id);
+      toast.success("Actividad eliminada correctamente");
       setOpen(false);
       router.push("/comunidad");
     } catch (err: any) {
       console.error(err);
-      alert("No se pudo eliminar la actividad");
+      toast.error("No se pudo eliminar la actividad");
     }
   };
 

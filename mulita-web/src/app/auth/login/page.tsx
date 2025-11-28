@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
+import { useQueryClient } from "@tanstack/react-query";
 import { createClientSupabase } from "@/lib/supabase";
 import { toast } from "react-hot-toast";
 
@@ -11,7 +12,8 @@ export default function Login() {
   const [contrasena, setContrasena] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { setUser } = useUser();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
 
   const onContinuarClick = async () => {
     setLoading(true);
@@ -62,9 +64,9 @@ export default function Login() {
         return;
       }
 
-      // 3. Actualizamos el contexto del usuario
-      setUser(data.user);
-
+      // 3. Invalidar el query de usuario para que se revalide
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      
       // 4. Redirigimos al inicio
       toast.success("¡Sesión iniciada correctamente!");
       router.push("/");

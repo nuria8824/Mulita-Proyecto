@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 
 interface Categoria {
   id: string;
@@ -9,7 +9,7 @@ interface Categoria {
 }
 
 export default function GestionCategoriasPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loadingCategorias, setLoadingCategorias] = useState(true);
   const [nombre, setNombre] = useState("");
@@ -65,7 +65,7 @@ export default function GestionCategoriasPage() {
     }
   };
 
-  if (userLoading || loadingCategorias) {
+  if (isUserLoading || loadingCategorias) {
     return <p className="text-center mt-10">Cargando categorías...</p>;
   }
 

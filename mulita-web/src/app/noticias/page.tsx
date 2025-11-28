@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import { SkeletonNoticias } from "@/components/ui/inicio/skeletons/SkeletonNoticias";
 
 interface Noticia {
@@ -17,7 +17,7 @@ interface Noticia {
 }
 
 export default function NoticiasPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const [noticias, setNoticias] = useState<Noticia[]>([]);
   const [loadingNoticias, setLoadingNoticias] = useState(true);
 
@@ -40,7 +40,7 @@ export default function NoticiasPage() {
   }, []);
 
 
-  if (userLoading || loadingNoticias) {
+  if (isUserLoading || loadingNoticias) {
     return <SkeletonNoticias />;
   }
 

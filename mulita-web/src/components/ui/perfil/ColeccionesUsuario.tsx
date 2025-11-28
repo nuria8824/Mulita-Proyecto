@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import MenuAccionesColecciones from "./MenuAccionesColecciones";
 import SkeletonColeccionesUsuario from "./skeletons/SkeletonColeccionesUsuario";
 
@@ -68,13 +69,14 @@ export default function ColeccionesUsuario({ userPerfilId }: ColeccionesUsuarioP
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al actualizar la colección");
+      toast.success("Colección actualizada");
       setColecciones((prev) =>
         prev.map((col) => (col.id === id ? { ...col, nombre: data.nombre } : col))
       );
       setEditandoId(null);
     } catch (err: any) {
       console.error(err);
-      alert("No se pudo actualizar la colección: " + err.message);
+      toast.error(err.message || "No se pudo actualizar la colección");
     }
   };
 
@@ -84,10 +86,11 @@ export default function ColeccionesUsuario({ userPerfilId }: ColeccionesUsuarioP
       const res = await fetch(`/api/colecciones/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al eliminar la colección");
+      toast.success("Colección eliminada");
       setColecciones((prev) => prev.filter((col) => col.id !== id));
     } catch (err: any) {
       console.error(err);
-      alert("No se pudo eliminar la colección: " + err.message);
+      toast.error(err.message || "No se pudo eliminar la colección");
     }
   };
 

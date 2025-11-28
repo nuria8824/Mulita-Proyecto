@@ -6,8 +6,9 @@ import ModalImagenActividades from "@/components/ui/comunidad/ModalImagenActivid
 import ComentarioInput from "@/components/ui/comunidad/ComentarioInput";
 import ComentariosModal from "@/components/ui/comunidad/ComentariosModal";
 import ModalColecciones from "@/components/ui/comunidad/ModalColecciones";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import { useParams } from "next/navigation";
+import BackButton from "@/components/ui/dashboard/BackButton";
 import SkeletonColeccionDetalle from "@/components/ui/perfil/skeletons/SkeletonColeccionDetalle";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
@@ -140,9 +141,24 @@ export default function ColeccionDetallePage() {
 
   if (loading)
     return <SkeletonColeccionDetalle />;
-  if (error) return <p className="text-center text-red-500 mt-4">{error}</p>;
+  if (error) 
+    return (
+      <div className="p-4 max-w-3xl mx-auto">
+        <div className="mb-4">
+          <BackButton />
+        </div>
+        <p className="text-center text-red-500 mt-4">{error}</p>
+      </div>
+    );
   if (actividades.length === 0)
-    return <p className="text-center text-gray-400 mt-4">No hay actividades en esta colección.</p>;
+    return (
+      <div className="p-4 max-w-3xl mx-auto">
+        <div className="mb-4">
+          <BackButton />
+        </div>
+        <p className="text-center text-gray-400 mt-4">No hay actividades en esta colección.</p>
+      </div>
+    );
 
   if (!user)
     return (
@@ -153,6 +169,9 @@ export default function ColeccionDetallePage() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
+      <div className="mb-4">
+        <BackButton />
+      </div>
       <h2 className="text-2xl font-semibold text-[#003c71] mb-4">
         {`Actividades de "${nombreColeccion}"`}
       </h2>

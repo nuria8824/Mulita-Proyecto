@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import { usePathname } from "next/navigation";
 import MenuAccionesHeaderPrincipal from "./MenuAccionesHeaderPrincipal";
 import { CartIcon } from "@/components/ui/tienda/carrito/CartIcon";

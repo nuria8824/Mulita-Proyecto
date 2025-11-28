@@ -72,7 +72,7 @@ export default function SidebarDashboard({
       >
         {/* Logo */}
         <div className="h-20 flex items-center justify-center bg-[#003c71] relative">
-          <div className="bg-white rounded-md p-2">
+          <div className="bg-[#003c71] rounded-md p-2">
             <Image
               src="/images/logosMulita/logo Mulita-12.svg"
               width={160}

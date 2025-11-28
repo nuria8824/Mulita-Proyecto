@@ -2,27 +2,27 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import toast from "react-hot-toast";
 import { SidebarComunidad } from "@/components/ui/comunidad/SidebarComunidad";
 import Actividades from "./Actividades"
 
 export default function Comunidad() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, loading } = useUser();
+  const { user, isLoading } = useUser();
   const router = useRouter();
   const hasRedirected = useRef(false);
 
   useEffect(() => {
-    if (!loading && !user && !hasRedirected.current) {
+    if (!isLoading && !user && !hasRedirected.current) {
       hasRedirected.current = true;
       toast.error("Debes iniciar sesión para acceder a la comunidad");
       router.push("/auth/login");
     }
-  }, [user, loading, router]);
+  }, [user, isLoading, router]);
 
   // Mientras carga o si no hay usuario, no mostrar nada
-  if (loading || !user) {
+  if (isLoading || !user) {
     return null;
   }
 

@@ -25,23 +25,30 @@ export default function MenuAccionesColecciones({ coleccionId, onEditar, onElimi
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleEditarClick = () => {
+  const handleEditarClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setOpen(false);
     onEditar(coleccionId);
   };
 
-  const handleEliminarClick = () => {
+  const handleEliminarClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setOpen(false);
     if (confirm("¿Estás seguro que querés eliminar esta colección?")) {
       onEliminar(coleccionId);
     }
   };
 
+  const handleToggleMenu = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleMenu();
+  };
+
   return (
     <div className="relative" ref={menuRef}>
       <button
         title="menu acciones colecciones"
-        onClick={toggleMenu}
+        onClick={handleToggleMenu}
         className="p-2 rounded-full hover:bg-gray-100 transition-colors"
       >
         <MoreVertical className="w-5 h-5 text-gray-600" />

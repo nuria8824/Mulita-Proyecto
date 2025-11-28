@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-hot-toast";
+import BackButton from "@/components/ui/dashboard/BackButton";
 
 export default function EditarPerfilPage() {
   console.log("Rendering EditarPerfilPage");
@@ -73,6 +74,7 @@ export default function EditarPerfilPage() {
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">
       <div className="w-full max-w-3xl flex flex-col gap-6">
+        <BackButton />
         <h1 className="text-2xl font-semibold text-black text-center">Editar Perfil</h1>
 
         <form

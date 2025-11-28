@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import { useRouter } from "next/navigation";
 
 export default function MenuAccionesHeaderPrincipal() {
@@ -57,10 +57,15 @@ export default function MenuAccionesHeaderPrincipal() {
           </Link> */}
           <button
             type="button"
-            onClick={async () => {
-              await logout();
-              setOpen(false);
-              router.push("/");
+            onClick={() => {
+              logout({
+                onSuccess: () => {
+                  setOpen(false);
+                },
+                onError: (error) => {
+                  console.error("Error al cerrar sesión:", error);
+                },
+              });
             }}
             className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
           >

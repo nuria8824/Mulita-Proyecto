@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import ComentarioInput from "./ComentarioInput";
 import ModalImagenActividades from "./ModalImagenActividades";
 import MenuAccionesActividades from "./MenuAccionesActividades";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/hooks/queries";
 import SkeletonComentarios from "./skeletons/SkeletonComentarios";
 
 export default function ComentariosModal({ actividad, onClose, onActualizarComentarios }: any) {
@@ -55,11 +56,15 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
         method: "DELETE",
       });
       if (res.ok) {
+        toast.success("Comentario eliminado");
         await cargarComentarios();
         if (onActualizarComentarios) onActualizarComentarios();
+      } else {
+        toast.error("No se pudo eliminar el comentario");
       }
     } catch (err) {
       console.error("Error eliminando comentario:", err);
+      toast.error("Error al eliminar comentario");
     }
   };
 
