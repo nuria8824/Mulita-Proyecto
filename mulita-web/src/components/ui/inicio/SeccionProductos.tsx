@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductoModal from "../tienda/ProductoModal";
 import { SkeletonProductos } from "./skeletons/SkeletonProductos";
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/navigation";
+import CompraModal from "../tienda/CompraModal";
+import { AddToCartButton } from "../tienda/carrito/AddToCartButton";
+import { toast } from "react-hot-toast"
+import { CartItem } from "@/context/CartContext";
 
 export type Archivo = { archivo_url: string };
 
@@ -20,7 +26,14 @@ export function SeccionProductos() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
+
+  const [compraOpen, setCompraOpen] = useState(false);
+  const [productoCompra, setProductoCompra] = useState<Producto | null>(null);
+
   const [loadingProductos, setLoadingProductos] = useState(true);
+
+  const { user } = useUser();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -51,6 +64,36 @@ export function SeccionProductos() {
     setModalOpen(false);
     setProductoSeleccionado(null);
   }
+
+  const abrirModalCompra = (producto: Producto) => {
+    if (!user) {
+      toast.error("Debes iniciar sesión para poder comprar");
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 1500);
+      return;
+    }
+    setProductoCompra(producto);
+    setCompraOpen(true);
+  };
+
+  // Item único para comprar directamente
+  const itemUnico: CartItem | null = productoCompra
+    ? {
+      id: crypto.randomUUID(),
+      producto_id: productoCompra.id,
+      carrito_id: "direct-purchase",
+      cantidad: 1,
+      precio: productoCompra.precio,
+      producto: {
+        id: productoCompra.id,
+        nombre: productoCompra.nombre,
+        descripcion: productoCompra.descripcion,
+        imagen: "",
+        precio: productoCompra.precio,
+      },
+    }
+  : null;
 
   if (productos.length === 0) {
     return (
@@ -115,8 +158,23 @@ export function SeccionProductos() {
 
               {/* Botones */}
               <div className="mt-4 flex gap-2">
-                <button className="btn btn--blue flex-1">Comprar</button>
-                <button className="btn btn--outline flex-1">Carrito</button>
+                <button
+                  className="btn btn--blue flex-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    abrirModalCompra(p);
+                  }}
+                >
+                  Comprar
+                </button>
+
+                <div onClick={(e) => e.stopPropagation()}>
+                  <AddToCartButton 
+                    productoId={p.id}
+                    nombre={p.nombre}
+                    precio={p.precio}
+                  />
+                </div>
               </div>
             </div>
           ))}
@@ -140,6 +198,13 @@ export function SeccionProductos() {
             precio: productoSeleccionado?.precio ?? 0,
             imagenes: productoSeleccionado?.producto_archivos?.map(a => a.archivo_url) ?? ["/placeholder.png"]
           }}
+        />
+
+        {/* MODAL DE COMPRA */}
+        <CompraModal
+          open={compraOpen}
+          onClose={() => setCompraOpen(false)}
+          items={itemUnico ? [itemUnico] : []}
         />
       </div>
     </section>

@@ -60,7 +60,7 @@ export default function Productos({ productos }: { productos: Producto[] }) {
       id: crypto.randomUUID(),
       producto_id: productoCompra.id,
       carrito_id: "direct-purchase",
-      cantidad: 1, // SIEMPRE 1
+      cantidad: 1,
       precio: productoCompra.precio,
       producto: {
         id: productoCompra.id,
