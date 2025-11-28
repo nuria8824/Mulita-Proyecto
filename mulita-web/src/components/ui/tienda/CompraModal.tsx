@@ -45,20 +45,23 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
   const [cantidad, setCantidad] = useState(1);
 
   // Datos fiscales
-  const [razonSocial, setRazonSocial] = useState<"consumidor-final" | "responsable-inscripto">("consumidor-final");
+  const [razonSocial, setRazonSocial] = useState<"Consumidor Final" | "Responsable Inscripto">("Consumidor Final");
   const [cuit, setCuit] = useState("");
   const [fiscalId, setFiscalId] = useState<string | null>(null);
 
   const [ubicacion, setUbicacion] = useState("");
   const [coordenadas, setCoordenadas] = useState<{ lat: string; lon: string } | null>(null);
 
-
   const [errores, setErrores] = useState({
     razonSocial: "",
     cuit: "",
-    cantidad: "",
     direccion: "",
-  })
+  });
+
+  const limpiarError = (campo: keyof typeof errores) => {
+    setErrores((prev) => ({ ...prev, [campo]: "" }));
+  };
+
 
   // Si el usuario no está logueado mostrar toast y redirigir a login
   useEffect(() => {
@@ -83,6 +86,12 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
     };
   }, [open]);
 
+  useEffect(() => {
+  if (!open) {
+    setUbicacion("");
+    setCoordenadas(null);
+  }
+}, [open]);
 
   const getWhatsAppUrl = ({
     codigo,
@@ -173,7 +182,7 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
     }
 
     // Validación condicional del CUIT según tipo fiscal
-    if (razonSocial === "responsable-inscripto") {
+    if (razonSocial === "Responsable Inscripto") {
       if (!validarCuit(cuit)) {
         erroresTemp.cuit = "El CUIT es obligatorio para Responsable Inscripto y debe ser válido.";
         valido = false;
@@ -200,7 +209,7 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
 
     if (!valido) return;
 
-    if (!razonSocial || !cuit) return;
+    if (!razonSocial || (razonSocial === "Responsable Inscripto" && !cuit)) return;
 
     let finalFiscalId = fiscalId;
 
@@ -335,11 +344,14 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
         <select
           aria-label="Razon social"
           value={razonSocial}
-          onChange={(e) => setRazonSocial(e.target.value as any)}
+          onChange={(e) => {
+            setRazonSocial(e.target.value as any);
+            limpiarError("razonSocial");
+          }}
           className="border rounded p-2 w-full"
         >
-          <option value="consumidor-final">Consumidor Final</option>
-          <option value="responsable-inscripto">Responsable Inscripto</option>
+          <option value="Consumidor Final">Consumidor Final</option>
+          <option value="Responsable Inscripto">Responsable Inscripto</option>
         </select>
 
         {errores.razonSocial && (
@@ -354,7 +366,10 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
           aria-label="CUIT o CUIL"
           type="text"
           value={cuit}
-          onChange={(e) => setCuit(e.target.value)}
+          onChange={(e) => {
+            setCuit(e.target.value);
+            limpiarError("cuit");
+          }}
           className="w-full border rounded-md px-3 py-2"
         />
         {errores.cuit && (
@@ -369,6 +384,7 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
           onSelect={(lugar) => {
             setUbicacion(lugar.display_name);
             setCoordenadas({ lat: lugar.lat, lon: lugar.lon });
+            limpiarError("direccion")
           }}
         />
         {errores.direccion && (
