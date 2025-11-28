@@ -3,6 +3,21 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-hot-toast"
+import { uploadFile } from "@/lib/subirArchivos";
+
+interface ArchivoSubido {
+  url: string;
+  name: string;
+  type: string;
+}
+
+interface ErroresFormulario {
+  titulo?: string;
+  autor?: string;
+  introduccion?: string;
+  descripcion?: string;
+  imagen_principal?: string;
+}
 
 export default function EditarNoticiaPage() {
   const params = useParams();
@@ -13,9 +28,9 @@ export default function EditarNoticiaPage() {
   const [introduccion, setIntroduccion] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [imagen_principal, setImagenPrincipal] = useState<File | string | null>(null);
-  const [archivo, setArchivo] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [errores, setErrores] = useState<ErroresFormulario>({});
 
   // Cargar noticia existente
   useEffect(() => {
@@ -30,7 +45,6 @@ export default function EditarNoticiaPage() {
         setIntroduccion(data.introduccion);
         setDescripcion(data.descripcion);
         setImagenPrincipal(data.imagen_principal);
-        setArchivo(null);
       } catch (err) {
         console.error(err);
       } finally {
@@ -41,34 +55,86 @@ export default function EditarNoticiaPage() {
     fetchNoticia();
   }, [params.id]);
 
+  function sanitizeFileName(fileName: string) {
+    return fileName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
-    try {
-      const formData = new FormData();
-      formData.append("titulo", titulo);
-      formData.append("autor", autor);
-      formData.append("introduccion", introduccion);
-      formData.append("descripcion", descripcion);
+    const nuevosErrores: ErroresFormulario = {};
+    if (!titulo.trim()) nuevosErrores.titulo = "El título es obligatorio";
+    if (!autor.trim()) nuevosErrores.autor = "El autor es obligatorio";
+    if (!introduccion.trim()) nuevosErrores.introduccion = "La introducción es obligatoria";
+    if (!descripcion.trim()) nuevosErrores.descripcion = "La descripción es obligatoria";
 
-      if (imagen_principal instanceof File) formData.append("imagen_principal", imagen_principal);
-      if (archivo) formData.append("archivo", archivo);
+    // Validación de imagen
+    if (imagen_principal instanceof File) {
+      if (!imagen_principal.type.startsWith("image/")) {
+        nuevosErrores.imagen_principal = "El archivo debe ser una imagen válida";
+      }
+    }
+
+    setErrores(nuevosErrores);
+    if (Object.keys(nuevosErrores).length > 0) return;
+
+    try {
+      const archivoSubido: ArchivoSubido[] = [];
+            
+      if (imagen_principal instanceof File) {
+        try {
+          const sanitizedFileName = sanitizeFileName(imagen_principal.name);
+          const filePath = `productos/imagenes/${Date.now()}_${sanitizedFileName}`;
+          
+          // Subir archivo usando la función uploadFile
+          const url = await uploadFile(imagen_principal, filePath);
+          
+          archivoSubido.push({
+            url,
+            name: imagen_principal.name,
+            type: imagen_principal.type,
+          });
+        } catch (error) {
+          console.error(`Error subiendo ${imagen_principal.name}:`, error);
+        }
+      }
+
+      const nuevaUrlImagen =
+      archivoSubido.length > 0
+        ? archivoSubido[0].url
+        : typeof imagen_principal === "string"
+        ? imagen_principal
+        : null;
 
       const res = await fetch(`/api/noticias/${params.id}`, {
         method: "PATCH",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          titulo,
+          autor,
+          introduccion,
+          descripcion,
+          imagen_principal: nuevaUrlImagen,
+        }),
         credentials: "include",
       });
 
-      toast.error("Error actualizando noticia")
-      if (!res.ok) throw new Error("Error actualizando noticia");
+      if (!res.ok) {
+        toast.error("Error actualizando noticia")
+        throw new Error("Error actualizando noticia");
+      }
 
       toast.success("Noticia actualizada exitosamente")
       router.push(`/dashboard/gestionLanding/gestionNoticias`);
     } catch (err) {
       console.error(err);
-      alert("Error actualizando noticia");
+      toast.error("Error actualizando noticia")
     } finally {
       setSubmitting(false);
     }
@@ -95,45 +161,54 @@ export default function EditarNoticiaPage() {
         >
           {/* Título */}
           <div>
-            <label className="block text-lg font-semibold mb-2">Título</label>
+            <label className="block text-lg font-semibold mb-2">Título*</label>
             <input
               type="text"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              className={`w-full border rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none 
+                ${errores.titulo ? "border-red-500" : "border-gray-300"}`}
               placeholder="Título"
-              required
             />
+            {errores.titulo && (
+              <p className="text-red-500 text-sm">{errores.titulo}</p>
+            )}
           </div>
 
           {/* Autor */}
           <div>
-            <label className="block text-lg font-semibold mb-2">Autor</label>
+            <label className="block text-lg font-semibold mb-2">Autor*</label>
             <input
               type="text"
               value={autor}
               onChange={(e) => setAutor(e.target.value)}
-              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-              placeholder="Autor"
-              required
+              className={`w-full border rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none 
+                ${errores.autor ? "border-red-500" : "border-gray-300"}`}
+              placeholder="Título"
             />
+            {errores.autor && (
+              <p className="text-red-500 text-sm">{errores.autor}</p>
+            )}
           </div>
 
           {/* Introducción */}
           <div>
-            <label className="block text-lg font-semibold mb-2">Introducción</label>
+            <label className="block text-lg font-semibold mb-2">Introducción*</label>
             <textarea
               value={introduccion}
               onChange={(e) => setIntroduccion(e.target.value)}
-              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 h-28 resize-none focus:ring-2 focus:ring-blue-400 focus:outline-none"
-              placeholder="Introducción"
-              required
+              className={`w-full border rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none 
+                ${errores.introduccion ? "border-red-500" : "border-gray-300"}`}
+              placeholder="Título"
             />
+            {errores.introduccion && (
+              <p className="text-red-500 text-sm">{errores.introduccion}</p>
+            )}
           </div>
 
           {/* Imagen principal */}
           <div>
-            <label className="block text-lg font-semibold mb-2">Imagen Principal</label>
+            <label className="block text-lg font-semibold mb-2">Imagen Principal*</label>
             {typeof imagen_principal === "string" && (
               <img src={imagen_principal} alt="Imagen actual" className="w-full h-48 object-cover rounded" />
             )}
@@ -141,33 +216,28 @@ export default function EditarNoticiaPage() {
               type="file"
               placeholder="Imagen Principal"
               onChange={(e) => setImagenPrincipal(e.target.files?.[0] || null)}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 cursor-pointer text-gray-600"
+              className={`w-full border rounded-md px-4 py-2 cursor-pointer text-gray-600
+                ${errores.imagen_principal ? "border-red-500" : "border-gray-300"}`}
               accept="image/*"
             />
+            {errores.imagen_principal && (
+              <p className="text-red-500 text-sm">{errores.imagen_principal}</p>
+            )}
           </div>
 
           {/* Descripción */}
           <div>
-            <label className="block text-lg font-semibold mb-2">Descripción</label>
+            <label className="block text-lg font-semibold mb-2">Descripción*</label>
             <textarea
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
-              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 h-36 resize-none focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              className={`w-full border rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none 
+                ${errores.descripcion ? "border-red-500" : "border-gray-300"}`}
               placeholder="Descripción"
-              required
             />
-          </div>
-
-          {/* Archivos/Imágenes extra */}
-          <div>
-            <label className="block text-lg font-semibold mb-2">Archivos/Imágenes</label>
-            {archivo && <p>Archivo seleccionado: {archivo.name}</p>}
-            <input
-              type="file"
-              placeholder="Archivos/Imágenes"
-              onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 cursor-pointer text-gray-600"
-            />
+            {errores.descripcion && (
+              <p className="text-red-500 text-sm">{errores.descripcion}</p>
+            )}
           </div>
 
           {/* Botones de acción */}

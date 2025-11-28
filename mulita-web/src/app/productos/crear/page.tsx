@@ -2,12 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { uploadFile } from "@/lib/subirArchivos";
+import { toast } from "react-hot-toast"
 
 interface ErroresFormulario {
   nombre?: string;
   descripcion?: string;
   precio?: string;
   imagenes?: string;
+}
+
+interface ArchivoSubido {
+  url: string;
+  name: string;
+  type: string;
 }
 
 export default function CrearProductoPage() {
@@ -27,6 +35,14 @@ export default function CrearProductoPage() {
   const handleEliminarImagen = (index: number) => {
     setImagenes((prev) => prev.filter((_, i) => i !== index));
   };
+
+  // Función para limpiar nombres de archivo
+  function sanitizeFileName(fileName: string) {
+    return fileName
+      .normalize("NFD") // separa letras y acentos
+      .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // reemplaza cualquier caracter no válido
+  }
 
   // Enviar formulario
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,30 +68,52 @@ export default function CrearProductoPage() {
 
     if (Object.keys(nuevosErrores).length > 0) return;
 
-    const formData = new FormData();
-    formData.append("nombre", nombre);
-    formData.append("descripcion", descripcion);
-    formData.append("precio", precio);
-    imagenes.forEach((imagen) => formData.append("imagenes", imagen));
-
     try {
+      const archivosSubidos: ArchivoSubido[] = [];
+      for (const imagen of imagenes) {
+        try {
+          const sanitizedFileName = sanitizeFileName(imagen.name);
+          const filePath = `productos/imagenes/${Date.now()}_${sanitizedFileName}`;
+                    
+          // Subir archivo usando la función uploadFile
+          const url = await uploadFile(imagen, filePath);
+          
+          archivosSubidos.push({
+            url,
+            name: imagen.name,
+            type: imagen.type,
+          });
+        } catch (error) {
+          console.error(`Error subiendo ${imagen.name}:`, error);
+        }
+      }
+
       const res = await fetch("/api/productos", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre,
+          descripcion,
+          precio,
+          imagenes: archivosSubidos,
+        }),
         credentials: "include",
       });
 
       if (!res.ok) {
         const error = await res.json();
         console.error(error.detail || error.message);
-        alert("Error creando actividad");
+        toast.error("Error creando producto");
         return;
       }
 
+      toast.success("Producto creado exitosamente");
       router.push("/dashboard/gestionLanding/gestionProductos");
     } catch (err) {
       console.error("Error en fetch:", err);
-      alert("Error creando actividad");
+      toast.error("Error creando producto");
     }
   };
 

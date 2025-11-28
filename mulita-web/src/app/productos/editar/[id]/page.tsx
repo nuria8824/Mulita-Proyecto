@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
-import { ar } from "zod/locales";
+import { uploadFile } from "@/lib/subirArchivos";
+import { toast } from "react-hot-toast"
 
 interface ArchivoExistente {
   archivo_url: string;
@@ -17,6 +17,13 @@ interface ErroresFormulario {
   precio?: string;
   imagenes?: string;
 }
+
+interface ArchivoSubido {
+  url: string;
+  name: string;
+  type: string;
+}
+
 
 export default function EditarProductoPage() {
   const router = useRouter();
@@ -80,6 +87,13 @@ export default function EditarProductoPage() {
     );
   };
 
+  function sanitizeFileName(fileName: string) {
+    return fileName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  }
+
   // Envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,32 +116,53 @@ export default function EditarProductoPage() {
       .filter((a) => !a.eliminado)
       .map((a) => a.archivo_url);
 
-    const formData = new FormData();
-    formData.append("nombre", nombre);
-    formData.append("descripcion", descripcion);
-    formData.append("precio", precio);
-    formData.append("archivosExistentes", JSON.stringify(urlsExistentes));
-
-    archivosNuevos.forEach((archivo) => formData.append("archivos", archivo));
-
     try {
+      const archivosSubidos: ArchivoSubido[] = [];
+      
+      for (const archivo of archivosNuevos) {
+        try {
+          const sanitizedFileName = sanitizeFileName(archivo.name);
+          const filePath = `productos/imagenes/${Date.now()}_${sanitizedFileName}`;
+          
+          // Subir archivo usando la función uploadFile
+          const url = await uploadFile(archivo, filePath);
+          
+          archivosSubidos.push({
+            url,
+            name: archivo.name,
+            type: archivo.type,
+          });
+        } catch (error) {
+          console.error(`Error subiendo ${archivo.name}:`, error);
+        }
+      }
       const res = await fetch(`/api/productos/${params.id}`, {
         method: "PATCH",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre,
+          descripcion,
+          precio,
+          archivosNuevos: archivosSubidos,
+          archivosExistentes: urlsExistentes,
+        }),
         credentials: "include",
       });
 
       if (!res.ok) {
         const error = await res.json();
         console.error(error);
-        alert("Error al actualizar el producto.");
+        toast.error("Error al actualizar el producto");
         return;
       }
 
+      toast.success("Producto actualizado exitosamente")
       router.push("/dashboard/gestionLanding/gestionProductos");
     } catch (err) {
       console.error(err);
-      alert("Error en la actualización.");
+      toast.error("Error actualizando el producto");
     }
   };
 

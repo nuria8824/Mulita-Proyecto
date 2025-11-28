@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { uploadFile } from "@/lib/subirArchivos";
 
 // GET: listar todas las noticias
 export async function GET() {
@@ -8,7 +7,7 @@ export async function GET() {
     .from("noticia")
     .select("*")
     .eq("eliminado", false)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

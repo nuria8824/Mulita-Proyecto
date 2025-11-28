@@ -34,26 +34,18 @@ export async function GET(req: NextRequest) {
 }
 
 
-// Función para limpiar nombres de archivo
-function sanitizeFileName(fileName: string) {
-  return fileName
-    .normalize("NFD") // separa letras y acentos
-    .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
-    .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // reemplaza cualquier caracter no válido
-}
-
 // POST: crear producto
 export async function POST(req: NextRequest) {
   try {
     // Validar autenticación desde cookie
-    const token = req.cookies.get("sb-access-token")?.value;
-    console.log("Token:", token);
+    const access_token = req.cookies.get("sb-access-token")?.value;
+    console.log("Token:", access_token);
 
-    if (!token) {
+    if (!access_token) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    const { data: userData, error: userError } = await supabase.auth.getUser(access_token);
     console.log("userData", userData, "userError", userError);
 
     if (userError || !userData.user) {
@@ -77,12 +69,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    // Procesar el formData
-    const formData = await req.formData();
-    const nombre = formData.get("nombre") as string;
-    const descripcion = formData.get("descripcion") as string;
-    const precio = formData.get("precio") as string;
-    const imagenes = formData.getAll("imagenes") as File[];
+    // Leer datos JSON
+    const body = await req.json();
+    const { nombre, descripcion, precio, imagenes } = body;
 
     console.log({ nombre, descripcion, precio, imagenes });
 
@@ -105,43 +94,13 @@ export async function POST(req: NextRequest) {
       console.log("Error insertando producto:", productoError);
       return NextResponse.json({ error: productoError.message }, { status: 400 });
     }
-
-    // Subir archivos al bucket
-    const uploadedFiles: { url: string; name: string; type: string }[] = [];
-  
-    for (const imagen of imagenes) {
-      const sanitizedFileName = sanitizeFileName(imagen.name);
-      const filePath = `productos/${producto.id}/${Date.now()}_${sanitizedFileName}`;
-  
-      const { error: uploadError } = await supabase.storage
-        .from("mulita-files")
-        .upload(filePath, imagen, {
-          contentType: imagen.type,
-          upsert: false,
-        });
-  
-      if (uploadError) {
-        console.error(`Error subiendo ${imagen.name}:`, uploadError.message);
-        continue;
-      }
-  
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("mulita-files").getPublicUrl(filePath);
-  
-      uploadedFiles.push({
-        url: publicUrl,
-        name: imagen.name,
-        type: imagen.type,
-      });
-    }
   
     // Guardar las URLs, nombres y tipos en producto_archivos
-    if (uploadedFiles.length) {
+    if (imagenes && imagenes.length > 0) {
       const { error: insertArchivosError } = await supabase
         .from("producto_archivos")
         .insert(
-          uploadedFiles.map((file) => ({
+          imagenes.map((file: any) => ({
             producto_id: producto.id,
             archivo_url: file.url,
             nombre: file.name,

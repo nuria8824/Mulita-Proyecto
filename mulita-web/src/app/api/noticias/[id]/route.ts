@@ -36,14 +36,10 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  // Leer FormData
-  const formData = await req.formData();
-  const titulo = formData.get("titulo")?.toString();
-  const autor = formData.get("autor")?.toString();
-  const introduccion = formData.get("introduccion")?.toString();
-  const descripcion = formData.get("descripcion")?.toString();
+  const body = await req.json();
+  const { titulo, autor, introduccion, descripcion, imagen_principal } = body;
 
-  let imagen_principal_url = formData.get("imagen_principal");
+  let imagen_principal_url;
 
   // Obtener imagen actual
   const { data: noticiActual } = await supabase
@@ -53,17 +49,10 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     .single();
 
   // Subir imagen_principal si es un File
-  if (imagen_principal_url instanceof File) {
-    const file = imagen_principal_url;
-    const { data, error } = await supabase.storage
-      .from("mulita-files")
-      .upload(`noticias/imagenes/${Date.now()}_${file.name}`, file);
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    imagen_principal_url = supabase.storage.from("mulita-files").getPublicUrl(data.path).data.publicUrl;
-  } else {
+  if (imagen_principal === null) {
     imagen_principal_url = noticiActual?.imagen_principal;
+  } else {
+    imagen_principal_url = imagen_principal
   }
 
   // Actualizar noticia
