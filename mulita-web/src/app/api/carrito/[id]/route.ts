@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 import { cookies } from "next/headers";
 
-// Función auxiliar para obtener items con datos de productos
+// Función auxiliar para obtener items con datos de productos (ordenados por más recientes primero)
 async function getItemsWithProducts(carritoId: string) {
   const { data: items } = await supabaseServer
     .from("carrito_items")
     .select("*")
-    .eq("carrito_id", carritoId);
+    .eq("carrito_id", carritoId)
+    .order("id", { ascending: false });
 
   let itemsConProducto = [];
   if (items && items.length > 0) {

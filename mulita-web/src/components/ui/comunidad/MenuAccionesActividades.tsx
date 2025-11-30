@@ -16,9 +16,10 @@ type AccionesMenuProps = {
   actividad: Actividad;
   userId: string;
   rol: string;
+  onActividadEliminada?: (actividadId: string) => void;
 };
 
-export default function MenuAccionesActividades({ actividad, userId, rol }: AccionesMenuProps) {
+export default function MenuAccionesActividades({ actividad, userId, rol, onActividadEliminada }: AccionesMenuProps) {
   const [open, setOpen] = useState(false);
   const [modalColeccionesOpen, setModalColeccionesOpen] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -55,7 +56,14 @@ export default function MenuAccionesActividades({ actividad, userId, rol }: Acci
       toast.success("Actividad eliminada correctamente");
       setOpen(false);
       setShowConfirmDelete(false);
-      router.push("/comunidad");
+      
+      // Llamar al callback si existe para eliminar de la vista al instante
+      if (onActividadEliminada) {
+        onActividadEliminada(actividad.id);
+      } else {
+        // Si no hay callback, redirigir a comunidad
+        router.push("/comunidad");
+      }
     } catch (err: any) {
       console.error(err);
       toast.error("No se pudo eliminar la actividad");

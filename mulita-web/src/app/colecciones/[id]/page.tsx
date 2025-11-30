@@ -113,22 +113,27 @@ export default function ColeccionDetallePage() {
     fetchFavoritos();
   }, [fetchFavoritos]);
 
-  // alternar like
-  const toggleLike = async (actividadId: string) => {
-    try {
-      const res = await fetch(`/api/comunidad/actividades/${actividadId}/like`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("Error al actualizar like");
+  // alternar like - Optimistic Update
+  const toggleLike = (actividadId: string) => {
+    // Guardar estado anterior en caso de necesitar revertir
+    const estadoAnterior = favoritos;
 
-      setFavoritos((prev) =>
-        prev.includes(actividadId)
-          ? prev.filter((id) => id !== actividadId)
-          : [...prev, actividadId]
-      );
-    } catch (err) {
-      console.error("Error al dar like:", err);
-    }
+    // Actualizar estado INMEDIATAMENTE (optimistic update)
+    setFavoritos((prev) =>
+      prev.includes(actividadId)
+        ? prev.filter((id) => id !== actividadId)
+        : [...prev, actividadId]
+    );
+
+    // Hacer el fetch en background (sin await)
+    fetch(`/api/comunidad/actividades/${actividadId}/like`, {
+      method: "POST",
+    })
+      .catch((err) => {
+        console.error("Error al dar like:", err);
+        // Revertir cambios si hay error
+        setFavoritos(estadoAnterior);
+      });
   };
 
   const toggleExpand = (id: string) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));

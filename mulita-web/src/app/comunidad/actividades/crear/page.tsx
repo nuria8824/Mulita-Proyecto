@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 interface Categoria {
   id: string;
   nombre: string;
+  tipo?: "curso" | "dificultad" | "materia";
 }
 
 interface ErroresFormulario {
@@ -39,7 +40,7 @@ export default function CrearActividadPage() {
   // Cargar categorías desde Supabase
   useEffect(() => {
     const fetchCategorias = async () => {
-      const { data, error } = await supabase.from("categoria").select("id, nombre");
+      const { data, error } = await supabase.from("categoria").select("id, nombre, tipo");
       if (!error && data) setCategorias(data);
       setCargandoCategorias(false);
     };
@@ -205,33 +206,105 @@ export default function CrearActividadPage() {
             ) : categorias.length === 0 ? (
               <p className="text-gray-500">No hay categorías disponibles.</p>
             ) : (
-              <div
-                className={`flex flex-wrap gap-3 p-2 rounded-md border ${
-                  errores.categorias ? "border-red-500" : "border-gray-200"
-                }`}
-              >
-                {categorias.map((cat) => (
-                  <label
-                    key={cat.id}
-                    className={`flex items-center gap-2 border px-4 py-2 rounded-md cursor-pointer transition ${
-                      categoriasSeleccionadas.includes(cat.id)
-                        ? "bg-blue-100 border-blue-500"
-                        : "bg-gray-50 hover:bg-gray-100"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={categoriasSeleccionadas.includes(cat.id)}
-                      onChange={() => {
-                        handleCategoriaChange(cat.id);
-                        if (errores.categorias)
-                          setErrores({ ...errores, categorias: undefined });
-                      }}
-                      className="accent-blue-600"
-                    />
-                    {cat.nombre}
-                  </label>
-                ))}
+              <div className="flex flex-col gap-6">
+                {/* Cursos */}
+                {categorias.filter((c) => c.tipo === "curso").length > 0 && (
+                  <div className="border-l-4 border-blue-500 pl-4">
+                    <h3 className="text-base font-semibold text-blue-700 mb-2">Cursos</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {categorias
+                        .filter((c) => c.tipo === "curso")
+                        .map((cat) => (
+                          <label
+                            key={cat.id}
+                            className={`flex items-center gap-2 border px-3 py-2 rounded-md cursor-pointer transition ${
+                              categoriasSeleccionadas.includes(cat.id)
+                                ? "bg-blue-100 border-blue-500"
+                                : "bg-gray-50 hover:bg-gray-100"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={categoriasSeleccionadas.includes(cat.id)}
+                              onChange={() => {
+                                handleCategoriaChange(cat.id);
+                                if (errores.categorias)
+                                  setErrores({ ...errores, categorias: undefined });
+                              }}
+                              className="accent-blue-600"
+                            />
+                            {cat.nombre}
+                          </label>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Materias */}
+                {categorias.filter((c) => c.tipo === "materia").length > 0 && (
+                  <div className="border-l-4 border-green-500 pl-4">
+                    <h3 className="text-base font-semibold text-green-700 mb-2">Materias</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {categorias
+                        .filter((c) => c.tipo === "materia")
+                        .map((cat) => (
+                          <label
+                            key={cat.id}
+                            className={`flex items-center gap-2 border px-3 py-2 rounded-md cursor-pointer transition ${
+                              categoriasSeleccionadas.includes(cat.id)
+                                ? "bg-green-100 border-green-500"
+                                : "bg-gray-50 hover:bg-gray-100"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={categoriasSeleccionadas.includes(cat.id)}
+                              onChange={() => {
+                                handleCategoriaChange(cat.id);
+                                if (errores.categorias)
+                                  setErrores({ ...errores, categorias: undefined });
+                              }}
+                              className="accent-green-600"
+                            />
+                            {cat.nombre}
+                          </label>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Dificultades */}
+                {categorias.filter((c) => c.tipo === "dificultad").length > 0 && (
+                  <div className="border-l-4 border-orange-500 pl-4">
+                    <h3 className="text-base font-semibold text-orange-700 mb-2">Dificultades</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {categorias
+                        .filter((c) => c.tipo === "dificultad")
+                        .map((cat) => (
+                          <label
+                            key={cat.id}
+                            className={`flex items-center gap-2 border px-3 py-2 rounded-md cursor-pointer transition ${
+                              categoriasSeleccionadas.includes(cat.id)
+                                ? "bg-orange-100 border-orange-500"
+                                : "bg-gray-50 hover:bg-gray-100"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={categoriasSeleccionadas.includes(cat.id)}
+                              onChange={() => {
+                                handleCategoriaChange(cat.id);
+                                if (errores.categorias)
+                                  setErrores({ ...errores, categorias: undefined });
+                              }}
+                              className="accent-orange-600"
+                            />
+                            {cat.nombre}
+                          </label>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {errores.categorias && (

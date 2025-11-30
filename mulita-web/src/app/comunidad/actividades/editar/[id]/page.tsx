@@ -5,11 +5,13 @@ import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { uploadFile } from "@/lib/subirArchivos";
 import SkeletonEditarActividad from "@/components/ui/comunidad/skeletons/SkeletonEditarActividad";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { toast } from "react-hot-toast";
 
 interface Categoria {
   id: string;
   nombre: string;
+  tipo?: "curso" | "dificultad" | "materia";
 }
 
 interface ArchivoExistente {
@@ -44,6 +46,7 @@ export default function EditarActividadPage() {
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [errores, setErrores] = useState<ErroresFormulario>({});
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   const MAX_FILE_SIZE = 30 * 1024 * 1024;
 
@@ -70,7 +73,7 @@ export default function EditarActividadPage() {
 
         const { data: categoriasData, error: categoriasError } = await supabase
           .from("categoria")
-          .select("id, nombre");
+          .select("id, nombre, tipo");
 
         if (!categoriasError && categoriasData) setCategorias(categoriasData);
       } catch (err) {
@@ -187,6 +190,12 @@ export default function EditarActividadPage() {
       }
 
       toast.success("Actividad actualizada exitosamente");
+      // Guardar la actividad actualizada en sessionStorage para que se actualice en la vista
+      sessionStorage.setItem("actividadActualizada", JSON.stringify({
+        id: params.id,
+        titulo,
+        descripcion,
+      }));
       router.push("/comunidad");
     } catch (err) {
       console.error("Error en fetch:", err);
@@ -196,11 +205,41 @@ export default function EditarActividadPage() {
 
   const handleCancel = () => router.push("/comunidad");
 
+  const handleEliminar = async () => {
+    try {
+      const res = await fetch(`/api/comunidad/actividades/${params.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) throw new Error("Error eliminando la actividad");
+
+      toast.success("Actividad eliminada correctamente");
+      setShowConfirmDelete(false);
+      router.push("/comunidad");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("No se pudo eliminar la actividad");
+    }
+  };
+
   if (loading)
     return <SkeletonEditarActividad />;
 
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        title="Eliminar actividad"
+        message="¿Estás seguro de que deseas eliminar esta actividad? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={handleEliminar}
+      />
       <div className="w-full max-w-3xl flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-semibold text-black">Editar Actividad</h1>
@@ -251,33 +290,105 @@ export default function EditarActividadPage() {
           {/* Categorías */}
           <div>
             <label className="block text-lg font-semibold mb-2">Categorías *</label>
-            <div
-              className={`flex flex-wrap gap-3 p-2 rounded-md border ${
-                errores.categorias ? "border-red-500" : "border-gray-200"
-              }`}
-            >
-              {categorias.map((cat) => (
-                <label
-                  key={cat.id}
-                  className={`flex items-center gap-2 border px-4 py-2 rounded-md cursor-pointer transition ${
-                    categoriasSeleccionadas.includes(cat.id)
-                      ? "bg-blue-100 border-blue-500"
-                      : "bg-gray-50 hover:bg-gray-100"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={categoriasSeleccionadas.includes(cat.id)}
-                    onChange={() => {
-                      handleCategoriaChange(cat.id);
-                      if (errores.categorias)
-                        setErrores({ ...errores, categorias: undefined });
-                    }}
-                    className="accent-blue-600"
-                  />
-                  {cat.nombre}
-                </label>
-              ))}
+            <div className="flex flex-col gap-6">
+              {/* Cursos */}
+              {categorias.filter((c) => c.tipo === "curso").length > 0 && (
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h3 className="text-base font-semibold text-blue-700 mb-2">Cursos</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {categorias
+                      .filter((c) => c.tipo === "curso")
+                      .map((cat) => (
+                        <label
+                          key={cat.id}
+                          className={`flex items-center gap-2 border px-3 py-2 rounded-md cursor-pointer transition ${
+                            categoriasSeleccionadas.includes(cat.id)
+                              ? "bg-blue-100 border-blue-500"
+                              : "bg-gray-50 hover:bg-gray-100"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={categoriasSeleccionadas.includes(cat.id)}
+                            onChange={() => {
+                              handleCategoriaChange(cat.id);
+                              if (errores.categorias)
+                                setErrores({ ...errores, categorias: undefined });
+                            }}
+                            className="accent-blue-600"
+                          />
+                          {cat.nombre}
+                        </label>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Materias */}
+              {categorias.filter((c) => c.tipo === "materia").length > 0 && (
+                <div className="border-l-4 border-green-500 pl-4">
+                  <h3 className="text-base font-semibold text-green-700 mb-2">Materias</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {categorias
+                      .filter((c) => c.tipo === "materia")
+                      .map((cat) => (
+                        <label
+                          key={cat.id}
+                          className={`flex items-center gap-2 border px-3 py-2 rounded-md cursor-pointer transition ${
+                            categoriasSeleccionadas.includes(cat.id)
+                              ? "bg-green-100 border-green-500"
+                              : "bg-gray-50 hover:bg-gray-100"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={categoriasSeleccionadas.includes(cat.id)}
+                            onChange={() => {
+                              handleCategoriaChange(cat.id);
+                              if (errores.categorias)
+                                setErrores({ ...errores, categorias: undefined });
+                            }}
+                            className="accent-green-600"
+                          />
+                          {cat.nombre}
+                        </label>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Dificultades */}
+              {categorias.filter((c) => c.tipo === "dificultad").length > 0 && (
+                <div className="border-l-4 border-orange-500 pl-4">
+                  <h3 className="text-base font-semibold text-orange-700 mb-2">Dificultades</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {categorias
+                      .filter((c) => c.tipo === "dificultad")
+                      .map((cat) => (
+                        <label
+                          key={cat.id}
+                          className={`flex items-center gap-2 border px-3 py-2 rounded-md cursor-pointer transition ${
+                            categoriasSeleccionadas.includes(cat.id)
+                              ? "bg-orange-100 border-orange-500"
+                              : "bg-gray-50 hover:bg-gray-100"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={categoriasSeleccionadas.includes(cat.id)}
+                            onChange={() => {
+                              handleCategoriaChange(cat.id);
+                              if (errores.categorias)
+                                setErrores({ ...errores, categorias: undefined });
+                            }}
+                            className="accent-orange-600"
+                          />
+                          {cat.nombre}
+                        </label>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
             {errores.categorias && (
               <p className="text-red-500 text-sm mt-1">{errores.categorias}</p>
@@ -356,14 +467,22 @@ export default function EditarActividadPage() {
             <button
               type="button"
               onClick={handleCancel}
-              className="w-1/2 h-12 bg-gray-300 text-[#003c71] font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
+              className="w-1/3 h-12 bg-gray-300 text-[#003c71] font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
             >
               Cancelar
             </button>
 
             <button
+              type="button"
+              onClick={() => setShowConfirmDelete(true)}
+              className="w-1/3 h-12 bg-red-500 text-white font-semibold rounded-md shadow-md hover:bg-red-600 transition"
+            >
+              Eliminar
+            </button>
+
+            <button
               type="submit"
-              className="w-1/2 h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
+              className="w-1/3 h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
             >
               Guardar cambios
             </button>

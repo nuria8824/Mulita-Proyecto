@@ -2,7 +2,7 @@ export default function ComentarioSkeleton() {
   return (
     <div className="animate-pulse space-y-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="border-b pb-2 flex gap-2">
+        <div key={i} className="border-b border-gray-100 pb-2 flex gap-2">
           {/* Avatar */}
           <div className="w-8 h-8 rounded-full bg-gray-300"></div>
 
