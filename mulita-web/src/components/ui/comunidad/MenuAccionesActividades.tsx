@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import ModalColecciones from "./ModalColecciones";
 
 type Actividad = {
@@ -20,6 +21,7 @@ type AccionesMenuProps = {
 export default function MenuAccionesActividades({ actividad, userId, rol }: AccionesMenuProps) {
   const [open, setOpen] = useState(false);
   const [modalColeccionesOpen, setModalColeccionesOpen] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -40,8 +42,6 @@ export default function MenuAccionesActividades({ actividad, userId, rol }: Acci
   }, []);
 
   const handleEliminar = async () => {
-    if (!confirm("¿Seguro que deseas eliminar esta actividad?")) return;
-
     try {
       const res = await fetch(`/api/comunidad/actividades/${actividad.id}`, {
         method: "DELETE",
@@ -54,6 +54,7 @@ export default function MenuAccionesActividades({ actividad, userId, rol }: Acci
 
       toast.success("Actividad eliminada correctamente");
       setOpen(false);
+      setShowConfirmDelete(false);
       router.push("/comunidad");
     } catch (err: any) {
       console.error(err);
@@ -68,6 +69,16 @@ export default function MenuAccionesActividades({ actividad, userId, rol }: Acci
 
   return (
     <>
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        title="Eliminar actividad"
+        message="¿Estás seguro de que deseas eliminar esta actividad? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={handleEliminar}
+      />
       <div className="relative" ref={menuRef}>
         <button
           onClick={toggleMenu}
@@ -105,7 +116,7 @@ export default function MenuAccionesActividades({ actividad, userId, rol }: Acci
                 </Link>
 
                 <button
-                  onClick={handleEliminar}
+                  onClick={() => setShowConfirmDelete(true)}
                   className="px-4 py-2 text-left hover:bg-gray-100 text-sm text-red-600"
                 >
                   Eliminar
@@ -117,7 +128,7 @@ export default function MenuAccionesActividades({ actividad, userId, rol }: Acci
               <>
                 <hr className="my-1 border-gray-200" />
                 <button
-                  onClick={handleEliminar}
+                  onClick={() => setShowConfirmDelete(true)}
                   className="px-4 py-2 text-left hover:bg-gray-100 text-sm text-red-600"
                 >
                   Eliminar

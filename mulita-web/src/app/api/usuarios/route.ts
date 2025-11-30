@@ -6,6 +6,7 @@ export async function GET(req: NextRequest) {
   const page = Number(searchParams.get("page") || 1);
   const limit = Number(searchParams.get("limit") || 10);
   const search = searchParams.get("search")?.toLowerCase() || "";
+  const rol = searchParams.get("rol") || "";
 
   const from = (page - 1) * limit;
   const to = from + limit - 1;
@@ -19,6 +20,10 @@ export async function GET(req: NextRequest) {
 
   if (search) {
     query = query.ilike("nombre", `%${search}%`);
+  }
+
+  if (rol) {
+    query = query.eq("rol", rol);
   }
 
   const { data, count, error } = await query;

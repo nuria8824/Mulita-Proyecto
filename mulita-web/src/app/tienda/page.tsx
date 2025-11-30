@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import ProductosWrapper from "@/components/ui/tienda/ProductosWrapper";
 
-export default function TiendaPage() {
+function TiendaContent() {
+  const searchParams = useSearchParams();
+  const productIdFromUrl = searchParams.get("productId");
+  
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -47,7 +51,11 @@ export default function TiendaPage() {
       </div>
 
       {/* Productos con skeleton integrado */}
-      <ProductosWrapper productos={productos} loading={loading} />
+      <ProductosWrapper 
+        productos={productos} 
+        loading={loading}
+        initialProductId={productIdFromUrl}
+      />
 
       {/* Paginación */}
       <div className="flex justify-center gap-4 my-10">
@@ -74,5 +82,13 @@ export default function TiendaPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function TiendaPage() {
+  return (
+    <Suspense fallback={<div className="w-full max-w-7xl mx-auto py-10 px-4">Cargando...</div>}>
+      <TiendaContent />
+    </Suspense>
   );
 }

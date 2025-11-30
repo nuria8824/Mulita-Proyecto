@@ -24,41 +24,71 @@ export default function UserList({ usuarios, onUpdate }: Props) {
   }
 
   return (
-    <>
-      <table className="w-full border-collapse border border-gray-300">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="border p-2">Nombre</th>
-            <th className="border p-2">Apellido</th>
-            <th className="border p-2">Email</th>
-            <th className="border p-2">Teléfono</th>
-            <th className="border p-2">Rol</th>
-            <th className="border p-2">Creado</th>
-            <th className="border p-2">Acceso Comunidad</th>
-            <th className="border p-2">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios.map((u) => (
-            <tr key={u.id} className="text-center">
-              <td className="border p-2">{u.nombre}</td>
-              <td className="border p-2">{u.apellido}</td>
-              <td className="border p-2">{u.email}</td>
-              <td className="border p-2">{u.telefono}</td>
-              <td className="border p-2">{u.rol}</td>
-              <td className="border p-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+      {usuarios.map((u) => (
+        <div
+          key={u.id}
+          className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200"
+        >
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {u.nombre} {u.apellido}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">{u.email}</p>
+            </div>
+            <div className="ml-4">
+              <MenuAccionesUsuarios user={u} onUpdate={onUpdate} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase">
+                Teléfono
+              </p>
+              <p className="text-sm text-gray-900 mt-1">{u.telefono}</p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase">
+                Rol
+              </p>
+              <p className="text-sm text-gray-900 mt-1">
+                <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">
+                  {u.rol}
+                </span>
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase">
+                Creado
+              </p>
+              <p className="text-sm text-gray-900 mt-1">
                 {new Date(u.created_at).toLocaleDateString()}
-              </td>
-              <td className="border p-2">
-                {u.acceso_comunidad ? "Sí" : "No"}
-              </td>
-              <td className="border p-2">
-                <MenuAccionesUsuarios user={u} onUpdate={onUpdate} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase">
+                Comunidad
+              </p>
+              <p className="text-sm text-gray-900 mt-1">
+                <span
+                  className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
+                    u.acceso_comunidad
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {u.acceso_comunidad ? "Sí" : "No"}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

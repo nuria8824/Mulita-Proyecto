@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import toast from "react-hot-toast";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import EditRolModal from "./EditRolModal";
 import EditPermissionsModal from "./EditPermisosModal";
 import Link from "next/link";
@@ -25,6 +27,7 @@ interface Props {
 export default function MenuAccionesUsuarios({ user, onUpdate }: Props) {
   const [open, setOpen] = useState(false);
   const [modal, setModal] = useState<null | "perfil" | "rol" | "permisos">(null);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const { isSuperAdmin, user: currentUser, isLoading } = useUser();
@@ -41,15 +44,12 @@ export default function MenuAccionesUsuarios({ user, onUpdate }: Props) {
   }, []);
 
   const handleDelete = async () => {
-    const confirmDelete = confirm("¿Seguro que deseas eliminar este usuario?");
-    if (!confirmDelete) return;
-
     const res = await fetch(`/api/usuarios/${user.id}`, { method: "DELETE" });
     if (res.ok) {
-      alert("Usuario marcado como eliminado.");
+      toast.success("Usuario marcado como eliminado.");
       onUpdate();
     } else {
-      alert("Error al eliminar usuario.");
+      toast.error("Error al eliminar usuario.");
     }
   };
 
@@ -101,7 +101,8 @@ export default function MenuAccionesUsuarios({ user, onUpdate }: Props) {
           <button
             onClick={ () => {
               if (!canEditOrDelete) return;
-              handleDelete
+              setShowConfirmDelete(true);
+              setOpen(false);
             }}
             disabled={!canEditOrDelete}
             className={`block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 ${!canEditOrDelete ? "opacity-50 cursor-not-allowed " : ""}`}
@@ -110,6 +111,17 @@ export default function MenuAccionesUsuarios({ user, onUpdate }: Props) {
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        title="Eliminar usuario"
+        message="¿Estás seguro de que deseas marcar este usuario como eliminado?"
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={handleDelete}
+      />
 
       {modal === "rol" && (
         <EditRolModal

@@ -7,17 +7,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import CompraModal from "../CompraModal";
 
 export function CarritoPage() {
   const { items, isLoading, removeItem, updateItemQuantity, clearCart, getTotalPrice } = useCart();
   const [processing, setProcessing] = useState(false);
-  // Estado local para los inputs de cantidad
   const [localQuantities, setLocalQuantities] = useState<Record<string, number>>({});
-  // Refs para los timeouts de debounce
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
-
   const [compraOpen, setCompraOpem] = useState(false);
+  const [showConfirmClearCart, setShowConfirmClearCart] = useState(false);
 
   const handleRemoveItem = (itemId: string) => {
     setProcessing(true);
@@ -76,23 +75,22 @@ export function CarritoPage() {
     }
   };
 
-  const handleClearCart = () => {
-    if (confirm("¿Estás seguro de que deseas vaciar el carrito?")) {
-      setProcessing(true);
-      clearCart(
-        {},
-        {
-          onSuccess: () => {
-            toast.success("Carrito vaciado exitosamente");
-            setProcessing(false);
-          },
-          onError: (error) => {
-            toast.error("Error al vaciar carrito");
-            setProcessing(false);
-          },
-        }
-      );
-    }
+  const handleClearCart = async () => {
+    setProcessing(true);
+    clearCart(
+      {},
+      {
+        onSuccess: () => {
+          toast.success("Carrito vaciado exitosamente");
+          setProcessing(false);
+          setShowConfirmClearCart(false);
+        },
+        onError: (error) => {
+          toast.error("Error al vaciar carrito");
+          setProcessing(false);
+        },
+      }
+    );
   };
 
   // Obtener cantidad actual del input local o del item
@@ -111,7 +109,18 @@ export function CarritoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <>
+      <ConfirmDialog
+        isOpen={showConfirmClearCart}
+        onClose={() => setShowConfirmClearCart(false)}
+        title="Vaciar carrito"
+        message="¿Estás seguro de que deseas vaciar tu carrito? Esta acción no se puede deshacer."
+        confirmText="Vaciar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={handleClearCart}
+      />
+      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -157,18 +166,20 @@ export function CarritoPage() {
                   >
                     {/* Imagen del producto */}
                     {item.producto?.imagen && (
-                      <div className="flex-shrink-0 w-24 h-24 relative">
-                        <Image
-                          src={item.producto.imagen}
-                          alt={item.producto.nombre}
-                          fill
-                          className="object-cover rounded"
-                        />
-                      </div>
+                      <Link href={`/tienda?productId=${item.producto_id}`}>
+                        <div className="flex-shrink-0 w-24 h-24 relative cursor-pointer hover:opacity-75 transition">
+                          <Image
+                            src={item.producto.imagen}
+                            alt={item.producto.nombre}
+                            fill
+                            className="object-cover rounded"
+                          />
+                        </div>
+                      </Link>
                     )}
 
                     {/* Detalles del producto */}
-                    <div className="flex-1">
+                    <Link href={`/tienda?productId=${item.producto_id}`} className="flex-1 cursor-pointer hover:opacity-75 transition">
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">
                         {item.producto?.nombre || `Producto (${item.producto_id?.slice(0, 8)}...)`}
                       </h3>
@@ -180,7 +191,7 @@ export function CarritoPage() {
                       <p className="text-lg font-bold text-blue-600 mt-2">
                         ${item.precio.toLocaleString("es-AR")}
                       </p>
-                    </div>
+                    </Link>
 
                     {/* Cantidad */}
                     <div className="flex items-center gap-2">
@@ -238,7 +249,7 @@ export function CarritoPage() {
               {/* Botón vaciar carrito */}
               <div className="mt-4 flex justify-end">
                 <button
-                  onClick={handleClearCart}
+                  onClick={() => setShowConfirmClearCart(true)}
                   disabled={processing}
                   className="text-red-600 hover:text-red-700 font-semibold disabled:opacity-50"
                 >
@@ -258,6 +269,13 @@ export function CarritoPage() {
                   <span className="text-2xl font-bold text-blue-600">
                     ${getTotalPrice().toLocaleString("es-AR")}
                   </span>
+                </div>
+
+                {/* Mensaje de aviso */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-amber-800">
+                    <span className="font-semibold">⚠️ Nota importante:</span> El precio mostrado no incluye los costos de envío. El total final se coordinará vía WhatsApp.
+                  </p>
                 </div>
 
                 {/* Botón checkout */}
@@ -283,10 +301,12 @@ export function CarritoPage() {
               open={compraOpen}
               onClose={() => setCompraOpem(false)}
               items={items}
+              source="cart"
             />
           </div>
         )}
       </div>
-    </div>
-  );
-}
+      </div>
+      </>
+    );
+  }

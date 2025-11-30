@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { useUser } from "@/hooks/queries";
 import MenuAccionesNoticias from "@/components/ui/noticias/MenuAccionesNoticias";
 
@@ -14,6 +16,7 @@ export default function GestionNoticiasPage() {
   const { user, isLoading: isUserLoading } = useUser();
   const [noticias, setNoticias] = useState<Noticia[]>([]);
   const [loadingNoticias, setLoadingNoticias] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   // Traer noticias desde la API
   useEffect(() => {
@@ -34,13 +37,19 @@ export default function GestionNoticiasPage() {
   }, []);
 
   const handleEliminar = async (id: number) => {
-    if (!confirm("¿Seguro que quieres eliminar esta noticia?")) return;
     try {
       await fetch(`/api/noticias/${id}`, { method: "DELETE" });
       setNoticias((prev) => prev.filter((n) => n.id !== id));
+      toast.success("Noticia eliminada exitosamente");
+      setConfirmDelete(null);
     } catch (err) {
       console.error("Error eliminando noticia:", err);
+      toast.error("Error al eliminar la noticia");
     }
+  };
+
+  const handleOpenConfirmDelete = (id: number) => {
+    setConfirmDelete(id);
   };
 
   if (isUserLoading || loadingNoticias) {
@@ -48,7 +57,20 @@ export default function GestionNoticiasPage() {
   }
 
   return (
-    <div className="w-full min-h-screen relative overflow-hidden flex flex-col items-center px-4 sm:px-6 pb-10 box-border font-inter">
+    <>
+      <ConfirmDialog
+        isOpen={confirmDelete !== null}
+        onClose={() => setConfirmDelete(null)}
+        title="Eliminar noticia"
+        message="¿Estás seguro de que deseas eliminar esta noticia? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={() => {
+          if (confirmDelete !== null) handleEliminar(confirmDelete);
+        }}
+      />
+      <div className="w-full min-h-screen relative overflow-hidden flex flex-col items-center px-4 sm:px-6 pb-10 box-border font-inter">
       {/* Header + botón agregar */}
       <div className="w-full max-w-[1103px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-6">
         <div className="flex flex-col text-[28px] sm:text-[32px] md:text-[36px]">
@@ -90,7 +112,7 @@ export default function GestionNoticiasPage() {
                 <div className="self-end sm:self-auto">
                   <MenuAccionesNoticias
                     noticiaId={noticia.id}
-                    onEliminar={handleEliminar}
+                    onEliminar={handleOpenConfirmDelete}
                   />
                 </div>
               )}
@@ -98,6 +120,7 @@ export default function GestionNoticiasPage() {
           ))
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
