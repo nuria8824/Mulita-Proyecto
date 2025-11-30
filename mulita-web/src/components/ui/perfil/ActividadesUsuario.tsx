@@ -53,6 +53,8 @@ export default function ActividadesUsuario({
   const [actividadParaColeccion, setActividadParaColeccion] = useState<string | null>(null);
 
   const [comentariosPorActividad, setComentariosPorActividad] = useState<Record<string, number>>({});
+  const [likesPorActividad, setLikesPorActividad] = useState<Record<string, number>>({});
+  const [ultimoComentario, setUltimoComentario] = useState<Record<string, any>>({});
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -71,8 +73,39 @@ export default function ActividadesUsuario({
     }
   };
 
+  const fetchLikesCount = async (actividadId: string) => {
+    try {
+      const res = await fetch(`/api/comunidad/actividades/${actividadId}/likes`);
+      if (!res.ok) throw new Error("Error al obtener likes");
+      const data = await res.json();
+      return data.count || 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  const fetchUltimoComentario = async (actividadId: string) => {
+    try {
+      const res = await fetch(`/api/comunidad/comentarios/${actividadId}`);
+      if (!res.ok) throw new Error("Error al obtener comentarios");
+      const data = await res.json();
+      if (data.length > 0) {
+        setUltimoComentario((prev) => ({
+          ...prev,
+          [actividadId]: data[data.length - 1],
+        }));
+      }
+    } catch {
+      // Silenciosamente ignorar errores
+    }
+  };
+
   const actualizarComentarios = (actividadId: string, nuevoCount: number) => {
     setComentariosPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
+  };
+
+  const actualizarLikes = (actividadId: string, nuevoCount: number) => {
+    setLikesPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
   };
 
   // Trae todas las actividades o solo los favoritos
@@ -133,14 +166,18 @@ export default function ActividadesUsuario({
         if (newOffset === 0) setActividades(actividadesConLike);
         else setActividades((prev) => [...prev, ...actividadesConLike]);
 
-        // Cargar cantidad de comentarios ---
+        // Cargar cantidad de comentarios, likes y último comentario ---
         const counts: Record<string, number> = {};
+        const likes: Record<string, number> = {};
         await Promise.all(
           data.map(async (act) => {
             counts[act.id] = await fetchComentariosCount(act.id);
+            likes[act.id] = await fetchLikesCount(act.id);
+            await fetchUltimoComentario(act.id);
           })
         );
         setComentariosPorActividad((prev) => ({ ...prev, ...counts }));
+        setLikesPorActividad((prev) => ({ ...prev, ...likes }));
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -166,6 +203,7 @@ export default function ActividadesUsuario({
     // Guardar estado anterior en caso de necesitar revertir
     const isFav = favoritos.includes(actividadId);
     const estadoAnterior = favoritos;
+    const likesAnteriores = likesPorActividad;
 
     // Actualizar estado INMEDIATAMENTE (optimistic update)
     setFavoritos((prev) =>
@@ -173,6 +211,12 @@ export default function ActividadesUsuario({
         ? prev.filter((id) => id !== actividadId)
         : [...prev, actividadId]
     );
+
+    // Actualizar contador de likes
+    setLikesPorActividad((prev) => ({
+      ...prev,
+      [actividadId]: isFav ? (prev[actividadId] || 0) - 1 : (prev[actividadId] || 0) + 1,
+    }));
 
     // Mostrar toast inmediatamente
     toast.success(isFav ? "Removido de favoritos" : "Agregado a favoritos");
@@ -187,6 +231,7 @@ export default function ActividadesUsuario({
         console.error("Error al dar like:", err);
         // Revertir cambios si hay error
         setFavoritos(estadoAnterior);
+        setLikesPorActividad(likesAnteriores);
         toast.error("Error al actualizar favorito");
       });
   };
@@ -340,17 +385,22 @@ export default function ActividadesUsuario({
 
               {/* Botones */}
               <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
-                <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
-                  <img
-                    src={
-                      isFav
-                        ? "/images/icons/comunidad/favoritos-fill.svg"
-                        : "/images/icons/comunidad/favoritos.svg"
-                    }
-                    alt="Me gusta"
-                    className="w-6 h-6"
-                  />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
+                    <img
+                      src={
+                        isFav
+                          ? "/images/icons/comunidad/favoritos-fill.svg"
+                          : "/images/icons/comunidad/favoritos.svg"
+                      }
+                      alt="Me gusta"
+                      className="w-6 h-6"
+                    />
+                  </button>
+                  <span className="text-sm text-gray-700 font-semibold">
+                    {likesPorActividad[act.id] ?? 0}
+                  </span>
+                </div>
 
                 <div className="flex items-center gap-1">
                   <button
@@ -388,8 +438,39 @@ export default function ActividadesUsuario({
                 onNuevoComentario={async () => {
                   const count = await fetchComentariosCount(act.id);
                   actualizarComentarios(act.id, count);
+                  await fetchUltimoComentario(act.id);
                 }}
               />
+
+              {/* ÚLTIMO COMENTARIO */}
+              {ultimoComentario[act.id] && (
+                <div className="border-t border-gray-100 pt-3 mt-2">
+                  <p className="text-xs text-gray-500 mb-2 font-semibold">Último comentario</p>
+                  <div className="flex items-start gap-2 bg-gray-50 rounded-lg p-3">
+                    {ultimoComentario[act.id].usuario?.perfil?.imagen ? (
+                      <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                        <img
+                          src={ultimoComentario[act.id].usuario.perfil.imagen}
+                          alt={`${ultimoComentario[act.id].usuario?.nombre}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs flex-shrink-0">
+                        {ultimoComentario[act.id].usuario?.nombre?.[0]?.toUpperCase() ?? "?"}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-800">
+                        {ultimoComentario[act.id].usuario?.nombre} {ultimoComentario[act.id].usuario?.apellido}
+                      </p>
+                      <p className="text-xs text-gray-700 line-clamp-2">
+                        {ultimoComentario[act.id].contenido}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
