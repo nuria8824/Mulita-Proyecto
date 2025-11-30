@@ -16,6 +16,7 @@ interface ErroresFormulario {
   titulo?: string;
   descripcion?: string;
   categorias?: string;
+  archivo?: string;
 }
 
 interface ArchivoSubido {
@@ -33,6 +34,8 @@ export default function CrearActividadPage() {
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
   const [cargandoCategorias, setCargandoCategorias] = useState(true);
   const [errores, setErrores] = useState<ErroresFormulario>({});
+
+  const MAX_FILE_SIZE = 30 * 1024 * 1024;
 
   // Cargar categorías desde Supabase
   useEffect(() => {
@@ -78,9 +81,17 @@ export default function CrearActividadPage() {
     if (categoriasSeleccionadas.length === 0)
       nuevosErrores.categorias = "Debes seleccionar al menos una categoría.";
 
-    setErrores(nuevosErrores);
+    // Validar tamaño de archivos
+    const archivoGrande = archivos.find((archivo) => archivo.size > MAX_FILE_SIZE);
+    if (archivoGrande) {
+      nuevosErrores.archivo = `El archivo "${archivoGrande.name}" supera el límite de 30 MB.`;
+    }
 
-    if (Object.keys(nuevosErrores).length > 0) return;
+    if (Object.keys(nuevosErrores).length > 0) {
+      setErrores(nuevosErrores);
+      if (nuevosErrores.archivo) toast.error(nuevosErrores.archivo);
+      return;
+    }
 
     try {
       // Subir archivos directamente a Supabase primero
