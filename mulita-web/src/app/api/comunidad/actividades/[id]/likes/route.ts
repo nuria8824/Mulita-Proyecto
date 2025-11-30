@@ -3,8 +3,9 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const actividadId = params.id;
 
   try {
