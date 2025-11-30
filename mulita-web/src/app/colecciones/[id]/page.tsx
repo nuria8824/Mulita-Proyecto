@@ -149,19 +149,19 @@ export default function ColeccionDetallePage() {
   if (error) 
     return (
       <div className="p-4 max-w-3xl mx-auto">
-        <div className="mb-4">
+        <div className="flex items-center gap-2 mb-4">
           <BackButton />
+          <p className="text-red-500">Error: {error}</p>
         </div>
-        <p className="text-center text-red-500 mt-4">{error}</p>
       </div>
     );
   if (actividades.length === 0)
     return (
       <div className="p-4 max-w-3xl mx-auto">
-        <div className="mb-4">
+        <div className="flex items-center gap-2 mb-4">
           <BackButton />
+          <p className="text-gray-400">No hay actividades en esta colección.</p>
         </div>
-        <p className="text-center text-gray-400 mt-4">No hay actividades en esta colección.</p>
       </div>
     );
 
@@ -174,12 +174,12 @@ export default function ColeccionDetallePage() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <div className="mb-4">
+      <div className="flex items-center gap-2 mb-4">
         <BackButton />
+        <h2 className="text-2xl font-semibold text-[#003c71]">
+          {`Actividades de "${nombreColeccion}"`}
+        </h2>
       </div>
-      <h2 className="text-2xl font-semibold text-[#003c71] mb-4">
-        {`Actividades de "${nombreColeccion}"`}
-      </h2>
 
       <div className="flex flex-col gap-8">
         {actividades.map((act) => {

@@ -110,7 +110,9 @@ export default function PerfilPage() {
   return (
     <div className="w-full min-h-screen bg-white flex flex-col items-center justify-start text-xs text-[#6d758f] font-inter">
       <div className="w-full max-w-6xl px-4 py-2">
-        <BackButton />
+        <div className="flex items-center gap-2 mb-6">
+          <BackButton />
+        </div>
       </div>
       {/* Sección superior del perfil */}
       <div className="w-full flex flex-col items-center text-center p-[30px_170px] relative">
