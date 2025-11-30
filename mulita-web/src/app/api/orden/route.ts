@@ -4,9 +4,10 @@ import { supabase } from "@/lib/supabase";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { usuario_id, datos_fiscales_id, items, ubicacion, lat, lon } = body;
+    const { usuario_id, datos_fiscales_id, items, ubicacion, lat, lon, total } = body;
+    console.log("items", items);
 
-    if (!usuario_id || !datos_fiscales_id || !items?.length) {
+    if (!usuario_id || !datos_fiscales_id || !items?.length || !total) {
       return NextResponse.json(
         { error: "Faltan campos obligatorios." },
         { status: 400 }
@@ -20,32 +21,11 @@ export async function POST(req: Request) {
       );
     }
 
-    let finalLat = lat;
-    let finalLon = lon;
-
-    // Si NO me mandaste coordenadas, las busco en Nominatim
-    if (!finalLat || !finalLon) {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        ubicacion
-      )}`;
-
-      const resp = await fetch(url, {
-        headers: {
-          "User-Agent": "tu-app/1.0 (tu-email@example.com)",
-        },
-      });
-
-      const data = await resp.json();
-
-      if (!data?.length) {
-        return NextResponse.json(
-          { error: "No se pudo obtener ubicación válida." },
-          { status: 400 }
-        );
-      }
-
-      finalLat = data[0].lat;
-      finalLon = data[0].lon;
+    if (!lat || !lon) {
+      return NextResponse.json(
+        { error: "Las coordenadas son obligatorias." },
+        { status: 400 }
+      );
     }
 
     // Verificar usuario
@@ -76,13 +56,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Calcular total
-    const total = items.reduce(
-      (acc: number, item: any) =>
-        acc + item.cantidad * item.precio_unitario,
-      0
-    );
-
     // Crear orden
     const { data: orden, error: ordenError } = await supabase
       .from("orden_compra")
@@ -91,8 +64,8 @@ export async function POST(req: Request) {
         datos_fiscales_id,
         total,
         direccion: ubicacion,
-        latitud: finalLat,
-        longitud: finalLon,
+        latitud: lat,
+        longitud: lon,
       })
       .select()
       .single();
@@ -104,7 +77,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Items
     const itemsPayload = items.map((item: any) => ({
       orden_id: orden.id,
       producto_id: item.producto_id,
@@ -119,19 +91,19 @@ export async function POST(req: Request) {
 
     if (itemsError) {
       return NextResponse.json(
-        { error: "Orden creada, pero error al guardar los items." },
-        { status: 500 }
+        { error: "Orden creada, pero error al guardar los items.", itemsError },
+        { status: 500 },
       );
     }
 
     console.log("ordenBack", orden);
-    console.log("itemsBack", itemsPayload);
+    console.log("itemsBack", items);
 
     return NextResponse.json(
       {
         message: "Orden creada con éxito",
         orden,
-        items: itemsPayload,
+        items,
       },
       { status: 201 }
     );
