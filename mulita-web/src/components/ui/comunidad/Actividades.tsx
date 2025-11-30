@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, act } from "react";
+import { useEffect, useState, useCallback, useMemo, act } from "react";
 import toast from "react-hot-toast";
 import MenuAccionesActividades from "./MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/comunidad/ModalImagenActividades";
@@ -52,7 +52,7 @@ export default function Actividades() {
   const limit = 5;
 
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("");
+  const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
   const [fechaSeleccionada, setFechaSeleccionada] = useState<string>("");
 
   // Debounce búsqueda
@@ -79,7 +79,7 @@ export default function Actividades() {
 
   // Fetch actividades
   const fetchActividades = useCallback(
-    async (newOffset = 0, searchTerm = "", categoria = "", fecha = "") => {
+    async (newOffset = 0, searchTerm = "", categorias: string[] = [], fecha = "") => {
       try {
         if (newOffset === 0) {
           setLoadingInicial(true);
@@ -88,7 +88,11 @@ export default function Actividades() {
         }
 
         let url = `/api/comunidad/actividades?offset=${newOffset}&limit=${limit}&search=${encodeURIComponent(searchTerm)}`;
-        if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+        if (categorias.length > 0) {
+          categorias.forEach(cat => {
+            url += `&categoria=${encodeURIComponent(cat)}`;
+          });
+        }
         if (fecha) url += `&fecha=${encodeURIComponent(fecha)}`;
 
         const res = await fetch(url);
@@ -133,14 +137,14 @@ export default function Actividades() {
 
   useEffect(() => {
     setOffset(0);
-    fetchActividades(0, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
+    fetchActividades(0, debouncedSearch, categoriasSeleccionadas, fechaSeleccionada);
     fetchFavoritos();
-  }, [debouncedSearch, categoriaSeleccionada, fechaSeleccionada, fetchActividades, fetchFavoritos]);
+  }, [debouncedSearch, categoriasSeleccionadas, fechaSeleccionada, fetchActividades, fetchFavoritos]);
 
   const handleVerMas = () => {
     const newOffset = offset + limit;
     setOffset(newOffset);
-    fetchActividades(newOffset, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
+    fetchActividades(newOffset, debouncedSearch, categoriasSeleccionadas, fechaSeleccionada);
   };
 
   // Alternar like (añadir o quitar de favoritos)
@@ -207,23 +211,38 @@ export default function Actividades() {
       </h1>
 
       {/* FILTROS + BÚSQUEDA */}
-      <div className="w-full max-w-xl mb-6 flex flex-wrap items-center justify-center sm:justify-between gap-2">
-        <input
-          type="text"
-          placeholder="Buscar por título o descripción..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-[55%] border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
-        />
-        <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center sm:justify-end">
-          <FiltroCategoria
-            categoriaSeleccionada={categoriaSeleccionada}
-            onChange={setCategoriaSeleccionada}
+      <div className="w-full max-w-2xl mb-8 flex flex-col gap-4">
+        {/* Barra de búsqueda */}
+        <div className="relative w-full">
+          <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Buscar actividades..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full border-2 border-gray-200 rounded-lg pl-12 pr-4 py-3 focus:outline-none focus:border-[#003c71] focus:ring-0 transition-colors"
           />
-          <FiltroFecha
-            fechaSeleccionada={fechaSeleccionada}
-            onChange={setFechaSeleccionada}
-          />
+        </div>
+
+        {/* Filtros */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-sm font-semibold text-gray-600">Filtrar por:</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="w-full sm:w-48">
+              <FiltroCategoria
+                categoriasSeleccionadas={categoriasSeleccionadas}
+                onChange={setCategoriasSeleccionadas}
+              />
+            </div>
+            <div className="w-full sm:w-40">
+              <FiltroFecha
+                fechaSeleccionada={fechaSeleccionada}
+                onChange={setFechaSeleccionada}
+              />
+            </div>
+          </div>
         </div>
       </div>
 

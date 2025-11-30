@@ -18,27 +18,29 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "5", 10);
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const search = searchParams.get("search")?.trim() || "";
-  const categoria = searchParams.get("categoria")?.trim() || "";
+  const categorias = searchParams.getAll("categoria").map(c => c.trim()).filter(c => c);
   const fechaFiltro = searchParams.get("fecha")?.trim() || "";
 
   // --- Construir filtro por categoría ---
+  // Ahora es OR: mostrar actividades que tengan AL MENOS una categoría seleccionada
   let actividadIdsFiltradas: string[] | null = null;
-  if (categoria) {
+  if (categorias.length > 0) {
     const { data: catData, error: catError } = await supabase
       .from("categoria")
       .select("id")
-      .eq("nombre", categoria)
-      .single();
+      .in("nombre", categorias);
 
-    if (!catError && catData) {
+    if (!catError && catData && catData.length > 0) {
+      const categoriaIds = catData.map(c => c.id);
       const { data: actividadCatIds, error: acError } = await supabase
         .from("actividad_categoria")
         .select("actividad_id")
-        .eq("categoria_id", catData.id);
+        .in("categoria_id", categoriaIds);
 
       if (acError) return NextResponse.json({ error: acError.message }, { status: 500 });
 
-      actividadIdsFiltradas = actividadCatIds.map((ac) => ac.actividad_id);
+      // Obtener actividades únicas que tengan al menos una de las categorías
+      actividadIdsFiltradas = [...new Set(actividadCatIds.map((ac) => ac.actividad_id))];
       if (actividadIdsFiltradas.length === 0) return NextResponse.json([], { status: 200 });
     } else {
       return NextResponse.json([], { status: 200 });
@@ -53,9 +55,19 @@ export async function GET(req: NextRequest) {
       actividad_archivos (archivo_url, tipo, nombre),
       actividad_categoria (categoria(id, nombre))
     `)
-    .eq("eliminado", false)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+    .eq("eliminado", false);
+
+  // Determinar orden según el filtro de fecha
+  if (fechaFiltro === "antiguo_nuevo") {
+    query = query.order("created_at", { ascending: true });
+  } else if (fechaFiltro === "nuevo_antiguo") {
+    query = query.order("created_at", { ascending: false });
+  } else {
+    // Por defecto, más nuevo a más antiguo
+    query = query.order("created_at", { ascending: false });
+  }
+
+  query = query.range(offset, offset + limit - 1);
 
   // Filtro por búsqueda
   if (search) {
@@ -67,8 +79,8 @@ export async function GET(req: NextRequest) {
     query = query.in("id", actividadIdsFiltradas);
   }
 
-  //Filtro por fecha
-  if (fechaFiltro) {
+  //Filtro por fecha (rango temporal)
+  if (fechaFiltro && fechaFiltro !== "nuevo_antiguo" && fechaFiltro !== "antiguo_nuevo") {
     const ahora = new Date();
     let startDate: Date;
 
