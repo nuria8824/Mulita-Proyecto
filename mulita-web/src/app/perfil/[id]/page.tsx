@@ -163,39 +163,39 @@ export default function PerfilPage() {
       </div>
 
       {/* Menú de secciones */}
-      <div className="w-full max-w-[1200px] flex justify-end py-8 pr-[90px]">
-        <div className="flex items-center gap-4 text-center text-base text-[#6d758f]">
+      <div className="w-full flex justify-center py-8">
+        <div className="flex items-center gap-3 text-center text-sm text-[#6d758f]">
           <div
             onClick={() => setVista("actividades")}
-            className={`shadow-sm rounded border px-3 py-2 cursor-pointer ${
+            className={`shadow-sm rounded border px-2 py-1 cursor-pointer ${
               vista === "actividades"
                 ? "bg-[#003c71] text-white border-[#003c71]"
                 : "bg-[#f8faff] border-[#f1f3f7] text-[#003c71]"
             }`}
           >
-            <span className="font-semibold">Actividades</span>
+            <span className="font-semibold text-xs">Actividades</span>
           </div>
 
           <div
             onClick={() => setVista("favoritos")}
-            className={`shadow-sm rounded border px-3 py-2 cursor-pointer ${
+            className={`shadow-sm rounded border px-2 py-1 cursor-pointer ${
               vista === "favoritos"
                 ? "bg-[#003c71] text-white border-[#003c71]"
                 : "bg-[#f8faff] border-[#f1f3f7] text-[#003c71]"
             }`}
           >
-            <span className="font-semibold">Favoritos</span>
+            <span className="font-semibold text-xs">Favoritos</span>
           </div>
 
           <div
             onClick={() => setVista("colecciones")}
-            className={`shadow-sm rounded border px-3 py-2 cursor-pointer ${
+            className={`shadow-sm rounded border px-2 py-1 cursor-pointer ${
               vista === "colecciones"
                 ? "bg-[#003c71] text-white border-[#003c71]"
                 : "bg-[#f8faff] border-[#f1f3f7] text-[#003c71]"
             }`}
           >
-            <span className="font-semibold">Colecciones</span>
+            <span className="font-semibold text-xs">Colecciones</span>
           </div>
 
           {/* Botón de nueva colección con animación */}
@@ -210,7 +210,7 @@ export default function PerfilPage() {
                     exit={{ opacity: 0, x: 40 }}
                     transition={{ duration: 0.3 }}
                     onClick={() => setMostrarInput(true)}
-                    className="rounded border border-[#fedd00] px-3 py-2 text-[#003c71] cursor-pointer font-semibold"
+                    className="rounded border border-[#fedd00] px-2 py-1 text-[#003c71] cursor-pointer font-semibold text-xs"
                   >
                     Nueva colección
                   </motion.button>

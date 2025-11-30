@@ -7,6 +7,7 @@ import ModalImagenActividades from "@/components/ui/comunidad/ModalImagenActivid
 import ComentarioInput from "@/components/ui/comunidad/ComentarioInput";
 import ComentariosModal from "@/components/ui/comunidad/ComentariosModal";
 import ModalColecciones from "@/components/ui/comunidad/ModalColecciones";
+import { FiltroCategoria, FiltroFecha } from "@/components/ui/comunidad/Filtros";
 import { useUser } from "@/hooks/queries";
 import { SkeletonActividadesUsuario } from "./skeletons/SkeletonActividadesUsuario";
 
@@ -43,6 +44,8 @@ export default function ActividadesUsuario({
   const [loadingInicial, setLoadingInicial] = useState(false);
   const [loadingVerMas, setLoadingVerMas] = useState(true)
   const [error, setError] = useState<string | null>(null);
+  const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
+  const [fechaSeleccionada, setFechaSeleccionada] = useState("");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -110,7 +113,7 @@ export default function ActividadesUsuario({
 
   // Trae todas las actividades o solo los favoritos
   const fetchActividades = useCallback(
-    async (newOffset = 0) => {
+    async (newOffset = 0, categorias: string[] = [], fecha = "") => {
       try {
         if (newOffset === 0) {
           setLoadingInicial(true);
@@ -146,6 +149,22 @@ export default function ActividadesUsuario({
 
           const coleccionData = await resFav.json();
           data = coleccionData.actividades || [];
+          
+          // Aplicar filtros a los favoritos ---
+          if (categorias.length > 0) {
+            data = data.filter((act: Actividad) => {
+              const actCategorias = act.actividad_categoria?.map((c: any) => c.categoria.nombre) || [];
+              return categorias.some(cat => actCategorias.includes(cat));
+            });
+          }
+          
+          if (fecha) {
+            data = data.filter((act: Actividad) => {
+              const actFecha = new Date(act.fecha).toLocaleDateString('es-AR');
+              const filtroFecha = new Date(fecha).toLocaleDateString('es-AR');
+              return actFecha === filtroFecha;
+            });
+          }
         } else {
           // Si no, traer las actividades del usuario ---
           const res = await fetch(
@@ -154,6 +173,22 @@ export default function ActividadesUsuario({
           if (!res.ok) throw new Error("Error al obtener las actividades del usuario");
           data = await res.json();
           setHasMore(data.length === limit);
+          
+          // Aplicar filtros en cliente ---
+          if (categorias.length > 0) {
+            data = data.filter((act: Actividad) => {
+              const actCategorias = act.actividad_categoria?.map((c: any) => c.categoria.nombre) || [];
+              return categorias.some(cat => actCategorias.includes(cat));
+            });
+          }
+          
+          if (fecha) {
+            data = data.filter((act: Actividad) => {
+              const actFecha = new Date(act.fecha).toLocaleDateString('es-AR');
+              const filtroFecha = new Date(fecha).toLocaleDateString('es-AR');
+              return actFecha === filtroFecha;
+            });
+          }
         }
 
         // Agregar campo 'isFav' a cada actividad ---
@@ -188,15 +223,17 @@ export default function ActividadesUsuario({
     [usuarioId, mostrarSoloFavoritos]
   );
 
-
   useEffect(() => {
-    if (usuarioId) fetchActividades(0);
-  }, [fetchActividades, usuarioId]);
+    if (usuarioId) {
+      setOffset(0);
+      fetchActividades(0, categoriasSeleccionadas, fechaSeleccionada);
+    }
+  }, [usuarioId, categoriasSeleccionadas, fechaSeleccionada, fetchActividades]);
 
   const handleVerMas = () => {
     const nuevoOffset = offset + limit;
     setOffset(nuevoOffset);
-    fetchActividades(nuevoOffset);
+    fetchActividades(nuevoOffset, categoriasSeleccionadas, fechaSeleccionada);
   };
 
   const toggleLike = (actividadId: string) => {
@@ -275,6 +312,27 @@ export default function ActividadesUsuario({
       <h2 className="text-3xl font-bold mb-8 text-[#003c71] text-center">
         {mostrarSoloFavoritos ? "Favoritos" : "Actividades del usuario"}
       </h2>
+
+      {/* Filtros */}
+      <div className="w-full max-w-2xl mb-6 flex flex-col gap-4">
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          <span className="text-sm font-semibold text-gray-600">Filtrar por:</span>
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            <div className="w-full sm:w-48">
+              <FiltroCategoria
+                categoriasSeleccionadas={categoriasSeleccionadas}
+                onChange={setCategoriasSeleccionadas}
+              />
+            </div>
+            <div className="w-full sm:w-40">
+              <FiltroFecha
+                fechaSeleccionada={fechaSeleccionada}
+                onChange={setFechaSeleccionada}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="flex flex-col gap-8 max-w-2xl w-full">
         {actividades.map((act) => {
