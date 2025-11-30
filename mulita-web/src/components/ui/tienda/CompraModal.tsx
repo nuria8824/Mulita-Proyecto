@@ -166,6 +166,20 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
   if (!open) return null;
   if (!usuario) return null;
 
+  const itemsPayload = items.map((item) => ({
+    producto_id: item.producto_id,
+    nombre: item.producto?.nombre ?? "Producto",
+    cantidad: item.cantidad,
+    precio_unitario: item.producto?.precio ?? item.precio,
+  }));
+
+  // Calcular total
+  const total = itemsPayload.reduce(
+    (acc: number, item: any) =>
+      acc + item.cantidad * item.precio_unitario,
+    0
+  );
+
   const confirmarCompra = async () => {
     const erroresTemp = {
       razonSocial: "",
@@ -189,7 +203,7 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
       }
     } else {
       // Consumidor final → CUIT no obligatorio, pero si lo escribe debe ser válido
-      if (cuit.trim() !== "" && !validarCuit(cuit)) {
+      if (cuit.trim() !== "" && !validarCuit(cuit.replace(/\D/g, ""))) {
         erroresTemp.cuit = "El CUIT ingresado no es válido.";
         valido = false;
       }
@@ -262,13 +276,6 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
       return;
     }
 
-    const itemsPayload = items.map((item) => ({
-      producto_id: item.producto_id,
-      nombre: item.producto?.nombre ?? "Producto",
-      cantidad: item.cantidad,
-      precio_unitario: item.producto?.precio ?? item.precio,
-    }));
-
     // Crear la orden
     const res = await fetch("/api/orden", {
       method: "POST",
@@ -280,6 +287,7 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
         lat: coordenadas?.lat ?? null,
         lon: coordenadas?.lon ?? null,
         items: itemsPayload,
+        total,
       }),
     });
 
@@ -313,6 +321,28 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
 
     onClose();
   };
+
+  const handleCuitChange = (value: string) => {
+    // Eliminar todo lo que NO sea número
+    const limpio = value.replace(/\D/g, "");
+
+    // No dejar más de 11 dígitos reales
+    const max11 = limpio.slice(0, 11);
+
+    // Aplicar formato dinámico XX-XXXXXXXX-X
+    let formateado = max11;
+
+    if (max11.length > 2 && max11.length <= 10) {
+      formateado = `${max11.slice(0, 2)}-${max11.slice(2)}`;
+    } 
+    else if (max11.length === 11) {
+      formateado = `${max11.slice(0, 2)}-${max11.slice(2, 10)}-${max11.slice(10)}`;
+    }
+
+    setCuit(formateado);
+    limpiarError("cuit");
+  };
+
 
   // Si no hay usuario, no renderizar el modal
   if (!usuario) return null;
@@ -366,11 +396,9 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
           aria-label="CUIT o CUIL"
           type="text"
           value={cuit}
-          onChange={(e) => {
-            setCuit(e.target.value);
-            limpiarError("cuit");
-          }}
+          onChange={(e) => handleCuitChange(e.target.value)}
           className="w-full border rounded-md px-3 py-2"
+          maxLength={13}
         />
         {errores.cuit && (
           <p className="text-red-600 text-sm mt-1">{errores.cuit}</p>
@@ -390,6 +418,23 @@ export default function CompraModal({ open, onClose, items }: CompraModalProps) 
         {errores.direccion && (
           <p className="text-red-600 text-sm mt-1">{errores.direccion}</p>
         )}
+
+        {/* TOTAL DEL PEDIDO */}
+        <div className="text-right mb-4 mt-4">
+          <p className="text-lg font-semibold">
+            Total: ${total}
+          </p>
+        </div>
+
+        {/* AVISO IMPORTANTE */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <p className="text-sm text-amber-800">
+            <span className="font-semibold">⚠️ Nota importante:</span> El precio mostrado no incluye los costos de envío. El total final se coordinará vía WhatsApp.
+          </p>
+          <p className="text-xs text-amber-800">
+            <span className="font-semibold">*Envíos disponibles solo en Argentina. Para envíos a otro país contáctate por WhatsApp.</span>
+          </p>
+        </div>
 
         {/* BOTÓN */}
         <button
