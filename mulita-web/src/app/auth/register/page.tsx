@@ -219,6 +219,7 @@ export default function RegisterPage() {
                   type="text"
                   placeholder="Provincia"
                   className={inputClass}
+                  required
                 />
               )}
 
@@ -238,10 +239,10 @@ export default function RegisterPage() {
                   ))}
                 </select>
               ) : (
-                <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} />
+                <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} required/>
               )}
 
-              <input name="institucion" type="text" placeholder="Institución" className={inputClass} />
+              <input name="institucion" type="text" placeholder="Institución" className={inputClass} required />
             </>
           )}
 
