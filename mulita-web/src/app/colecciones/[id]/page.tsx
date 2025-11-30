@@ -149,19 +149,19 @@ export default function ColeccionDetallePage() {
   if (error) 
     return (
       <div className="p-4 max-w-3xl mx-auto">
-        <div className="mb-4">
+        <div className="flex items-center gap-2 mb-4">
           <BackButton />
+          <p className="text-red-500">Error: {error}</p>
         </div>
-        <p className="text-center text-red-500 mt-4">{error}</p>
       </div>
     );
   if (actividades.length === 0)
     return (
       <div className="p-4 max-w-3xl mx-auto">
-        <div className="mb-4">
+        <div className="flex items-center gap-2 mb-4">
           <BackButton />
+          <p className="text-gray-400">No hay actividades en esta colección.</p>
         </div>
-        <p className="text-center text-gray-400 mt-4">No hay actividades en esta colección.</p>
       </div>
     );
 
@@ -174,10 +174,9 @@ export default function ColeccionDetallePage() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <div className="flex mb-4 gap-8">
+      <div className="flex items-center gap-2 mb-4">
         <BackButton />
-
-        <h2 className="text-2xl font-semibold text-[#003c71] mb-4">
+        <h2 className="text-2xl font-semibold text-[#003c71]">
           {`Actividades de "${nombreColeccion}"`}
         </h2>
       </div>
@@ -263,9 +262,11 @@ export default function ColeccionDetallePage() {
                       download
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline flex items-center gap-2"
+                      title={a.nombre}
+                      className="text-sm text-blue-600 hover:underline flex items-center gap-2 truncate"
                     >
-                      📎 Descargar archivo: {a.nombre}
+                      <span className="flex-shrink-0">📎</span>
+                      <span className="truncate">Descargar archivo: {a.nombre}</span>
                     </a>
                   ))}
                 </div>

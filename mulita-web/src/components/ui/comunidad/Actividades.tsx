@@ -274,12 +274,12 @@ export default function Actividades() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  if (loadingInicial)
+  if (loadingInicial && actividades.length === 0)
     return <SkeletonActividades />;
 
   if (error)
     return (
-      <div className="text-red-text-center600 font-medium mt-10">{error}</div>
+      <div className="text-red-600 text-center font-medium mt-10">{error}</div>
     );
 
   if (!user)
@@ -307,6 +307,12 @@ export default function Actividades() {
             placeholder="Buscar actividades..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setOffset(0);
+                fetchActividades(0, search, categoriasSeleccionadas, fechaSeleccionada);
+              }
+            }}
             className="w-full border-2 border-gray-200 rounded-full pl-12 pr-4 py-3 focus:outline-none focus:border-[#003c71] focus:ring-0 transition-colors"
           />
         </div>

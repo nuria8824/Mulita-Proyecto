@@ -7,6 +7,7 @@ import ModalImagenActividades from "@/components/ui/comunidad/ModalImagenActivid
 import ComentarioInput from "@/components/ui/comunidad/ComentarioInput";
 import ComentariosModal from "@/components/ui/comunidad/ComentariosModal";
 import ModalColecciones from "@/components/ui/comunidad/ModalColecciones";
+import { FiltroCategoria, FiltroFecha } from "@/components/ui/comunidad/Filtros";
 import { useUser } from "@/hooks/queries";
 import { SkeletonActividadesUsuario } from "./skeletons/SkeletonActividadesUsuario";
 
@@ -43,6 +44,8 @@ export default function ActividadesUsuario({
   const [loadingInicial, setLoadingInicial] = useState(false);
   const [loadingVerMas, setLoadingVerMas] = useState(true)
   const [error, setError] = useState<string | null>(null);
+  const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
+  const [fechaSeleccionada, setFechaSeleccionada] = useState("");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -110,7 +113,7 @@ export default function ActividadesUsuario({
 
   // Trae todas las actividades o solo los favoritos
   const fetchActividades = useCallback(
-    async (newOffset = 0) => {
+    async (newOffset = 0, categorias: string[] = [], fecha = "") => {
       try {
         if (newOffset === 0) {
           setLoadingInicial(true);
@@ -146,6 +149,46 @@ export default function ActividadesUsuario({
 
           const coleccionData = await resFav.json();
           data = coleccionData.actividades || [];
+          
+          // Aplicar filtros a los favoritos ---
+          if (categorias.length > 0) {
+            data = data.filter((act: Actividad) => {
+              const actCategorias = act.actividad_categoria?.map((c: any) => c.categoria.nombre) || [];
+              return categorias.some(cat => actCategorias.includes(cat));
+            });
+          }
+          
+          if (fecha) {
+            // Ordenamiento por fecha
+            if (fecha === "nuevo_antiguo") {
+              data = data.sort((a: Actividad, b: Actividad) => 
+                new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+              );
+            } else if (fecha === "antiguo_nuevo") {
+              data = data.sort((a: Actividad, b: Actividad) => 
+                new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+              );
+            } else if (fecha === "hoy") {
+              const hoy = new Date().toLocaleDateString('es-AR');
+              data = data.filter((act: Actividad) => 
+                new Date(act.fecha).toLocaleDateString('es-AR') === hoy
+              );
+            } else if (fecha === "semana") {
+              const ahora = new Date();
+              const hace7dias = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000);
+              data = data.filter((act: Actividad) => {
+                const actFecha = new Date(act.fecha);
+                return actFecha >= hace7dias && actFecha <= ahora;
+              });
+            } else if (fecha === "mes") {
+              const ahora = new Date();
+              const hace30dias = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000);
+              data = data.filter((act: Actividad) => {
+                const actFecha = new Date(act.fecha);
+                return actFecha >= hace30dias && actFecha <= ahora;
+              });
+            }
+          }
         } else {
           // Si no, traer las actividades del usuario ---
           const res = await fetch(
@@ -154,6 +197,46 @@ export default function ActividadesUsuario({
           if (!res.ok) throw new Error("Error al obtener las actividades del usuario");
           data = await res.json();
           setHasMore(data.length === limit);
+          
+          // Aplicar filtros en cliente ---
+          if (categorias.length > 0) {
+            data = data.filter((act: Actividad) => {
+              const actCategorias = act.actividad_categoria?.map((c: any) => c.categoria.nombre) || [];
+              return categorias.some(cat => actCategorias.includes(cat));
+            });
+          }
+          
+          if (fecha) {
+            // Ordenamiento por fecha
+            if (fecha === "nuevo_antiguo") {
+              data = data.sort((a: Actividad, b: Actividad) => 
+                new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+              );
+            } else if (fecha === "antiguo_nuevo") {
+              data = data.sort((a: Actividad, b: Actividad) => 
+                new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+              );
+            } else if (fecha === "hoy") {
+              const hoy = new Date().toLocaleDateString('es-AR');
+              data = data.filter((act: Actividad) => 
+                new Date(act.fecha).toLocaleDateString('es-AR') === hoy
+              );
+            } else if (fecha === "semana") {
+              const ahora = new Date();
+              const hace7dias = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000);
+              data = data.filter((act: Actividad) => {
+                const actFecha = new Date(act.fecha);
+                return actFecha >= hace7dias && actFecha <= ahora;
+              });
+            } else if (fecha === "mes") {
+              const ahora = new Date();
+              const hace30dias = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000);
+              data = data.filter((act: Actividad) => {
+                const actFecha = new Date(act.fecha);
+                return actFecha >= hace30dias && actFecha <= ahora;
+              });
+            }
+          }
         }
 
         // Agregar campo 'isFav' a cada actividad ---
@@ -188,15 +271,17 @@ export default function ActividadesUsuario({
     [usuarioId, mostrarSoloFavoritos]
   );
 
-
   useEffect(() => {
-    if (usuarioId) fetchActividades(0);
-  }, [fetchActividades, usuarioId]);
+    if (usuarioId) {
+      setOffset(0);
+      fetchActividades(0, categoriasSeleccionadas, fechaSeleccionada);
+    }
+  }, [usuarioId, categoriasSeleccionadas, fechaSeleccionada, fetchActividades]);
 
   const handleVerMas = () => {
     const nuevoOffset = offset + limit;
     setOffset(nuevoOffset);
-    fetchActividades(nuevoOffset);
+    fetchActividades(nuevoOffset, categoriasSeleccionadas, fechaSeleccionada);
   };
 
   const toggleLike = (actividadId: string) => {
@@ -276,7 +361,28 @@ export default function ActividadesUsuario({
         {mostrarSoloFavoritos ? "Favoritos" : "Actividades del usuario"}
       </h2>
 
-      <div className="w-full grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 px-4 md:px-0">
+      {/* Filtros */}
+      <div className="w-full max-w-2xl mb-6 flex flex-col gap-4">
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          <span className="text-sm font-semibold text-gray-600">Filtrar por:</span>
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            <div className="w-full sm:w-48">
+              <FiltroCategoria
+                categoriasSeleccionadas={categoriasSeleccionadas}
+                onChange={setCategoriasSeleccionadas}
+              />
+            </div>
+            <div className="w-full sm:w-40">
+              <FiltroFecha
+                fechaSeleccionada={fechaSeleccionada}
+                onChange={setFechaSeleccionada}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-8 max-w-2xl w-full">
         {actividades.map((act) => {
           const imagenesAct = act.actividad_archivos.filter((a) => a.tipo.startsWith("image/"));
           const otrosArchivos = act.actividad_archivos.filter((a) => !a.tipo.startsWith("image/"));

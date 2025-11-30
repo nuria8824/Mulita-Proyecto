@@ -110,11 +110,13 @@ export default function PerfilPage() {
   return (
     <div className="w-full min-h-screen bg-white flex flex-col items-center justify-start text-xs text-[#6d758f] font-inter">
       {/* Sección superior del perfil */}
-      <div className="w-full flex flex-col items-center text-center px-10 md:px-24 py-8 relative max-w-[1400px] mx-auto">
-        <div className="flex items-center justify-between gap-10 w-full max-w-[900px] text-left text-2xl text-black font-roboto">
-          <div className="flex">
+      <div className="w-full flex flex-col items-center text-center p-[30px_170px] relative">
+        <div className="flex items-start justify-center gap-10 text-left text-2xl text-black font-roboto">
+          {/* Flecha al costado del avatar */}
+          <div className="flex items-start">
             <BackButton />
           </div>
+
           {/* Avatar */}
           <div className="w-[120px] h-[120px] rounded-full overflow-hidden flex-shrink-0 border border-gray-200 shadow-sm">
             <img
@@ -161,39 +163,39 @@ export default function PerfilPage() {
       </div>
 
       {/* Menú de secciones */}
-      <div className="w-full max-w-[1200px] flex justify-end py-8 pr-[90px]">
-        <div className="flex items-center gap-4 text-center text-base text-[#6d758f]">
+      <div className="w-full flex justify-center py-8">
+        <div className="flex items-center gap-3 text-center text-sm text-[#6d758f]">
           <div
             onClick={() => setVista("actividades")}
-            className={`shadow-sm rounded border px-3 py-2 cursor-pointer ${
+            className={`shadow-sm rounded border px-4 py-2 cursor-pointer ${
               vista === "actividades"
                 ? "bg-[#003c71] text-white border-[#003c71]"
                 : "bg-[#f8faff] border-[#f1f3f7] text-[#003c71]"
             }`}
           >
-            <span className="font-semibold">Actividades</span>
+            <span className="font-semibold text-sm">Actividades</span>
           </div>
 
           <div
             onClick={() => setVista("favoritos")}
-            className={`shadow-sm rounded border px-3 py-2 cursor-pointer ${
+            className={`shadow-sm rounded border px-4 py-2 cursor-pointer ${
               vista === "favoritos"
                 ? "bg-[#003c71] text-white border-[#003c71]"
                 : "bg-[#f8faff] border-[#f1f3f7] text-[#003c71]"
             }`}
           >
-            <span className="font-semibold">Favoritos</span>
+            <span className="font-semibold text-sm">Favoritos</span>
           </div>
 
           <div
             onClick={() => setVista("colecciones")}
-            className={`shadow-sm rounded border px-3 py-2 cursor-pointer ${
+            className={`shadow-sm rounded border px-4 py-2 cursor-pointer ${
               vista === "colecciones"
                 ? "bg-[#003c71] text-white border-[#003c71]"
                 : "bg-[#f8faff] border-[#f1f3f7] text-[#003c71]"
             }`}
           >
-            <span className="font-semibold">Colecciones</span>
+            <span className="font-semibold text-sm">Colecciones</span>
           </div>
 
           {/* Botón de nueva colección con animación */}
@@ -208,7 +210,7 @@ export default function PerfilPage() {
                     exit={{ opacity: 0, x: 40 }}
                     transition={{ duration: 0.3 }}
                     onClick={() => setMostrarInput(true)}
-                    className="rounded border border-[#fedd00] px-3 py-2 text-[#003c71] cursor-pointer font-semibold"
+                    className="rounded border border-[#fedd00] px-4 py-2 text-[#003c71] cursor-pointer font-semibold text-sm"
                   >
                     Nueva colección
                   </motion.button>
