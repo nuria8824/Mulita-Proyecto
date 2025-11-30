@@ -84,7 +84,7 @@ export function SidebarComunidad({
           ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
         {/* Header */}
-        <div className="h-20 flex items-center justify-center border-b border-gray-200 relative">
+        <div className="h-17 flex items-center justify-center border-b border-gray-200 relative">
           <Image
             src="/images/logosMulita/logo Mulita-12.svg"
             width={160}
