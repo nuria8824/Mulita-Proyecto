@@ -42,11 +42,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const { nombre } = await req.json();
+  const { nombre, tipo } = await req.json();
 
   const { data, error } = await supabase
     .from("categoria")
-    .insert({ nombre })
+    .insert({ nombre, tipo })
     .select()
     .single();
 
