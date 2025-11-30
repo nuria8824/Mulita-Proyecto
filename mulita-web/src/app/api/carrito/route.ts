@@ -36,11 +36,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ carrito: null, items: [] }, { status: 200 });
     }
 
-    // Obtener items del carrito con datos del producto
+    // Obtener items del carrito con datos del producto (ordenados por más recientes primero)
     const { data: items, error: itemsError } = await supabaseServer
       .from("carrito_items")
       .select("*")
-      .eq("carrito_id", carrito.id);
+      .eq("carrito_id", carrito.id)
+      .order("id", { ascending: false });
 
     if (itemsError) throw itemsError;
 
@@ -187,7 +188,8 @@ export async function POST(req: NextRequest) {
     const { data: items } = await supabaseServer
       .from("carrito_items")
       .select("*")
-      .eq("carrito_id", carrito.id);
+      .eq("carrito_id", carrito.id)
+      .order("id", { ascending: false });
 
     const newTotal =
       items?.reduce((sum, item) => sum + item.precio * item.cantidad, 0) || 0;
