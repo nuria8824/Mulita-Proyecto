@@ -37,17 +37,17 @@ export async function POST(req: Request) {
     }
 
     // 0.5 Verificar si el email existe en Supabase Auth
-    const { data: authUsers, error: authCheckError } = await supabaseServer.auth.admin.listUsers();
+    // const { data: authUsers, error: authCheckError } = await supabaseServer.auth.admin.listUsers();
     
-    if (authCheckError) {
-      console.error("Error checking auth users:", authCheckError);
-      throw new Error("Error al verificar el email en autenticación");
-    }
+    // if (authCheckError) {
+    //   console.error("Error checking auth users:", authCheckError);
+    //   throw new Error("Error al verificar el email en autenticación");
+    // }
 
-    const emailExists = authUsers.users.some(u => u.email?.toLowerCase() === data.email.toLowerCase());
-    if (emailExists) {
-      throw new Error("El email ya está registrado");
-    }
+    // const emailExists = authUsers.users.some(u => u.email?.toLowerCase() === data.email.toLowerCase());
+    // if (emailExists) {
+    //   throw new Error("El email ya está registrado");
+    // }
 
     // 1. Crear usuario en Supabase Auth
     const { data: authData, error: authError } = await supabaseServer.auth.signUp({
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Insertar en tabla usuario
-    const { error: userError } = await supabaseServer.from("usuario").update([
+    const { error: userError } = await supabaseServer.from("usuario").insert([
       {
         id: userId,
         nombre: data.nombre,
@@ -90,12 +90,14 @@ export async function POST(req: Request) {
       const { error: docenteError } = await supabaseServer.from("docente").insert([
         {
           id_usuario: userId,
-          institucion: data.institucion || "",
-          pais: data.pais || "",
-          provincia: data.provincia || "",
-          ciudad: data.ciudad || "",
+          institucion: data.institucion,
+          pais: data.pais,
+          provincia: data.provincia,
+          ciudad: data.ciudad,
         },
       ]);
+
+      console.log("id usuario", userId);
 
       if (docenteError) {
         throw new Error(docenteError.message);

@@ -3,12 +3,46 @@
 import React, { useState, useCallback, useRef } from "react";
 import { toast } from "react-hot-toast";
 import PhoneInputWithCountry from "@/components/PhoneInputWithCountry";
+import { Country, State, City, IState, ICity } from "country-state-city";
 
 export default function RegisterPage() {
   const [esDocente, setEsDocente] = useState(false);
   const [loading, setLoading] = useState(false);
   const [telefono, setTelefono] = useState("");
+
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [ListaProvincias, setListaProvincias] = useState<IState[]>([]);
+  const [ListaCiudades, setListaCiudades] = useState<ICity[]>([]);
+
   const formRef = useRef<HTMLFormElement>(null);
+
+  const countryList = Country.getAllCountries();
+
+  const cities = City.getCitiesOfState("US", "California");
+  console.log(cities.length, cities);
+
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const isoCode = e.target.value;
+    const country = countryList.find(c => c.isoCode === isoCode);
+
+    if (!country) return;
+    setSelectedCountry(isoCode);
+
+    // Cargar provincias/estados del país
+    const states = State.getStatesOfCountry(isoCode);
+    setListaProvincias(states);
+  };
+
+  // Manejar el cambio de provincia
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const stateName = e.target.value;
+    const country = countryList.find(c => c.name === selectedCountry);
+    if (!country) return;
+
+    // Obtener todas las ciudades del país y estado seleccionado
+    const cities = City.getCitiesOfState(country.isoCode, stateName);
+    setListaCiudades(cities);
+  };
 
   const onContinuarClick = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -132,12 +166,12 @@ export default function RegisterPage() {
           />
           <input name="contrasena" type="password" placeholder="Contraseña" className={inputClass} required />
 
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2">
             <span>Docente:</span>
             <input
               type="checkbox"
               name="docente"
-              className="w-5 h-5"
+              className="w-5 h-5 cursor-pointer"
               checked={esDocente}
               onChange={() => setEsDocente(!esDocente)}
             />
@@ -145,9 +179,68 @@ export default function RegisterPage() {
 
           {esDocente && (
             <>
-              <input name="pais" type="text" placeholder="País" className={inputClass} />
-              <input name="provincia" type="text" placeholder="Provincia" className={inputClass} />
-              <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} />
+              {/* Seleccionar país */}
+              <select
+                aria-label="pais"
+                name="pais"
+                className={inputClass}
+                required
+                value={selectedCountry}
+                onChange={handleCountryChange}
+              >
+                <option value="">Selecciona un país</option>
+
+                {countryList.map((c) => (
+                  <option key={c.isoCode} value={c.isoCode}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Seleccionar provincia según país */}
+              {ListaProvincias.length > 0 ? (
+                <select
+                  aria-label="provincia"
+                  name="provincia"
+                  className={inputClass}
+                  required
+                  onChange={handleStateChange}
+                >
+                  <option value="">Selecciona una provincia</option>
+                  {ListaProvincias.map((p) => (
+                    <option key={p.isoCode} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  name="provincia"
+                  type="text"
+                  placeholder="Provincia"
+                  className={inputClass}
+                />
+              )}
+
+              {/* Seleccionar ciudad según provincia */}
+              {ListaCiudades.length > 0 ? (
+                <select
+                  aria-label="ciudad"
+                  name="ciudad"
+                  className={inputClass}
+                  required
+                >
+                  <option value="">Selecciona una ciudad</option>
+                  {ListaCiudades.map((c) => (
+                    <option key={c.name} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} />
+              )}
+
               <input name="institucion" type="text" placeholder="Institución" className={inputClass} />
             </>
           )}
