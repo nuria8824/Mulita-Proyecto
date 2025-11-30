@@ -45,6 +45,8 @@ export default function Actividades() {
   const [actividadParaColeccion, setActividadParaColeccion] = useState<string | null>(null);
 
   const [comentariosPorActividad, setComentariosPorActividad] = useState<Record<string, number>>({});
+  const [likesPorActividad, setLikesPorActividad] = useState<Record<string, number>>({});
+  const [ultimoComentario, setUltimoComentario] = useState<Record<string, any>>({});
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState("");
@@ -73,8 +75,40 @@ export default function Actividades() {
     }
   };
 
+  const fetchLikesCount = async (actividadId: string) => {
+    try {
+      const res = await fetch(`/api/comunidad/actividades/${actividadId}/likes`);
+      if (!res.ok) throw new Error("Error al obtener likes");
+      const data = await res.json();
+      return data.count || 0;
+    } catch (err) {
+      console.error(err);
+      return 0;
+    }
+  };
+
+  const fetchUltimoComentario = async (actividadId: string) => {
+    try {
+      const res = await fetch(`/api/comunidad/comentarios/${actividadId}`);
+      if (!res.ok) throw new Error("Error al obtener comentarios");
+      const data = await res.json();
+      if (data.length > 0) {
+        setUltimoComentario((prev) => ({
+          ...prev,
+          [actividadId]: data[data.length - 1],
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const actualizarComentarios = (actividadId: string, nuevoCount: number) => {
     setComentariosPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
+  };
+
+  const actualizarLikes = (actividadId: string, nuevoCount: number) => {
+    setLikesPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
   };
 
   // Fetch actividades
@@ -105,12 +139,16 @@ export default function Actividades() {
         setHasMore(data.length === limit);
 
         const counts: Record<string, number> = {};
+        const likeCounts: Record<string, number> = {};
         await Promise.all(
           data.map(async (act) => {
             counts[act.id] = await fetchComentariosCount(act.id);
+            likeCounts[act.id] = await fetchLikesCount(act.id);
+            await fetchUltimoComentario(act.id);
           })
         );
         setComentariosPorActividad((prev) => ({ ...prev, ...counts }));
+        setLikesPorActividad((prev) => ({ ...prev, ...likeCounts }));
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -147,26 +185,49 @@ export default function Actividades() {
     fetchActividades(newOffset, debouncedSearch, categoriasSeleccionadas, fechaSeleccionada);
   };
 
-  // Alternar like (añadir o quitar de favoritos)
-  const toggleLike = async (actividadId: string) => {
-    console.log("click en like:", actividadId);
-    try {
-      const res = await fetch(`/api/comunidad/actividades/${actividadId}/like`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("Error al actualizar like");
+  // Alternar like (añadir o quitar de favoritos) - Optimistic Update
+  const toggleLike = (actividadId: string) => {
+    // Guardar estado anterior en caso de necesitar revertir
+    const isFav = favoritos.includes(actividadId);
+    const estadoAnterior = favoritos;
+    const likesAnteriores = likesPorActividad[actividadId] || 0;
 
-      const isFav = favoritos.includes(actividadId);
-      setFavoritos((prev) =>
-        prev.includes(actividadId)
-          ? prev.filter((id) => id !== actividadId)
-          : [...prev, actividadId]
-      );
-      toast.success(isFav ? "Removido de favoritos" : "Agregado a favoritos");
-    } catch (err) {
-      console.error("Error al dar like:", err);
-      toast.error("Error al actualizar favorito");
-    }
+    // Actualizar estado INMEDIATAMENTE (optimistic update)
+    setFavoritos((prev) =>
+      prev.includes(actividadId)
+        ? prev.filter((id) => id !== actividadId)
+        : [...prev, actividadId]
+    );
+
+    // Actualizar contador de likes instantáneamente
+    setLikesPorActividad((prev) => ({
+      ...prev,
+      [actividadId]: isFav ? likesAnteriores - 1 : likesAnteriores + 1,
+    }));
+
+    // Mostrar toast inmediatamente
+    toast.success(isFav ? "Removido de favoritos" : "Agregado a favoritos");
+
+    // Hacer el fetch en background (sin await)
+    fetch(`/api/comunidad/actividades/${actividadId}/like`, {
+      method: "POST",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Error al actualizar like");
+        // Obtener el contador actualizado del servidor
+        return fetchLikesCount(actividadId);
+      })
+      .then((nuevoCount) => {
+        // Actualizar con el valor real del servidor
+        setLikesPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
+      })
+      .catch((err) => {
+        console.error("Error al dar like:", err);
+        // Revertir cambios si hay error
+        setFavoritos(estadoAnterior);
+        setLikesPorActividad((prev) => ({ ...prev, [actividadId]: likesAnteriores }));
+        toast.error("Error al actualizar favorito");
+      });
   };
 
   const toggleExpand = (id: string) => {
@@ -363,17 +424,22 @@ export default function Actividades() {
                 {/* BOTONES */}
                 <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
                   {/* Me gusta */}
-                  <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
-                    <img
-                      src={
-                        isFav
-                          ? "/images/icons/comunidad/favoritos-fill.svg"
-                          : "/images/icons/comunidad/favoritos.svg"
-                      }
-                      alt="Me gusta"
-                      className="w-6 h-6"
-                    />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
+                      <img
+                        src={
+                          isFav
+                            ? "/images/icons/comunidad/favoritos-fill.svg"
+                            : "/images/icons/comunidad/favoritos.svg"
+                        }
+                        alt="Me gusta"
+                        className="w-6 h-6"
+                      />
+                    </button>
+                    <span className="text-sm text-gray-700 font-semibold">
+                      {likesPorActividad[act.id] ?? 0}
+                    </span>
+                  </div>
 
                   {/* Comentarios */}
                   <div className="flex items-center gap-1">
@@ -414,8 +480,39 @@ export default function Actividades() {
                   onNuevoComentario={async () => {
                     const count = await fetchComentariosCount(act.id);
                     actualizarComentarios(act.id, count);
+                    await fetchUltimoComentario(act.id);
                   }}
                 />
+
+                {/* ÚLTIMO COMENTARIO */}
+                {ultimoComentario[act.id] && (
+                  <div className="border-t border-gray-100 pt-3 mt-2">
+                    <p className="text-xs text-gray-500 mb-2 font-semibold">Último comentario</p>
+                    <div className="flex items-start gap-2 bg-gray-50 rounded-lg p-3">
+                      {ultimoComentario[act.id].usuario?.perfil?.imagen ? (
+                        <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                          <img
+                            src={ultimoComentario[act.id].usuario.perfil.imagen}
+                            alt={`${ultimoComentario[act.id].usuario?.nombre}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs flex-shrink-0">
+                          {ultimoComentario[act.id].usuario?.nombre?.[0]?.toUpperCase() ?? "?"}
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-gray-800">
+                          {ultimoComentario[act.id].usuario?.nombre} {ultimoComentario[act.id].usuario?.apellido}
+                        </p>
+                        <p className="text-xs text-gray-700 line-clamp-2">
+                          {ultimoComentario[act.id].contenido}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })

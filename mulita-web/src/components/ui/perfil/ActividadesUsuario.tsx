@@ -162,27 +162,33 @@ export default function ActividadesUsuario({
     fetchActividades(nuevoOffset);
   };
 
-  const toggleLike = async (actividadId: string) => {
-    try {
-      const res = await fetch(`/api/comunidad/actividades/${actividadId}/like`, { method: "POST" });
-      if (!res.ok) throw new Error("Error al actualizar like");
+  const toggleLike = (actividadId: string) => {
+    // Guardar estado anterior en caso de necesitar revertir
+    const isFav = favoritos.includes(actividadId);
+    const estadoAnterior = favoritos;
 
-      const isFav = favoritos.includes(actividadId);
-      setFavoritos((prev) =>
-        prev.includes(actividadId)
-          ? prev.filter((id) => id !== actividadId)
-          : [...prev, actividadId]
-      );
+    // Actualizar estado INMEDIATAMENTE (optimistic update)
+    setFavoritos((prev) =>
+      prev.includes(actividadId)
+        ? prev.filter((id) => id !== actividadId)
+        : [...prev, actividadId]
+    );
 
-      toast.success(isFav ? "Removido de favoritos" : "Agregado a favoritos");
+    // Mostrar toast inmediatamente
+    toast.success(isFav ? "Removido de favoritos" : "Agregado a favoritos");
 
-      if (mostrarSoloFavoritos) {
-        setActividades((prev) => prev.filter((a) => a.id !== actividadId));
-      }
-    } catch (err) {
-      console.error("Error al dar like:", err);
-      toast.error("Error al actualizar favorito");
+    if (mostrarSoloFavoritos) {
+      setActividades((prev) => prev.filter((a) => a.id !== actividadId));
     }
+
+    // Hacer el fetch en background (sin await)
+    fetch(`/api/comunidad/actividades/${actividadId}/like`, { method: "POST" })
+      .catch((err) => {
+        console.error("Error al dar like:", err);
+        // Revertir cambios si hay error
+        setFavoritos(estadoAnterior);
+        toast.error("Error al actualizar favorito");
+      });
   };
 
   const toggleExpand = (id: string) => {

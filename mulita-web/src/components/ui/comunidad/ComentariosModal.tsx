@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import ComentarioInput from "./ComentarioInput";
 import ModalImagenActividades from "./ModalImagenActividades";
 import MenuAccionesActividades from "./MenuAccionesActividades";
+import ModalColecciones from "./ModalColecciones";
 import { useUser } from "@/hooks/queries";
 import SkeletonComentarios from "./skeletons/SkeletonComentarios";
 
@@ -13,6 +14,9 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
   const [loading, setLoading] = useState(true);
   const [modalImagenes, setModalImagenes] = useState(false);
   const [indexImagen, setIndexImagen] = useState(0);
+  const [favoritos, setFavoritos] = useState<string[]>([]);
+  const [likesPorActividad, setLikesPorActividad] = useState<Record<string, number>>({});
+  const [modalColecciones, setModalColecciones] = useState(false);
 
   const { user, isSuperAdmin } = useUser();
 
@@ -30,8 +34,40 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
     }
   };
 
+  // Cargar favoritos del usuario
+  const cargarFavoritos = async () => {
+    try {
+      const res = await fetch("/api/colecciones/favoritos");
+      if (!res.ok) return;
+      const data = await res.json();
+      const favIds = data.map((f: { actividad_id: string }) => f.actividad_id);
+      setFavoritos(favIds);
+    } catch (err) {
+      console.error("Error al cargar favoritos", err);
+    }
+  };
+
+  // Cargar contador de likes
+  const cargarLikesCount = async () => {
+    try {
+      const res = await fetch(`/api/comunidad/actividades/${actividad.id}/likes`);
+      if (!res.ok) throw new Error("Error al obtener likes");
+      const data = await res.json();
+      setLikesPorActividad((prev) => ({
+        ...prev,
+        [actividad.id]: data.count || 0,
+      }));
+    } catch (err) {
+      console.error("Error al cargar likes:", err);
+    }
+  };
+
   useEffect(() => {
-    if (actividad?.id) cargarComentarios();
+    if (actividad?.id) {
+      cargarComentarios();
+      cargarLikesCount();
+    }
+    cargarFavoritos();
   }, [actividad.id]);
 
   // Bloquear scroll de fondo mientras el modal está abierto
@@ -41,6 +77,43 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
       document.body.style.overflow = "auto";
     };
   }, []);
+
+  // Toggles like - Optimistic Update
+  const toggleLike = (actividadId: string) => {
+    // Guardar estado anterior en caso de necesitar revertir
+    const estadoAnterior = favoritos;
+    const likesAnteriores = likesPorActividad[actividadId] || 0;
+    const isFav = favoritos.includes(actividadId);
+
+    // Actualizar estado INMEDIATAMENTE (optimistic update)
+    setFavoritos((prev) =>
+      prev.includes(actividadId)
+        ? prev.filter((id) => id !== actividadId)
+        : [...prev, actividadId]
+    );
+
+    // Actualizar contador de likes instantáneamente
+    setLikesPorActividad((prev) => ({
+      ...prev,
+      [actividadId]: isFav ? likesAnteriores - 1 : likesAnteriores + 1,
+    }));
+
+    // Mostrar toast inmediatamente
+    toast.success(isFav ? "Removido de favoritos" : "Agregado a favoritos");
+
+    // Hacer el fetch en background (sin await)
+    fetch(`/api/comunidad/actividades/${actividadId}/like`, { method: "POST" })
+      .catch((err) => {
+        console.error("Error al dar like:", err);
+        // Revertir cambios si hay error
+        setFavoritos(estadoAnterior);
+        setLikesPorActividad((prev) => ({
+          ...prev,
+          [actividadId]: likesAnteriores,
+        }));
+        toast.error("Error al actualizar favorito");
+      });
+  };
 
   if (!user) {
     return (
@@ -86,6 +159,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
   const categorias = actividad.actividad_categoria?.map(
     (c: any) => c.categoria.nombre
   );
+  const isFav = favoritos.includes(actividad.id);
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -184,13 +258,25 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
 
         {/* BOTONES DE ACCIÓN */}
         <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm mb-3">
-          <button className="hover:opacity-75 transition">
-            <img
-              src="/images/icons/comunidad/favoritos.svg"
-              alt="Me gusta"
-              className="w-6 h-6"
-            />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => toggleLike(actividad.id)}
+              className="hover:opacity-75 transition"
+            >
+              <img
+                src={
+                  isFav
+                    ? "/images/icons/comunidad/favoritos-fill.svg"
+                    : "/images/icons/comunidad/favoritos.svg"
+                }
+                alt="Me gusta"
+                className="w-6 h-6"
+              />
+            </button>
+            <span className="text-sm text-gray-700 font-semibold">
+              {likesPorActividad[actividad.id] ?? 0}
+            </span>
+          </div>
 
           <div className="flex items-center gap-1">
             <button className="hover:opacity-75 transition">
@@ -203,7 +289,9 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
             <span className="text-sm text-gray-700 font-semibold">{comentarios.length}</span>
           </div>
 
-          <button className="hover:opacity-75 transition">
+          <button 
+            onClick={() => setModalColecciones(true)}
+            className="hover:opacity-75 transition">
             <img
               src="/images/icons/comunidad/colecciones.svg"
               alt="Guardar"
@@ -231,7 +319,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
           ) : (
             <div className="space-y-3">
               {comentarios.map((c) => (
-                <div key={c.id} className="border-b pb-2">
+                <div key={c.id} className="border-b border-gray-100 pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-2">
                       {c.usuario?.perfil?.imagen ? (
@@ -261,9 +349,10 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
                     {puedeEliminar(c) && (
                       <button
                         onClick={() => handleEliminar(c.id)}
-                        className="text-xs text-red-500 hover:underline"
+                        className="text-gray-400 hover:text-red-600 transition text-lg font-bold"
+                        title="Eliminar comentario"
                       >
-                        Eliminar
+                        ✕
                       </button>
                     )}
                   </div>
@@ -283,6 +372,13 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
           onClose={() => setModalImagenes(false)}
         />
       )}
+
+      {/* Modal de colecciones */}
+      <ModalColecciones
+        isOpen={modalColecciones}
+        actividadId={actividad.id}
+        onClose={() => setModalColecciones(false)}
+      />
     </div>
   );
 }
