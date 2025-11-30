@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { uploadFile } from "@/lib/subirArchivos";
 import SkeletonEditarActividad from "@/components/ui/comunidad/skeletons/SkeletonEditarActividad";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { toast } from "react-hot-toast";
 
 interface Categoria {
@@ -44,6 +45,7 @@ export default function EditarActividadPage() {
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [errores, setErrores] = useState<ErroresFormulario>({});
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -176,6 +178,12 @@ export default function EditarActividadPage() {
       }
 
       toast.success("Actividad actualizada exitosamente");
+      // Guardar la actividad actualizada en sessionStorage para que se actualice en la vista
+      sessionStorage.setItem("actividadActualizada", JSON.stringify({
+        id: params.id,
+        titulo,
+        descripcion,
+      }));
       router.push("/comunidad");
     } catch (err) {
       console.error("Error en fetch:", err);
@@ -185,11 +193,41 @@ export default function EditarActividadPage() {
 
   const handleCancel = () => router.push("/comunidad");
 
+  const handleEliminar = async () => {
+    try {
+      const res = await fetch(`/api/comunidad/actividades/${params.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) throw new Error("Error eliminando la actividad");
+
+      toast.success("Actividad eliminada correctamente");
+      setShowConfirmDelete(false);
+      router.push("/comunidad");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("No se pudo eliminar la actividad");
+    }
+  };
+
   if (loading)
     return <SkeletonEditarActividad />;
 
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        title="Eliminar actividad"
+        message="¿Estás seguro de que deseas eliminar esta actividad? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={handleEliminar}
+      />
       <div className="w-full max-w-3xl flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-semibold text-black">Editar Actividad</h1>
@@ -417,14 +455,22 @@ export default function EditarActividadPage() {
             <button
               type="button"
               onClick={handleCancel}
-              className="w-1/2 h-12 bg-gray-300 text-[#003c71] font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
+              className="w-1/3 h-12 bg-gray-300 text-[#003c71] font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
             >
               Cancelar
             </button>
 
             <button
+              type="button"
+              onClick={() => setShowConfirmDelete(true)}
+              className="w-1/3 h-12 bg-red-500 text-white font-semibold rounded-md shadow-md hover:bg-red-600 transition"
+            >
+              Eliminar
+            </button>
+
+            <button
               type="submit"
-              className="w-1/2 h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
+              className="w-1/3 h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
             >
               Guardar cambios
             </button>

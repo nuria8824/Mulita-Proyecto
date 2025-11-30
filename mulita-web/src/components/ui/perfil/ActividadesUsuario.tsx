@@ -310,9 +310,10 @@ export default function ActividadesUsuario({
                       download
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline flex items-center gap-2"
+                      className="text-sm text-blue-600 hover:underline flex items-center gap-2 truncate"
+                      title={a.nombre}
                     >
-                      📎 Descargar archivo: {a.nombre}
+                      📎 <span className="truncate">Descargar archivo: {a.nombre}</span>
                     </a>
                   ))}
                 </div>

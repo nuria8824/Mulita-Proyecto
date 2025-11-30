@@ -109,7 +109,7 @@ function FiltroCategoriaComponent({ categoriasSeleccionadas, onChange }: FiltroC
     <div className="relative w-full" ref={dropdownRef}>
       <button
         onClick={handleButtonClick}
-        className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#003c71] bg-white text-left flex justify-between items-center pointer-events-auto hover:border-[#003c71] transition-colors"
+        className="w-full border-2 border-gray-200 rounded-full px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#003c71] bg-white text-left flex justify-between items-center pointer-events-auto hover:border-[#003c71] transition-colors"
       >
         <span className="flex items-center gap-2">
           <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,11 +119,13 @@ function FiltroCategoriaComponent({ categoriasSeleccionadas, onChange }: FiltroC
             ? "Categorías"
             : `${localSeleccionadas.length} seleccionada${localSeleccionadas.length > 1 ? "s" : ""}`}
         </span>
-        <span className="text-gray-400">{isOpen ? "▲" : "▼"}</span>
+        <svg className="w-4 h-4 text-[#003c71]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isOpen ? "M19 14l-7-7m0 0L5 14m7-7v12" : "M5 10l7 7 7-7"} />
+        </svg>
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto">
           {/* Cursos */}
           {cursos.length > 0 && (
             <div className="border-b border-gray-200">
@@ -204,7 +206,7 @@ function FiltroCategoriaComponent({ categoriasSeleccionadas, onChange }: FiltroC
             <div className="border-t border-gray-200 p-3 bg-gray-50">
               <button
                 onClick={handleLimpiarClick}
-                className="w-full text-sm font-medium bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="w-full text-sm font-medium bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-full transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -222,6 +224,7 @@ function FiltroCategoriaComponent({ categoriasSeleccionadas, onChange }: FiltroC
 export const FiltroCategoria = memo(FiltroCategoriaComponent);
 
 export function FiltroFecha({ fechaSeleccionada, onChange }: FiltroFechaProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const opciones = [
     { label: "Hoy", value: "hoy" },
     { label: "Esta semana", value: "semana" },
@@ -230,13 +233,19 @@ export function FiltroFecha({ fechaSeleccionada, onChange }: FiltroFechaProps) {
     { label: "De más antiguo a más nuevo", value: "antiguo_nuevo" },
   ];
 
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onChange(e.target.value);
+  };
+
   return (
-    <div className="w-full flex">
+    <div className="w-full flex relative">
       <select
         aria-label="Filtrar por fecha"
         value={fechaSeleccionada}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#003c71] bg-white hover:border-[#003c71] transition-colors appearance-none pr-10 bg-no-repeat bg-right bg-[url('data:image/svg+xml;utf8,<svg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2212%22%20height=%2212%22%20viewBox=%220%200%2012%2012%22><path%20fill=%22%23666%22%20d=%22M0%204l6%206%206-6z%22/></svg>')]"
+        onChange={handleChange}
+        onFocus={() => setIsOpen(true)}
+        onBlur={() => setIsOpen(false)}
+        className="w-full border-2 border-gray-200 rounded-full px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#003c71] bg-white hover:border-[#003c71] transition-colors appearance-none pr-10"
       >
         <option value="">📅 Fecha</option>
         {opciones.map((op) => (
@@ -245,6 +254,9 @@ export function FiltroFecha({ fechaSeleccionada, onChange }: FiltroFechaProps) {
           </option>
         ))}
       </select>
+      <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#003c71] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isOpen ? "M19 14l-7-7m0 0L5 14m7-7v12" : "M5 10l7 7 7-7"} />
+      </svg>
     </div>
   );
 }

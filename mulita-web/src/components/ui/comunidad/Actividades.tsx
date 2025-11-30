@@ -111,6 +111,20 @@ export default function Actividades() {
     setLikesPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
   };
 
+  const handleActividadEliminada = (actividadId: string) => {
+    setActividades((prev) => prev.filter((act) => act.id !== actividadId));
+  };
+
+  const handleActividadActualizada = (actividadId: string, datosActualizados: any) => {
+    setActividades((prev) =>
+      prev.map((act) =>
+        act.id === actividadId
+          ? { ...act, ...datosActualizados }
+          : act
+      )
+    );
+  };
+
   // Fetch actividades
   const fetchActividades = useCallback(
     async (newOffset = 0, searchTerm = "", categorias: string[] = [], fecha = "") => {
@@ -178,6 +192,16 @@ export default function Actividades() {
     fetchActividades(0, debouncedSearch, categoriasSeleccionadas, fechaSeleccionada);
     fetchFavoritos();
   }, [debouncedSearch, categoriasSeleccionadas, fechaSeleccionada, fetchActividades, fetchFavoritos]);
+
+  // Verificar si hay una actividad actualizada desde la página de editar
+  useEffect(() => {
+    const actividadActualizada = sessionStorage.getItem("actividadActualizada");
+    if (actividadActualizada) {
+      const datos = JSON.parse(actividadActualizada);
+      handleActividadActualizada(datos.id, datos);
+      sessionStorage.removeItem("actividadActualizada");
+    }
+  }, []);
 
   const handleVerMas = () => {
     const newOffset = offset + limit;
@@ -272,7 +296,7 @@ export default function Actividades() {
       </h1>
 
       {/* FILTROS + BÚSQUEDA */}
-      <div className="w-full max-w-2xl mb-8 flex flex-col gap-4">
+      <div className="w-full max-w-xl mb-8 flex flex-col gap-4">
         {/* Barra de búsqueda */}
         <div className="relative w-full">
           <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,14 +307,14 @@ export default function Actividades() {
             placeholder="Buscar actividades..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full border-2 border-gray-200 rounded-lg pl-12 pr-4 py-3 focus:outline-none focus:border-[#003c71] focus:ring-0 transition-colors"
+            className="w-full border-2 border-gray-200 rounded-full pl-12 pr-4 py-3 focus:outline-none focus:border-[#003c71] focus:ring-0 transition-colors"
           />
         </div>
 
         {/* Filtros */}
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap justify-center">
           <span className="text-sm font-semibold text-gray-600">Filtrar por:</span>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap justify-center">
             <div className="w-full sm:w-48">
               <FiltroCategoria
                 categoriasSeleccionadas={categoriasSeleccionadas}
@@ -358,6 +382,7 @@ export default function Actividades() {
                       actividad={{ id: act.id, usuario_id: act.usuario.id }}
                       userId={user.id}
                       rol={user.rol}
+                      onActividadEliminada={handleActividadEliminada}
                     />
                   </div>
                 </div>
@@ -394,9 +419,10 @@ export default function Actividades() {
                         download
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline flex items-center gap-2"
+                        className="text-sm text-blue-600 hover:underline flex items-center gap-2 truncate"
+                        title={a.nombre}
                       >
-                        📎 Descargar archivo: {a.nombre}
+                        📎 <span className="truncate">Descargar archivo: {a.nombre}</span>
                       </a>
                     ))}
                   </div>
