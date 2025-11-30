@@ -6,7 +6,7 @@ const registerSchema = z.object({
   nombre: z.string(),
   apellido: z.string(),
   email: z.email(),
-  telefono: z.string().min(7).max(15),
+  telefono: z.string().min(7).max(30),
   contrasena: z.string().min(6),
   rol: z.enum(["usuario", "docente"]),
   institucion: z.string().optional(),
@@ -19,6 +19,22 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const data = registerSchema.parse(body);
+
+    // 0. Verificar si el email ya existe en la tabla usuario
+    const { data: existingUser, error: checkError } = await supabaseServer
+      .from("usuario")
+      .select("id, email")
+      .eq("email", data.email)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking email:", checkError);
+      throw new Error("Error al verificar el email");
+    }
+
+    if (existingUser) {
+      throw new Error("El email ya está registrado");
+    }
 
     // 1. Crear usuario en Supabase Auth
     const { data: authData, error: authError } = await supabaseServer.auth.signUp({

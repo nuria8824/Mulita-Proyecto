@@ -16,10 +16,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className="">
       <head>
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/react-international-phone@4.6.1/lib/styles.css"
-        />
       </head>
       <body className="bg-background text-foreground min-h-screen flex flex-col">
         <ProvidersWrapper>
