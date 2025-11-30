@@ -29,6 +29,7 @@ interface ErroresFormulario {
   titulo?: string;
   descripcion?: string;
   categorias?: string;
+  archivo?: string;
 }
 
 export default function EditarActividadPage() {
@@ -43,6 +44,8 @@ export default function EditarActividadPage() {
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [errores, setErrores] = useState<ErroresFormulario>({});
+
+  const MAX_FILE_SIZE = 30 * 1024 * 1024;
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -122,8 +125,17 @@ export default function EditarActividadPage() {
     if (categoriasSeleccionadas.length === 0)
       nuevosErrores.categorias = "Debes seleccionar al menos una categoría.";
 
-    setErrores(nuevosErrores);
-    if (Object.keys(nuevosErrores).length > 0) return;
+    // Validación de tamaño de archivos nuevos
+    const archivoGrande = archivosNuevos.find((archivo) => archivo.size > MAX_FILE_SIZE);
+    if (archivoGrande) {
+      nuevosErrores.archivo = `El archivo "${archivoGrande.name}" supera el límite de 30 MB.`;
+    }
+
+     if (Object.keys(nuevosErrores).length > 0) {
+        setErrores(nuevosErrores);
+        if (nuevosErrores.archivo) toast.error(nuevosErrores.archivo);
+        return;
+      }
 
     // Filtramos los archivos que el usuario decidió mantener
     const urlsExistentes = archivosExistentes

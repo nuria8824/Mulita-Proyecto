@@ -314,7 +314,7 @@ export default function Actividades() {
                         download
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline flex items-center gap-2"
+                        className="text-sm text-blue-600 hover:underline flex items-center gap-2 overflow-hidden whitespace-nowrap text-ellipsis"
                       >
                         📎 Descargar archivo: {a.nombre}
                       </a>
