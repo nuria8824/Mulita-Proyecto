@@ -142,8 +142,18 @@ export default function ModalColecciones({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-6 relative">
+    <div 
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-white w-full max-w-md rounded-2xl shadow-lg p-6 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="text-xl font-semibold mb-4 text-[#003c71]">
           Agregar a colecciones
         </h2>
