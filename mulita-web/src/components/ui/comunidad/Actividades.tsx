@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, act } from "react";
+import { useEffect, useState, useCallback, useMemo, act } from "react";
 import toast from "react-hot-toast";
 import MenuAccionesActividades from "./MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/comunidad/ModalImagenActividades";
@@ -45,6 +45,8 @@ export default function Actividades() {
   const [actividadParaColeccion, setActividadParaColeccion] = useState<string | null>(null);
 
   const [comentariosPorActividad, setComentariosPorActividad] = useState<Record<string, number>>({});
+  const [likesPorActividad, setLikesPorActividad] = useState<Record<string, number>>({});
+  const [ultimoComentario, setUltimoComentario] = useState<Record<string, any>>({});
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState("");
@@ -52,7 +54,7 @@ export default function Actividades() {
   const limit = 5;
 
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("");
+  const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
   const [fechaSeleccionada, setFechaSeleccionada] = useState<string>("");
 
   // Debounce búsqueda
@@ -73,13 +75,59 @@ export default function Actividades() {
     }
   };
 
+  const fetchLikesCount = async (actividadId: string) => {
+    try {
+      const res = await fetch(`/api/comunidad/actividades/${actividadId}/likes`);
+      if (!res.ok) throw new Error("Error al obtener likes");
+      const data = await res.json();
+      return data.count || 0;
+    } catch (err) {
+      console.error(err);
+      return 0;
+    }
+  };
+
+  const fetchUltimoComentario = async (actividadId: string) => {
+    try {
+      const res = await fetch(`/api/comunidad/comentarios/${actividadId}`);
+      if (!res.ok) throw new Error("Error al obtener comentarios");
+      const data = await res.json();
+      if (data.length > 0) {
+        setUltimoComentario((prev) => ({
+          ...prev,
+          [actividadId]: data[data.length - 1],
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const actualizarComentarios = (actividadId: string, nuevoCount: number) => {
     setComentariosPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
   };
 
+  const actualizarLikes = (actividadId: string, nuevoCount: number) => {
+    setLikesPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
+  };
+
+  const handleActividadEliminada = (actividadId: string) => {
+    setActividades((prev) => prev.filter((act) => act.id !== actividadId));
+  };
+
+  const handleActividadActualizada = (actividadId: string, datosActualizados: any) => {
+    setActividades((prev) =>
+      prev.map((act) =>
+        act.id === actividadId
+          ? { ...act, ...datosActualizados }
+          : act
+      )
+    );
+  };
+
   // Fetch actividades
   const fetchActividades = useCallback(
-    async (newOffset = 0, searchTerm = "", categoria = "", fecha = "") => {
+    async (newOffset = 0, searchTerm = "", categorias: string[] = [], fecha = "") => {
       try {
         if (newOffset === 0) {
           setLoadingInicial(true);
@@ -88,7 +136,11 @@ export default function Actividades() {
         }
 
         let url = `/api/comunidad/actividades?offset=${newOffset}&limit=${limit}&search=${encodeURIComponent(searchTerm)}`;
-        if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+        if (categorias.length > 0) {
+          categorias.forEach(cat => {
+            url += `&categoria=${encodeURIComponent(cat)}`;
+          });
+        }
         if (fecha) url += `&fecha=${encodeURIComponent(fecha)}`;
 
         const res = await fetch(url);
@@ -101,12 +153,16 @@ export default function Actividades() {
         setHasMore(data.length === limit);
 
         const counts: Record<string, number> = {};
+        const likeCounts: Record<string, number> = {};
         await Promise.all(
           data.map(async (act) => {
             counts[act.id] = await fetchComentariosCount(act.id);
+            likeCounts[act.id] = await fetchLikesCount(act.id);
+            await fetchUltimoComentario(act.id);
           })
         );
         setComentariosPorActividad((prev) => ({ ...prev, ...counts }));
+        setLikesPorActividad((prev) => ({ ...prev, ...likeCounts }));
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -133,36 +189,69 @@ export default function Actividades() {
 
   useEffect(() => {
     setOffset(0);
-    fetchActividades(0, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
+    fetchActividades(0, debouncedSearch, categoriasSeleccionadas, fechaSeleccionada);
     fetchFavoritos();
-  }, [debouncedSearch, categoriaSeleccionada, fechaSeleccionada, fetchActividades, fetchFavoritos]);
+  }, [debouncedSearch, categoriasSeleccionadas, fechaSeleccionada, fetchActividades, fetchFavoritos]);
+
+  // Verificar si hay una actividad actualizada desde la página de editar
+  useEffect(() => {
+    const actividadActualizada = sessionStorage.getItem("actividadActualizada");
+    if (actividadActualizada) {
+      const datos = JSON.parse(actividadActualizada);
+      handleActividadActualizada(datos.id, datos);
+      sessionStorage.removeItem("actividadActualizada");
+    }
+  }, []);
 
   const handleVerMas = () => {
     const newOffset = offset + limit;
     setOffset(newOffset);
-    fetchActividades(newOffset, debouncedSearch, categoriaSeleccionada, fechaSeleccionada);
+    fetchActividades(newOffset, debouncedSearch, categoriasSeleccionadas, fechaSeleccionada);
   };
 
-  // Alternar like (añadir o quitar de favoritos)
-  const toggleLike = async (actividadId: string) => {
-    console.log("click en like:", actividadId);
-    try {
-      const res = await fetch(`/api/comunidad/actividades/${actividadId}/like`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("Error al actualizar like");
+  // Alternar like (añadir o quitar de favoritos) - Optimistic Update
+  const toggleLike = (actividadId: string) => {
+    // Guardar estado anterior en caso de necesitar revertir
+    const isFav = favoritos.includes(actividadId);
+    const estadoAnterior = favoritos;
+    const likesAnteriores = likesPorActividad[actividadId] || 0;
 
-      const isFav = favoritos.includes(actividadId);
-      setFavoritos((prev) =>
-        prev.includes(actividadId)
-          ? prev.filter((id) => id !== actividadId)
-          : [...prev, actividadId]
-      );
-      toast.success(isFav ? "Removido de favoritos" : "Agregado a favoritos");
-    } catch (err) {
-      console.error("Error al dar like:", err);
-      toast.error("Error al actualizar favorito");
-    }
+    // Actualizar estado INMEDIATAMENTE (optimistic update)
+    setFavoritos((prev) =>
+      prev.includes(actividadId)
+        ? prev.filter((id) => id !== actividadId)
+        : [...prev, actividadId]
+    );
+
+    // Actualizar contador de likes instantáneamente
+    setLikesPorActividad((prev) => ({
+      ...prev,
+      [actividadId]: isFav ? likesAnteriores - 1 : likesAnteriores + 1,
+    }));
+
+    // Mostrar toast inmediatamente
+    toast.success(isFav ? "Removido de favoritos" : "Agregado a favoritos");
+
+    // Hacer el fetch en background (sin await)
+    fetch(`/api/comunidad/actividades/${actividadId}/like`, {
+      method: "POST",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Error al actualizar like");
+        // Obtener el contador actualizado del servidor
+        return fetchLikesCount(actividadId);
+      })
+      .then((nuevoCount) => {
+        // Actualizar con el valor real del servidor
+        setLikesPorActividad((prev) => ({ ...prev, [actividadId]: nuevoCount }));
+      })
+      .catch((err) => {
+        console.error("Error al dar like:", err);
+        // Revertir cambios si hay error
+        setFavoritos(estadoAnterior);
+        setLikesPorActividad((prev) => ({ ...prev, [actividadId]: likesAnteriores }));
+        toast.error("Error al actualizar favorito");
+      });
   };
 
   const toggleExpand = (id: string) => {
@@ -207,23 +296,38 @@ export default function Actividades() {
       </h1>
 
       {/* FILTROS + BÚSQUEDA */}
-      <div className="w-full max-w-xl mb-6 flex flex-wrap items-center justify-center sm:justify-between gap-2">
-        <input
-          type="text"
-          placeholder="Buscar por título o descripción..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-[55%] border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#003c71]"
-        />
-        <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center sm:justify-end">
-          <FiltroCategoria
-            categoriaSeleccionada={categoriaSeleccionada}
-            onChange={setCategoriaSeleccionada}
+      <div className="w-full max-w-xl mb-8 flex flex-col gap-4">
+        {/* Barra de búsqueda */}
+        <div className="relative w-full">
+          <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Buscar actividades..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full border-2 border-gray-200 rounded-full pl-12 pr-4 py-3 focus:outline-none focus:border-[#003c71] focus:ring-0 transition-colors"
           />
-          <FiltroFecha
-            fechaSeleccionada={fechaSeleccionada}
-            onChange={setFechaSeleccionada}
-          />
+        </div>
+
+        {/* Filtros */}
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          <span className="text-sm font-semibold text-gray-600">Filtrar por:</span>
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            <div className="w-full sm:w-48">
+              <FiltroCategoria
+                categoriasSeleccionadas={categoriasSeleccionadas}
+                onChange={setCategoriasSeleccionadas}
+              />
+            </div>
+            <div className="w-full sm:w-40">
+              <FiltroFecha
+                fechaSeleccionada={fechaSeleccionada}
+                onChange={setFechaSeleccionada}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -278,6 +382,7 @@ export default function Actividades() {
                       actividad={{ id: act.id, usuario_id: act.usuario.id }}
                       userId={user.id}
                       rol={user.rol}
+                      onActividadEliminada={handleActividadEliminada}
                     />
                   </div>
                 </div>
@@ -314,9 +419,10 @@ export default function Actividades() {
                         download
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline flex items-center gap-2"
+                        className="text-sm text-blue-600 hover:underline flex items-center gap-2 truncate"
+                        title={a.nombre}
                       >
-                        📎 Descargar archivo: {a.nombre}
+                        📎 <span className="truncate">Descargar archivo: {a.nombre}</span>
                       </a>
                     ))}
                   </div>
@@ -344,17 +450,22 @@ export default function Actividades() {
                 {/* BOTONES */}
                 <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
                   {/* Me gusta */}
-                  <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
-                    <img
-                      src={
-                        isFav
-                          ? "/images/icons/comunidad/favoritos-fill.svg"
-                          : "/images/icons/comunidad/favoritos.svg"
-                      }
-                      alt="Me gusta"
-                      className="w-6 h-6"
-                    />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
+                      <img
+                        src={
+                          isFav
+                            ? "/images/icons/comunidad/favoritos-fill.svg"
+                            : "/images/icons/comunidad/favoritos.svg"
+                        }
+                        alt="Me gusta"
+                        className="w-6 h-6"
+                      />
+                    </button>
+                    <span className="text-sm text-gray-700 font-semibold">
+                      {likesPorActividad[act.id] ?? 0}
+                    </span>
+                  </div>
 
                   {/* Comentarios */}
                   <div className="flex items-center gap-1">
@@ -395,8 +506,39 @@ export default function Actividades() {
                   onNuevoComentario={async () => {
                     const count = await fetchComentariosCount(act.id);
                     actualizarComentarios(act.id, count);
+                    await fetchUltimoComentario(act.id);
                   }}
                 />
+
+                {/* ÚLTIMO COMENTARIO */}
+                {ultimoComentario[act.id] && (
+                  <div className="border-t border-gray-100 pt-3 mt-2">
+                    <p className="text-xs text-gray-500 mb-2 font-semibold">Último comentario</p>
+                    <div className="flex items-start gap-2 bg-gray-50 rounded-lg p-3">
+                      {ultimoComentario[act.id].usuario?.perfil?.imagen ? (
+                        <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                          <img
+                            src={ultimoComentario[act.id].usuario.perfil.imagen}
+                            alt={`${ultimoComentario[act.id].usuario?.nombre}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs flex-shrink-0">
+                          {ultimoComentario[act.id].usuario?.nombre?.[0]?.toUpperCase() ?? "?"}
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-gray-800">
+                          {ultimoComentario[act.id].usuario?.nombre} {ultimoComentario[act.id].usuario?.apellido}
+                        </p>
+                        <p className="text-xs text-gray-700 line-clamp-2">
+                          {ultimoComentario[act.id].contenido}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })

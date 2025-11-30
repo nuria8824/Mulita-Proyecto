@@ -70,7 +70,7 @@ export default function GestionUsuariosPage() {
               setRolFilter(e.target.value);
               setPage(1); // Resetear a página 1 al cambiar filtro
             }}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
           >
             <option value="">Todos los roles</option>
             <option value="superAdmin">Super Admin</option>
@@ -82,7 +82,7 @@ export default function GestionUsuariosPage() {
 
         <button
           onClick={handleExportToExcel}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors font-medium whitespace-nowrap"
         >
           <Download size={18} />
           Exportar Excel

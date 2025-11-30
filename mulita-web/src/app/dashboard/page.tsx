@@ -1,8 +1,39 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState({
+    usuarios: { total: 0, nuevos: 0 },
+    actividades: { total: 0, nuevas: 0 },
+    pedidos: { total: 0, nuevos: 0 },
+  });
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/dashboard/stats", {
+        cache: "no-store",
+      });
+      const data = await response.json();
+      if (data.success) {
+        setStats(data.stats);
+      }
+    } catch (error) {
+      console.error("Error al cargar estadísticas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+    // Recargar cada 5 segundos para detectar cambios más rápido
+    const interval = setInterval(fetchStats, 5 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="w-full flex flex-col items-center px-4 sm:px-6 lg:px-10 pb-10 text-center text-xs text-[#6d758f] font-inter">
       
@@ -19,7 +50,7 @@ export default function DashboardPage() {
         {/* NUEVAS ACTIVIDADES */}
         <Card
           title="Nuevas Actividades"
-          value="10"
+          value={loading ? "..." : stats.actividades.nuevas.toString()}
           subtitle="en los últimos 30 días"
           color="text-[#68bb6c]"
           icon="/images/icons/dashboard/actividades.svg"
@@ -28,7 +59,7 @@ export default function DashboardPage() {
         {/* TOTAL ACTIVIDADES */}
         <Card
           title="Total de Actividades"
-          value="25"
+          value={loading ? "..." : stats.actividades.total.toString()}
           subtitle="actividades creadas"
           color="text-[#68bb6c]"
           icon="/images/icons/dashboard/actividades.svg"
@@ -37,7 +68,7 @@ export default function DashboardPage() {
         {/* NUEVOS USUARIOS */}
         <Card
           title="Nuevos Usuarios"
-          value="12"
+          value={loading ? "..." : stats.usuarios.nuevos.toString()}
           subtitle="en los últimos 30 días"
           color="text-[#ec9d54]"
           icon="/images/icons/dashboard/usuario.svg"
@@ -46,7 +77,7 @@ export default function DashboardPage() {
         {/* TOTAL USUARIOS */}
         <Card
           title="Total de Usuarios"
-          value="51"
+          value={loading ? "..." : stats.usuarios.total.toString()}
           subtitle="usuarios registrados"
           color="text-[#ec9d54]"
           icon="/images/icons/dashboard/usuario.svg"
@@ -55,7 +86,7 @@ export default function DashboardPage() {
         {/* NUEVOS PEDIDOS */}
         <Card
           title="Nuevos Pedidos"
-          value="10"
+          value={loading ? "..." : stats.pedidos.nuevos.toString()}
           subtitle="en los últimos 30 días"
           color="text-[#bd76c4]"
           icon="/images/icons/dashboard/pedidos.svg"
@@ -64,7 +95,7 @@ export default function DashboardPage() {
         {/* TOTAL PEDIDOS */}
         <Card
           title="Total de Pedidos"
-          value="25"
+          value={loading ? "..." : stats.pedidos.total.toString()}
           subtitle="pedidos realizados"
           color="text-[#bd76c4]"
           icon="/images/icons/dashboard/pedidos.svg"

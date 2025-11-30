@@ -55,15 +55,15 @@ export default function ComentarioInput({
         value={contenido}
         onChange={(e) => setContenido(e.target.value)}
         onKeyDown={handleKeyDown}
-        className="flex-1 border rounded-full px-3 py-1 text-sm"
+        className="flex-1 appearance-none border-2 border-[#003c71] rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-0 bg-white"
         disabled={cargando}
       />
       <button
         onClick={handleEnviar}
         disabled={cargando}
-        className="text-sm text-blue-600 hover:underline"
+        className="px-4 py-2 border-2 border-[#003c71] text-[#003c71] rounded-full text-sm font-semibold hover:bg-blue-50 disabled:opacity-50 transition"
       >
-        {cargando ? "Enviando..." : "Comentar"}
+        {cargando ? "Enviando..." : "Enviar"}
       </button>
     </div>
   );

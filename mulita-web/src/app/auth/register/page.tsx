@@ -16,6 +16,10 @@ export default function RegisterPage() {
 
   const formRef = useRef<HTMLFormElement>(null);
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !loading) {
+      formRef.current?.requestSubmit();
+    }
   const countryList = Country.getAllCountries();
 
   const cities = City.getCitiesOfState("US", "California");
@@ -156,15 +160,15 @@ export default function RegisterPage() {
 
         {/* Formulario */}
         <div className="flex flex-col gap-4 text-left text-lg">
-          <input name="nombre" type="text" placeholder="Nombre" className={inputClass} required />
-          <input name="apellido" type="text" placeholder="Apellido" className={inputClass} required />
-          <input name="email" type="email" placeholder="Email" className={inputClass} required />
+          <input name="nombre" type="text" placeholder="Nombre" className={inputClass} onKeyPress={handleKeyPress} required />
+          <input name="apellido" type="text" placeholder="Apellido" className={inputClass} onKeyPress={handleKeyPress} required />
+          <input name="email" type="email" placeholder="Email" className={inputClass} onKeyPress={handleKeyPress} required />
           <PhoneInputWithCountry
             value={telefono}
             onChange={(value) => setTelefono(value)}
             placeholder="Teléfono"
           />
-          <input name="contrasena" type="password" placeholder="Contraseña" className={inputClass} required />
+          <input name="contrasena" type="password" placeholder="Contraseña" className={inputClass} onKeyPress={handleKeyPress} required />
 
           <label className="flex items-center gap-2">
             <span>Docente:</span>
@@ -187,6 +191,7 @@ export default function RegisterPage() {
                 required
                 value={selectedCountry}
                 onChange={handleCountryChange}
+                onKeyPress={handleKeyPress}
               >
                 <option value="">Selecciona un país</option>
 
@@ -205,6 +210,7 @@ export default function RegisterPage() {
                   className={inputClass}
                   required
                   onChange={handleStateChange}
+                  onKeyPress={handleKeyPress}
                 >
                   <option value="">Selecciona una provincia</option>
                   {ListaProvincias.map((p) => (
@@ -219,6 +225,7 @@ export default function RegisterPage() {
                   type="text"
                   placeholder="Provincia"
                   className={inputClass}
+                  onKeyPress={handleKeyPress}
                   required
                 />
               )}
@@ -229,6 +236,7 @@ export default function RegisterPage() {
                   aria-label="ciudad"
                   name="ciudad"
                   className={inputClass}
+                  onKeyPress={handleKeyPress}
                   required
                 >
                   <option value="">Selecciona una ciudad</option>
@@ -239,10 +247,10 @@ export default function RegisterPage() {
                   ))}
                 </select>
               ) : (
-                <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} required/>
+                <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} onKeyPress={handleKeyPress} required/>
               )}
 
-              <input name="institucion" type="text" placeholder="Institución" className={inputClass} required />
+              <input name="institucion" type="text" placeholder="Institución" className={inputClass} onKeyPress={handleKeyPress} required />
             </>
           )}
 
