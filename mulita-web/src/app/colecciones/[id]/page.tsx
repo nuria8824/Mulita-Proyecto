@@ -262,9 +262,11 @@ export default function ColeccionDetallePage() {
                       download
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline flex items-center gap-2"
+                      title={a.nombre}
+                      className="text-sm text-blue-600 hover:underline flex items-center gap-2 truncate"
                     >
-                      📎 Descargar archivo: {a.nombre}
+                      <span className="flex-shrink-0">📎</span>
+                      <span className="truncate">Descargar archivo: {a.nombre}</span>
                     </a>
                   ))}
                 </div>
