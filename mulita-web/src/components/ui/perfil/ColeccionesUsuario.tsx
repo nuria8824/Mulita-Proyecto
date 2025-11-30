@@ -12,6 +12,7 @@ type Coleccion = {
   nombre: string;
   created_at: string;
   usuario_id: string;
+  tipo?: string;
 };
 
 type ColeccionesUsuarioProps = {
@@ -82,6 +83,14 @@ export default function ColeccionesUsuario({ userPerfilId }: ColeccionesUsuarioP
 
   const handleEliminar = async (id: string) => {
     if (!esPropioPerfil) return; // solo permitir eliminar en el propio perfil
+    
+    // Verificar que no sea la colección de favoritos
+    const coleccion = colecciones.find(c => c.id === id);
+    if (coleccion?.tipo === "favoritos") {
+      toast.error("No puedes eliminar la carpeta de Favoritos");
+      return;
+    }
+    
     try {
       const res = await fetch(`/api/colecciones/${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -116,7 +125,7 @@ export default function ColeccionesUsuario({ userPerfilId }: ColeccionesUsuarioP
               })}
             </span>
 
-            {esPropioPerfil && (
+            {esPropioPerfil && col.tipo !== "favoritos" && (
               <MenuAccionesColecciones
                 coleccionId={col.id}
                 onEditar={handleEditar}

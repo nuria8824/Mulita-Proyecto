@@ -2,6 +2,45 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 import { cookies } from "next/headers";
 
+// Función auxiliar para obtener items con datos de productos
+async function getItemsWithProducts(carritoId: string) {
+  const { data: items } = await supabaseServer
+    .from("carrito_items")
+    .select("*")
+    .eq("carrito_id", carritoId);
+
+  let itemsConProducto = [];
+  if (items && items.length > 0) {
+    const productoIds = items.map(item => item.producto_id);
+    
+    const { data: productos } = await supabaseServer
+      .from("producto")
+      .select(`
+        *,
+        producto_archivos (archivo_url, nombre)
+      `)
+      .in("id", productoIds);
+
+    itemsConProducto = items.map(item => {
+      const producto = productos?.find(p => p.id === item.producto_id);
+      const imagenUrl = producto?.producto_archivos?.[0]?.archivo_url || null;
+      
+      return {
+        ...item,
+        producto: producto ? {
+          id: producto.id,
+          nombre: producto.nombre || producto.titulo || `Producto ${producto.id?.slice(0, 8)}`,
+          descripcion: producto.descripcion,
+          imagen: imagenUrl,
+          precio: producto.precio
+        } : null
+      };
+    });
+  }
+
+  return itemsConProducto;
+}
+
 // Actualizar cantidad o eliminar item del carrito
 export async function PUT(
   req: NextRequest,
@@ -81,7 +120,13 @@ export async function PUT(
       })
       .eq("id", item.carrito_id);
 
-    return NextResponse.json({ success: true });
+    // Obtener items con productos
+    const itemsConProducto = await getItemsWithProducts(item.carrito_id);
+
+    return NextResponse.json({ 
+      success: true,
+      items: itemsConProducto
+    });
   } catch (error) {
     console.error("Error en PUT /api/carrito/[id]:", error);
     return NextResponse.json(
@@ -162,7 +207,13 @@ export async function DELETE(
       })
       .eq("id", item.carrito_id);
 
-    return NextResponse.json({ success: true });
+    // Obtener items con productos
+    const itemsConProducto = await getItemsWithProducts(item.carrito_id);
+
+    return NextResponse.json({ 
+      success: true,
+      items: itemsConProducto
+    });
   } catch (error) {
     console.error("Error en DELETE /api/carrito/[id]:", error);
     return NextResponse.json(

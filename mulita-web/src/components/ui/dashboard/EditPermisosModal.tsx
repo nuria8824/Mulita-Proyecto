@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface Usuario {
   id: string;
@@ -29,11 +30,11 @@ export default function EditPermissionsModal({ user, onClose, onUpdated }: Props
     setLoading(false);
 
     if (res.ok) {
-      alert("Permisos actualizados");
+      toast.success("Permisos actualizados");
       onUpdated();
       onClose();
     } else {
-      alert("Error al actualizar permisos");
+      toast.error("Error al actualizar permisos");
     }
   };
 

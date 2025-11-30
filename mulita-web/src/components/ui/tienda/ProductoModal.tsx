@@ -215,6 +215,7 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
         open={compraOpen}
         onClose={() => setCompraOpen(false)}
         items={[itemUnico]}
+        source="product"
       />
     </div>
   );

@@ -52,7 +52,10 @@ export async function GET(req: NextRequest) {
       
       const { data: productos, error: productosError } = await supabaseServer
         .from("producto")
-        .select("*")
+        .select(`
+          *,
+          producto_archivos (archivo_url, nombre)
+        `)
         .in("id", productoIds);
 
       console.log("Productos encontrados:", productos);
@@ -60,13 +63,15 @@ export async function GET(req: NextRequest) {
 
       itemsConProducto = items.map(item => {
         const producto = productos?.find(p => p.id === item.producto_id);
+        const imagenUrl = producto?.producto_archivos?.[0]?.archivo_url || null;
+        
         return {
           ...item,
           producto: producto ? {
             id: producto.id,
             nombre: producto.nombre || producto.titulo || `Producto ${producto.id?.slice(0, 8)}`,
             descripcion: producto.descripcion,
-            imagen: producto.imagen || producto.archivo_url,
+            imagen: imagenUrl,
             precio: producto.precio
           } : null
         };
@@ -197,7 +202,41 @@ export async function POST(req: NextRequest) {
       })
       .eq("id", carrito.id);
 
-    return NextResponse.json({ success: true });
+    // Obtener datos de productos para cada item (igual que en GET)
+    let itemsConProducto = [];
+    if (items && items.length > 0) {
+      const productoIds = items.map(item => item.producto_id);
+      
+      const { data: productos, error: productosError } = await supabaseServer
+        .from("producto")
+        .select(`
+          *,
+          producto_archivos (archivo_url, nombre)
+        `)
+        .in("id", productoIds);
+
+      itemsConProducto = items.map(item => {
+        const producto = productos?.find(p => p.id === item.producto_id);
+        const imagenUrl = producto?.producto_archivos?.[0]?.archivo_url || null;
+        
+        return {
+          ...item,
+          producto: producto ? {
+            id: producto.id,
+            nombre: producto.nombre || producto.titulo || `Producto ${producto.id?.slice(0, 8)}`,
+            descripcion: producto.descripcion,
+            imagen: imagenUrl,
+            precio: producto.precio
+          } : null
+        };
+      });
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      carrito,
+      items: itemsConProducto
+    });
   } catch (error) {
     console.error("Error en POST /api/carrito:", error);
     const errorMessage = error instanceof Error ? error.message : "Error desconocido";

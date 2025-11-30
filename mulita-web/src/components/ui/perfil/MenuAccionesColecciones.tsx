@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MoreVertical } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 type Props = {
   coleccionId: string;
@@ -11,6 +12,7 @@ type Props = {
 
 export default function MenuAccionesColecciones({ coleccionId, onEditar, onEliminar }: Props) {
   const [open, setOpen] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleMenu = () => setOpen((prev) => !prev);
@@ -34,9 +36,11 @@ export default function MenuAccionesColecciones({ coleccionId, onEditar, onElimi
   const handleEliminarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setOpen(false);
-    if (confirm("¿Estás seguro que querés eliminar esta colección?")) {
-      onEliminar(coleccionId);
-    }
+    setShowConfirmDelete(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    await onEliminar(coleccionId);
   };
 
   const handleToggleMenu = (e: React.MouseEvent) => {
@@ -45,7 +49,18 @@ export default function MenuAccionesColecciones({ coleccionId, onEditar, onElimi
   };
 
   return (
-    <div className="relative" ref={menuRef}>
+    <>
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        title="Eliminar colección"
+        message="¿Estás seguro de que deseas eliminar esta colección? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={handleConfirmDelete}
+      />
+      <div className="relative" ref={menuRef}>
       <button
         title="menu acciones colecciones"
         onClick={handleToggleMenu}
@@ -69,7 +84,8 @@ export default function MenuAccionesColecciones({ coleccionId, onEditar, onElimi
             Eliminar
           </button>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef } from "react";
 import { toast } from "react-hot-toast";
-import { PhoneInput } from "react-international-phone";
+import PhoneInputWithCountry from "@/components/PhoneInputWithCountry";
 
 export default function RegisterPage() {
   const [esDocente, setEsDocente] = useState(false);
@@ -44,10 +44,15 @@ export default function RegisterPage() {
       return;
     }
 
-    // Validar teléfono - debe tener mínimo 7 caracteres sin espacios ni símbolos especiales
+    // Validar teléfono - debe tener mínimo 7 y máximo 30 dígitos
     const phoneDigits = telefono.replace(/\D/g, "");
     if (phoneDigits.length < 7) {
       toast.error("El teléfono es muy corto");
+      setLoading(false);
+      return;
+    }
+    if (phoneDigits.length > 30) {
+      toast.error("El teléfono no puede tener más de 30 dígitos");
       setLoading(false);
       return;
     }
@@ -120,13 +125,11 @@ export default function RegisterPage() {
           <input name="nombre" type="text" placeholder="Nombre" className={inputClass} required />
           <input name="apellido" type="text" placeholder="Apellido" className={inputClass} required />
           <input name="email" type="email" placeholder="Email" className={inputClass} required />
-          <div className="phone-input-wrapper">
-            <PhoneInput
-              defaultCountry="ar"
-              value={telefono}
-              onChange={(value) => setTelefono(value)}
-            />
-          </div>
+          <PhoneInputWithCountry
+            value={telefono}
+            onChange={(value) => setTelefono(value)}
+            placeholder="Teléfono"
+          />
           <input name="contrasena" type="password" placeholder="Contraseña" className={inputClass} required />
 
           <label className="flex items-center gap-2 cursor-pointer">
