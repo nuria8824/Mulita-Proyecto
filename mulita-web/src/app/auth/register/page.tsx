@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [telefono, setTelefono] = useState("");
 
   const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [selectedState, setSelectedState] = useState<string>("");
   const [ListaProvincias, setListaProvincias] = useState<IState[]>([]);
   const [ListaCiudades, setListaCiudades] = useState<ICity[]>([]);
 
@@ -37,8 +38,8 @@ export default function RegisterPage() {
   };
 
   // Manejar el cambio de provincia
-  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const stateName = e.target.value;
+  const handleStateChange = (stateName: string) => {
+    setSelectedState(stateName);
     const country = countryList.find(c => c.name === selectedCountry);
     if (!country) return;
 
@@ -193,9 +194,8 @@ export default function RegisterPage() {
               {ListaProvincias.length > 0 ? (
                 <Select
                   options={ListaProvincias.map(p => ({ value: p.name, label: p.name }))}
-                  onChange={(option: any) => {
-                    handleStateChange({ target: { value: option.value } } as any);
-                  }}
+                  onChange={(option: any) => handleStateChange(option.value)}
+                  value={selectedState ? { value: selectedState, label: selectedState } : null}
                   placeholder="Selecciona una provincia"
                 />
               ) : (
@@ -227,7 +227,7 @@ export default function RegisterPage() {
 
               {/* Hidden inputs para FormData */}
               <input type="hidden" name="pais" value={selectedCountry} />
-              <input type="hidden" name="provincia" value={ListaProvincias.find(p => p.name === selectedCountry)?.name ?? ""} />
+              <input type="hidden" name="provincia" value={selectedState} />
             </>
           )}
 
