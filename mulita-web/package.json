@@ -30,6 +30,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
+    "react-select": "^5.10.2",
     "sqlite3": "^5.1.7",
     "world-countries": "^5.1.0",
     "xlsx": "^0.18.5",

@@ -180,7 +180,7 @@ export default function ColeccionDetallePage() {
           {`Actividades de "${nombreColeccion}"`}
         </h2>
       </div>
-
+      
       <div className="flex flex-col gap-8">
         {actividades.map((act) => {
           const imagenesAct = act.actividad_archivos?.filter((a) => a.tipo.startsWith("image/")) || [];

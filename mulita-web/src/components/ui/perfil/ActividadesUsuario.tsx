@@ -392,161 +392,166 @@ export default function ActividadesUsuario({
           return (
             <div
               key={act.id}
-              className="w-full bg-white rounded-2xl shadow border border-gray-200 p-5 flex flex-col gap-4"
+              className="w-full bg-white rounded-2xl shadow border border-gray-200 p-5 flex flex-col justify-between"
             >
-              {/* Cabecera */}
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                    <img
-                      src={perfilImagen || "/images/icons/perfil/default-avatar.svg"}
-                      alt="Perfil"
-                      className="w-full h-full rounded-full object-cover"
+              {/* Contenido superior */}
+              <div className="flex flex-col flex-1 gap-4">
+                {/* Cabecera */}
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                      <img
+                        src={perfilImagen || "/images/icons/perfil/default-avatar.svg"}
+                        alt="Perfil"
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800">
+                        {act.usuario?.nombre} {act.usuario?.apellido}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(act.fecha).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {categorias?.map((cat, i) => (
+                      <span
+                        key={i}
+                        className="shadow border border-[#f1f3f7] bg-white rounded px-2 py-1 text-xs font-semibold text-gray-700"
+                      >
+                        {cat}
+                      </span>
+                    ))}
+                    <MenuAccionesActividades
+                      actividad={{ id: act.id, usuario_id: act.usuario_id }}
+                      userId={user.id}
+                      rol={user.rol}
                     />
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-800">
-                      {act.usuario?.nombre} {act.usuario?.apellido}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(act.fecha).toLocaleDateString()}
-                    </p>
-                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {categorias?.map((cat, i) => (
-                    <span
-                      key={i}
-                      className="shadow border border-[#f1f3f7] bg-white rounded px-2 py-1 text-xs font-semibold text-gray-700"
+                {/* Título */}
+                <h3 className="text-lg font-bold text-[#003c71] -mb-2">{act.titulo}</h3>
+
+                {/* Descripción */}
+                <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
+                  {expanded[act.id]
+                    ? act.descripcion
+                    : act.descripcion.length > 200
+                    ? act.descripcion.slice(0, 200) + "..."
+                    : act.descripcion}
+                  {act.descripcion.length > 200 && (
+                    <button
+                      onClick={() => toggleExpand(act.id)}
+                      className="text-[#003c71] ml-2 font-semibold hover:underline"
                     >
-                      {cat}
-                    </span>
-                  ))}
-                  <MenuAccionesActividades
-                    actividad={{ id: act.id, usuario_id: act.usuario_id }}
-                    userId={user.id}
-                    rol={user.rol}
-                  />
+                      {expanded[act.id] ? "Ver menos" : "Ver más"}
+                    </button>
+                  )}
                 </div>
-              </div>
 
-              {/* Título */}
-              <h3 className="text-lg font-bold text-[#003c71] -mb-2">{act.titulo}</h3>
+                {/* Otros archivos */}
+                {otrosArchivos.length > 0 && (
+                  <div className="flex flex-col gap-1 mt-2">
+                    {otrosArchivos.map((a, i) => (
+                      <a
+                        key={i}
+                        href={a.archivo_url}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline flex items-center gap-2 truncate"
+                        title={a.nombre}
+                      >
+                        📎 <span className="truncate">Descargar archivo: {a.nombre}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
 
-              {/* Descripción */}
-              <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
-                {expanded[act.id]
-                  ? act.descripcion
-                  : act.descripcion.length > 200
-                  ? act.descripcion.slice(0, 200) + "..."
-                  : act.descripcion}
-                {act.descripcion.length > 200 && (
-                  <button
-                    onClick={() => toggleExpand(act.id)}
-                    className="text-[#003c71] ml-2 font-semibold hover:underline"
-                  >
-                    {expanded[act.id] ? "Ver menos" : "Ver más"}
-                  </button>
+                {/* Galería de imágenes */}
+                {imagenesAct.length > 0 && (
+                  <div className="px-4 pb-4 grid grid-cols-3 gap-2">
+                    {imagenesAct.map((img, i) => (
+                      <button
+                        key={i}
+                        onClick={() => toggleModal(imagenesAct, i)}
+                        className="w-full aspect-square overflow-hidden rounded-md"
+                      >
+                        <img
+                          src={img.archivo_url}
+                          alt={`Imagen ${i + 1}`}
+                          className="object-cover w-full h-full"
+                        />
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
-              {/* Archivos */}
-              {otrosArchivos.length > 0 && (
-                <div className="flex flex-col gap-1 mt-2">
-                  {otrosArchivos.map((a, i) => (
-                    <a
-                      key={i}
-                      href={a.archivo_url}
-                      download
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline flex items-center gap-2 truncate"
-                      title={a.nombre}
-                    >
-                      📎 <span className="truncate">Descargar archivo: {a.nombre}</span>
-                    </a>
-                  ))}
-                </div>
-              )}
-
-              {/* Galería */}
-              {imagenesAct.length > 0 && (
-                <div className="px-4 pb-4 grid grid-cols-3 gap-2">
-                  {imagenesAct.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => toggleModal(imagenesAct, i)}
-                      className="w-full aspect-square overflow-hidden rounded-md"
-                    >
+              {/* Botones y barra de comentarios */}
+              <div className="mt-4">
+                <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
                       <img
-                        src={img.archivo_url}
-                        alt={`Imagen ${i + 1}`}
-                        className="object-cover w-full h-full"
+                        src={
+                          isFav
+                            ? "/images/icons/comunidad/favoritos-fill.svg"
+                            : "/images/icons/comunidad/favoritos.svg"
+                        }
+                        alt="Me gusta"
+                        className="w-6 h-6"
                       />
                     </button>
-                  ))}
-                </div>
-              )}
+                    <span className="text-sm text-gray-700 font-semibold">
+                      {likesPorActividad[act.id] ?? 0}
+                    </span>
+                  </div>
 
-              {/* Botones */}
-              <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm">
-                <div className="flex items-center gap-1">
-                  <button onClick={() => toggleLike(act.id)} className="hover:opacity-75 transition">
-                    <img
-                      src={
-                        isFav
-                          ? "/images/icons/comunidad/favoritos-fill.svg"
-                          : "/images/icons/comunidad/favoritos.svg"
-                      }
-                      alt="Me gusta"
-                      className="w-6 h-6"
-                    />
-                  </button>
-                  <span className="text-sm text-gray-700 font-semibold">
-                    {likesPorActividad[act.id] ?? 0}
-                  </span>
-                </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      className="hover:opacity-75 transition"
+                      onClick={() => setActividadSeleccionada(act)}
+                    >
+                      <img
+                        src="/images/icons/comunidad/comentarios.svg"
+                        alt="Comentarios"
+                        className="w-6 h-6"
+                      />
+                    </button>
+                    <span className="text-sm text-gray-700 font-semibold">
+                      {comentariosPorActividad[act.id] ?? 0}
+                    </span>
+                  </div>
 
-                <div className="flex items-center gap-1">
                   <button
+                    onClick={() => {
+                      setActividadParaColeccion(act.id);
+                      setModalColeccionesOpen(true);
+                    }}
                     className="hover:opacity-75 transition"
-                    onClick={() => setActividadSeleccionada(act)}
                   >
                     <img
-                      src="/images/icons/comunidad/comentarios.svg"
-                      alt="Comentarios"
+                      src="/images/icons/comunidad/colecciones.svg"
+                      alt="Guardar"
                       className="w-6 h-6"
                     />
                   </button>
-                  <span className="text-sm text-gray-700 font-semibold">
-                    {comentariosPorActividad[act.id] ?? 0}
-                  </span>
                 </div>
 
-                <button
-                  onClick={() => {
-                    setActividadParaColeccion(act.id);
-                    setModalColeccionesOpen(true);
+                <ComentarioInput
+                  actividadId={act.id}
+                  onNuevoComentario={async () => {
+                    const count = await fetchComentariosCount(act.id);
+                    actualizarComentarios(act.id, count);
+                    await fetchUltimoComentario(act.id);
                   }}
-                  className="hover:opacity-75 transition"
-                >
-                  <img
-                    src="/images/icons/comunidad/colecciones.svg"
-                    alt="Guardar"
-                    className="w-6 h-6"
-                  />
-                </button>
-              </div>
-
-              <ComentarioInput
-                actividadId={act.id}
-                onNuevoComentario={async () => {
-                  const count = await fetchComentariosCount(act.id);
-                  actualizarComentarios(act.id, count);
-                  await fetchUltimoComentario(act.id);
-                }}
-              />
+                />
+              </div>     
 
               {/* ÚLTIMO COMENTARIO */}
               {ultimoComentario[act.id] && (
