@@ -146,6 +146,18 @@ export default function Login() {
             ¿Olvidaste tu contraseña?
           </Link>
         </div>
+
+        <div className="text-center">
+          <p className="text-sm text-gray-600">
+            ¿No tienes cuenta?{" "}
+            <Link
+              href="/auth/register"
+              className="text-[#003c71] font-semibold hover:underline"
+            >
+              Regístrate aquí
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
