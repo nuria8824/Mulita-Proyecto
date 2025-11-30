@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef } from "react";
 import { toast } from "react-hot-toast";
 import PhoneInputWithCountry from "@/components/PhoneInputWithCountry";
 import { Country, State, City, IState, ICity } from "country-state-city";
+import Select from "react-select";
 
 export default function RegisterPage() {
   const [esDocente, setEsDocente] = useState(false);
@@ -18,8 +19,10 @@ export default function RegisterPage() {
 
   const countryList = Country.getAllCountries();
 
-  const cities = City.getCitiesOfState("US", "California");
-  console.log(cities.length, cities);
+  const countryOptions = countryList.map((c) => ({
+    value: c.isoCode,
+    label: c.name,
+  }));
 
   const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const isoCode = e.target.value;
@@ -180,39 +183,21 @@ export default function RegisterPage() {
           {esDocente && (
             <>
               {/* Seleccionar país */}
-              <select
-                aria-label="pais"
-                name="pais"
-                className={inputClass}
-                required
-                value={selectedCountry}
-                onChange={handleCountryChange}
-              >
-                <option value="">Selecciona un país</option>
-
-                {countryList.map((c) => (
-                  <option key={c.isoCode} value={c.isoCode}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              <Select
+                options={countryOptions}
+                value={countryOptions.find((o) => o.value === selectedCountry)}
+                onChange={(option: any) => handleCountryChange({ target: { value: option.value } } as any)}
+              />
 
               {/* Seleccionar provincia según país */}
               {ListaProvincias.length > 0 ? (
-                <select
-                  aria-label="provincia"
-                  name="provincia"
-                  className={inputClass}
-                  required
-                  onChange={handleStateChange}
-                >
-                  <option value="">Selecciona una provincia</option>
-                  {ListaProvincias.map((p) => (
-                    <option key={p.isoCode} value={p.name}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  options={ListaProvincias.map(p => ({ value: p.name, label: p.name }))}
+                  onChange={(option: any) => {
+                    handleStateChange({ target: { value: option.value } } as any);
+                  }}
+                  placeholder="Selecciona una provincia"
+                />
               ) : (
                 <input
                   name="provincia"
@@ -225,24 +210,24 @@ export default function RegisterPage() {
 
               {/* Seleccionar ciudad según provincia */}
               {ListaCiudades.length > 0 ? (
-                <select
-                  aria-label="ciudad"
-                  name="ciudad"
-                  className={inputClass}
-                  required
-                >
-                  <option value="">Selecciona una ciudad</option>
-                  {ListaCiudades.map((c) => (
-                    <option key={c.name} value={c.name}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  options={ListaCiudades.map(c => ({ value: c.name, label: c.name }))}
+                  onChange={(option: any) => {
+                    // Guardamos la ciudad en un hidden input para FormData
+                    const hiddenInput = document.querySelector<HTMLInputElement>('input[name="ciudad"]');
+                    if (hiddenInput) hiddenInput.value = option.value;
+                  }}
+                  placeholder="Selecciona una ciudad"
+                />
               ) : (
                 <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} required/>
               )}
 
               <input name="institucion" type="text" placeholder="Institución" className={inputClass} required />
+
+              {/* Hidden inputs para FormData */}
+              <input type="hidden" name="pais" value={selectedCountry} />
+              <input type="hidden" name="provincia" value={ListaProvincias.find(p => p.name === selectedCountry)?.name ?? ""} />
             </>
           )}
 
