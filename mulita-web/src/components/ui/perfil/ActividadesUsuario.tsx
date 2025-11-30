@@ -159,11 +159,35 @@ export default function ActividadesUsuario({
           }
           
           if (fecha) {
-            data = data.filter((act: Actividad) => {
-              const actFecha = new Date(act.fecha).toLocaleDateString('es-AR');
-              const filtroFecha = new Date(fecha).toLocaleDateString('es-AR');
-              return actFecha === filtroFecha;
-            });
+            // Ordenamiento por fecha
+            if (fecha === "nuevo_antiguo") {
+              data = data.sort((a: Actividad, b: Actividad) => 
+                new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+              );
+            } else if (fecha === "antiguo_nuevo") {
+              data = data.sort((a: Actividad, b: Actividad) => 
+                new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+              );
+            } else if (fecha === "hoy") {
+              const hoy = new Date().toLocaleDateString('es-AR');
+              data = data.filter((act: Actividad) => 
+                new Date(act.fecha).toLocaleDateString('es-AR') === hoy
+              );
+            } else if (fecha === "semana") {
+              const ahora = new Date();
+              const hace7dias = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000);
+              data = data.filter((act: Actividad) => {
+                const actFecha = new Date(act.fecha);
+                return actFecha >= hace7dias && actFecha <= ahora;
+              });
+            } else if (fecha === "mes") {
+              const ahora = new Date();
+              const hace30dias = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000);
+              data = data.filter((act: Actividad) => {
+                const actFecha = new Date(act.fecha);
+                return actFecha >= hace30dias && actFecha <= ahora;
+              });
+            }
           }
         } else {
           // Si no, traer las actividades del usuario ---
@@ -183,11 +207,35 @@ export default function ActividadesUsuario({
           }
           
           if (fecha) {
-            data = data.filter((act: Actividad) => {
-              const actFecha = new Date(act.fecha).toLocaleDateString('es-AR');
-              const filtroFecha = new Date(fecha).toLocaleDateString('es-AR');
-              return actFecha === filtroFecha;
-            });
+            // Ordenamiento por fecha
+            if (fecha === "nuevo_antiguo") {
+              data = data.sort((a: Actividad, b: Actividad) => 
+                new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+              );
+            } else if (fecha === "antiguo_nuevo") {
+              data = data.sort((a: Actividad, b: Actividad) => 
+                new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+              );
+            } else if (fecha === "hoy") {
+              const hoy = new Date().toLocaleDateString('es-AR');
+              data = data.filter((act: Actividad) => 
+                new Date(act.fecha).toLocaleDateString('es-AR') === hoy
+              );
+            } else if (fecha === "semana") {
+              const ahora = new Date();
+              const hace7dias = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000);
+              data = data.filter((act: Actividad) => {
+                const actFecha = new Date(act.fecha);
+                return actFecha >= hace7dias && actFecha <= ahora;
+              });
+            } else if (fecha === "mes") {
+              const ahora = new Date();
+              const hace30dias = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000);
+              data = data.filter((act: Actividad) => {
+                const actFecha = new Date(act.fecha);
+                return actFecha >= hace30dias && actFecha <= ahora;
+              });
+            }
           }
         }
 
