@@ -162,7 +162,15 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
   const isFav = favoritos.includes(actividad.id);
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+      onClick={(e) => {
+        // Cerrar solo si se hace clic en el fondo, no en el modal
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       {/* Botón de cierre con fondo circular */}
       <button
         onClick={onClose}
@@ -173,91 +181,94 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
       </button>
 
       {/* Contenedor del modal */}
-      <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl w-full max-w-2xl relative shadow-lg flex flex-col max-h-[90vh] overflow-y-auto">
-        {/* CABECERA */}
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-              <img
-                src={actividad.usuario.perfil?.imagen || "/default-profile.png"}
-                alt="Perfil"
-                className="w-full h-full rounded-full object-cover"
+      <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl w-full max-w-2xl relative shadow-lg flex flex-col max-h-[90vh]">
+        {/* SECCIÓN SUPERIOR FIJA (CABECERA, DESCRIPCIÓN, GALERÍA) */}
+        <div className="mb-4 pb-4 border-b border-gray-200 flex-shrink-0">
+          {/* CABECERA */}
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                <img
+                  src={actividad.usuario.perfil?.imagen || "/default-profile.png"}
+                  alt="Perfil"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800">
+                  {actividad.usuario?.nombre} {actividad.usuario?.apellido}
+                </p>
+                <p className="text-xs text-gray-500">{actividad.fecha}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {categorias?.map((cat: string, i: number) => (
+                <span
+                  key={i}
+                  className="shadow border border-[#f1f3f7] bg-white rounded px-2 py-1 text-xs font-semibold text-gray-700"
+                >
+                  {cat}
+                </span>
+              ))}
+
+              <MenuAccionesActividades
+                actividad={{ id: actividad.id, usuario_id: actividad.usuario.id }}
+                userId={user?.id ?? ""}
+                rol={user?.rol ?? ""}
               />
             </div>
-            <div>
-              <p className="font-semibold text-gray-800">
-                {actividad.usuario?.nombre} {actividad.usuario?.apellido}
-              </p>
-              <p className="text-xs text-gray-500">{actividad.fecha}</p>
+          </div>
+
+          {/* TÍTULO Y DESCRIPCIÓN */}
+          <h2 className="text-lg font-bold text-[#003c71] mb-2">
+            {actividad.titulo}
+          </h2>
+          <p className="text-sm mb-4 text-gray-700 whitespace-pre-line">{actividad.descripcion}</p>
+
+          {/* ARCHIVOS DESCARGABLES */}
+          {otrosArchivos?.length > 0 && (
+            <div className="flex flex-col gap-1 mb-4">
+              {otrosArchivos.map((a: any, i: number) => (
+                <a
+                  key={i}
+                  href={a.archivo_url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline flex items-center gap-2"
+                >
+                  📎 Descargar archivo: {a.nombre}
+                </a>
+              ))}
             </div>
-          </div>
+          )}
 
-          <div className="flex items-center gap-2">
-            {categorias?.map((cat: string, i: number) => (
-              <span
-                key={i}
-                className="shadow border border-[#f1f3f7] bg-white rounded px-2 py-1 text-xs font-semibold text-gray-700"
-              >
-                {cat}
-              </span>
-            ))}
-
-            <MenuAccionesActividades
-              actividad={{ id: actividad.id, usuario_id: actividad.usuario.id }}
-              userId={user?.id ?? ""}
-              rol={user?.rol ?? ""}
-            />
-          </div>
+          {/* GALERÍA DE IMÁGENES */}
+          {imagenesAct?.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {imagenesAct.map((img: any, i: number) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setIndexImagen(i);
+                    setModalImagenes(true);
+                  }}
+                  className="aspect-square overflow-hidden rounded-md"
+                >
+                  <img
+                    src={img.archivo_url}
+                    alt={`Imagen ${i + 1}`}
+                    className="object-cover w-full h-full"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* TÍTULO Y DESCRIPCIÓN */}
-        <h2 className="text-lg font-bold text-[#003c71] mb-2">
-          {actividad.titulo}
-        </h2>
-        <p className="text-sm mb-4 text-gray-700 whitespace-pre-line">{actividad.descripcion}</p>
-
-        {/* ARCHIVOS DESCARGABLES */}
-        {otrosArchivos?.length > 0 && (
-          <div className="flex flex-col gap-1 mb-4">
-            {otrosArchivos.map((a: any, i: number) => (
-              <a
-                key={i}
-                href={a.archivo_url}
-                download
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:underline flex items-center gap-2"
-              >
-                📎 Descargar archivo: {a.nombre}
-              </a>
-            ))}
-          </div>
-        )}
-
-        {/* GALERÍA DE IMÁGENES */}
-        {imagenesAct?.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {imagenesAct.map((img: any, i: number) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setIndexImagen(i);
-                  setModalImagenes(true);
-                }}
-                className="aspect-square overflow-hidden rounded-md"
-              >
-                <img
-                  src={img.archivo_url}
-                  alt={`Imagen ${i + 1}`}
-                  className="object-cover w-full h-full"
-                />
-              </button>
-            ))}
-          </div>
-        )}
-
         {/* BOTONES DE ACCIÓN */}
-        <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm mb-3">
+        <div className="flex items-center gap-4 text-gray-600 pt-3 border-t border-gray-200 text-sm mb-3 flex-shrink-0">
           <div className="flex items-center gap-1">
             <button
               onClick={() => toggleLike(actividad.id)}
@@ -308,9 +319,9 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
           }}
         />
 
-        {/* COMENTARIOS */}
-        <div className="border-t border-gray-200 pt-3">
-          <h3 className="text-sm font-medium mb-2 text-black">Comentarios</h3>
+        {/* COMENTARIOS - SECCIÓN DESPLAZABLE */}
+        <div className="border-t border-gray-200 pt-3 overflow-y-auto flex-1 min-h-0">
+          <h3 className="text-sm font-medium mb-2 text-black pb-2">Comentarios</h3>
 
           {loading ? (
             <SkeletonComentarios />
