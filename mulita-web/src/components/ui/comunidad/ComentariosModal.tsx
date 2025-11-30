@@ -163,7 +163,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/60 flex items-start justify-center z-50 px-4 py-20 overflow-y-auto"
       onClick={(e) => {
         // Cerrar solo si se hace clic en el fondo, no en el modal
         if (e.target === e.currentTarget) {
@@ -236,9 +236,10 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
                   download
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline flex items-center gap-2"
+                  className="text-sm text-blue-600 hover:underline flex items-center gap-2 truncate"
+                  title={a.nombre}
                 >
-                  📎 Descargar archivo: {a.nombre}
+                  📎 <span className="truncate">Descargar archivo: {a.nombre}</span>
                 </a>
               ))}
             </div>
@@ -246,7 +247,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
 
           {/* GALERÍA DE IMÁGENES */}
           {imagenesAct?.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-3 gap-2 mb-4 overflow-hidden">
               {imagenesAct.map((img: any, i: number) => (
                 <button
                   key={i}
