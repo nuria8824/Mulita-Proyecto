@@ -229,7 +229,7 @@ export default function RegisterPage() {
                 <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} onKeyPress={handleKeyPress} required/>
               )}
 
-              <input name="institucion" type="text" placeholder="Institución" className={inputClass} nKeyPress={handleKeyPress} required />
+              <input name="institucion" type="text" placeholder="Institución" className={inputClass} onKeyPress={handleKeyPress} required />
 
               {/* Hidden inputs para FormData */}
               <input type="hidden" name="pais" value={selectedCountry} />
