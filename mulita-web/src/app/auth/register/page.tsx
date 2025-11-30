@@ -10,6 +10,12 @@ export default function RegisterPage() {
   const [telefono, setTelefono] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !loading) {
+      formRef.current?.requestSubmit();
+    }
+  };
+
   const onContinuarClick = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -122,15 +128,15 @@ export default function RegisterPage() {
 
         {/* Formulario */}
         <div className="flex flex-col gap-4 text-left text-lg">
-          <input name="nombre" type="text" placeholder="Nombre" className={inputClass} required />
-          <input name="apellido" type="text" placeholder="Apellido" className={inputClass} required />
-          <input name="email" type="email" placeholder="Email" className={inputClass} required />
+          <input name="nombre" type="text" placeholder="Nombre" className={inputClass} onKeyPress={handleKeyPress} required />
+          <input name="apellido" type="text" placeholder="Apellido" className={inputClass} onKeyPress={handleKeyPress} required />
+          <input name="email" type="email" placeholder="Email" className={inputClass} onKeyPress={handleKeyPress} required />
           <PhoneInputWithCountry
             value={telefono}
             onChange={(value) => setTelefono(value)}
             placeholder="Teléfono"
           />
-          <input name="contrasena" type="password" placeholder="Contraseña" className={inputClass} required />
+          <input name="contrasena" type="password" placeholder="Contraseña" className={inputClass} onKeyPress={handleKeyPress} required />
 
           <label className="flex items-center gap-2 cursor-pointer">
             <span>Docente:</span>
@@ -145,10 +151,10 @@ export default function RegisterPage() {
 
           {esDocente && (
             <>
-              <input name="pais" type="text" placeholder="País" className={inputClass} />
-              <input name="provincia" type="text" placeholder="Provincia" className={inputClass} />
-              <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} />
-              <input name="institucion" type="text" placeholder="Institución" className={inputClass} />
+              <input name="pais" type="text" placeholder="País" className={inputClass} onKeyPress={handleKeyPress} />
+              <input name="provincia" type="text" placeholder="Provincia" className={inputClass} onKeyPress={handleKeyPress} />
+              <input name="ciudad" type="text" placeholder="Ciudad" className={inputClass} onKeyPress={handleKeyPress} />
+              <input name="institucion" type="text" placeholder="Institución" className={inputClass} onKeyPress={handleKeyPress} />
             </>
           )}
 

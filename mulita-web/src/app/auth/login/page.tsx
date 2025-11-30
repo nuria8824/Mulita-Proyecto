@@ -79,6 +79,12 @@ export default function Login() {
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && email && contrasena && !loading) {
+      onContinuarClick();
+    }
+  };
+
   const inputClass =
     "w-full shadow-[0_4px_4px_rgba(0,0,0,0.25)] rounded-lg border border-gray-300 h-10 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600";
 
@@ -105,6 +111,7 @@ export default function Login() {
             className={inputClass}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyPress={handleKeyPress}
           />
 
           <label className="inline-block w-full font-bold mt-2">Contraseña</label>
@@ -114,6 +121,7 @@ export default function Login() {
             className={inputClass}
             value={contrasena}
             onChange={(e) => setContrasena(e.target.value)}
+            onKeyPress={handleKeyPress}
           />
         </div>
 
