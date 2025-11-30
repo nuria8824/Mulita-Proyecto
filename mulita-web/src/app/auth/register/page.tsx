@@ -20,6 +20,7 @@ export default function RegisterPage() {
     if (e.key === "Enter" && !loading) {
       formRef.current?.requestSubmit();
     }
+  }
   const countryList = Country.getAllCountries();
 
   const cities = City.getCitiesOfState("US", "California");
@@ -191,7 +192,6 @@ export default function RegisterPage() {
                 required
                 value={selectedCountry}
                 onChange={handleCountryChange}
-                onKeyPress={handleKeyPress}
               >
                 <option value="">Selecciona un país</option>
 
@@ -210,7 +210,6 @@ export default function RegisterPage() {
                   className={inputClass}
                   required
                   onChange={handleStateChange}
-                  onKeyPress={handleKeyPress}
                 >
                   <option value="">Selecciona una provincia</option>
                   {ListaProvincias.map((p) => (
@@ -236,7 +235,6 @@ export default function RegisterPage() {
                   aria-label="ciudad"
                   name="ciudad"
                   className={inputClass}
-                  onKeyPress={handleKeyPress}
                   required
                 >
                   <option value="">Selecciona una ciudad</option>
