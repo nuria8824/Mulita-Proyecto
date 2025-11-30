@@ -110,9 +110,9 @@ export default function PerfilPage() {
   return (
     <div className="w-full min-h-screen bg-white flex flex-col items-center justify-start text-xs text-[#6d758f] font-inter">
       {/* Sección superior del perfil */}
-      <div className="w-full flex flex-col items-center text-center p-[30px_170px] relative">
-        <div className="flex items-center justify-center gap-10 text-left text-2xl text-black font-roboto">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 translate-x-30">
+      <div className="w-full flex flex-col items-center text-center px-10 md:px-24 py-8 relative max-w-[1400px] mx-auto">
+        <div className="flex items-center justify-between gap-10 w-full max-w-[900px] text-left text-2xl text-black font-roboto">
+          <div className="flex">
             <BackButton />
           </div>
           {/* Avatar */}
