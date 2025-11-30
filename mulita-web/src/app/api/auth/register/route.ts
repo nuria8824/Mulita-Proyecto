@@ -36,6 +36,19 @@ export async function POST(req: Request) {
       throw new Error("El email ya está registrado");
     }
 
+    // 0.5 Verificar si el email existe en Supabase Auth
+    const { data: authUsers, error: authCheckError } = await supabaseServer.auth.admin.listUsers();
+    
+    if (authCheckError) {
+      console.error("Error checking auth users:", authCheckError);
+      throw new Error("Error al verificar el email en autenticación");
+    }
+
+    const emailExists = authUsers.users.some(u => u.email?.toLowerCase() === data.email.toLowerCase());
+    if (emailExists) {
+      throw new Error("El email ya está registrado");
+    }
+
     // 1. Crear usuario en Supabase Auth
     const { data: authData, error: authError } = await supabaseServer.auth.signUp({
       email: data.email,
