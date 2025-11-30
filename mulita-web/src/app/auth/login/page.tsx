@@ -6,6 +6,7 @@ import { useUser } from "@/hooks/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { createClientSupabase } from "@/lib/supabase";
 import { toast } from "react-hot-toast";
+import Link from "next/link";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -127,6 +128,15 @@ export default function Login() {
               {loading ? "Iniciando sesión..." : "Continuar"}
             </span>
           </button>
+        </div>
+
+        <div className="text-center">
+          <Link
+            href="/auth/reset-password"
+            className="text-sm text-[#003c71] font-semibold hover:underline"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
         </div>
       </div>
     </div>
