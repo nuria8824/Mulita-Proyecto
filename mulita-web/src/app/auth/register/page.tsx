@@ -138,7 +138,15 @@ export default function RegisterPage() {
       setTelefono("");
     } catch (err: any) {
       console.error(err);
-      toast.error("Error al registrar usuario: " + err.message);
+      
+      // Manejo específico de errores
+      if (err.message && err.message.includes("rate limit")) {
+        toast.error("Demasiados intentos. Por favor espera algunos minutos antes de intentar nuevamente.");
+      } else if (err.message && err.message.includes("email")) {
+        toast.error("El email ya está registrado o hay un problema con el registro. Intenta con otro email.");
+      } else {
+        toast.error("Error al registrar usuario: " + err.message);
+      }
     } finally {
       setLoading(false);
     }

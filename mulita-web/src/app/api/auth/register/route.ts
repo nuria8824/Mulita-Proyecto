@@ -59,6 +59,15 @@ export async function POST(req: Request) {
       console.error("Supabase auth error:", authError)
       console.log("Payload:", data);
       console.log("Auth result:", authData, authError);
+      
+      // Manejo específico del error de rate limit
+      if (authError.message && authError.message.toLowerCase().includes("rate limit")) {
+        throw new Error("email rate limit exceeded. Por favor intenta más tarde.");
+      }
+      if (authError.message && authError.message.toLowerCase().includes("already registered")) {
+        throw new Error("El email ya está registrado");
+      }
+      
       throw new Error(authError.message);
     }
 
