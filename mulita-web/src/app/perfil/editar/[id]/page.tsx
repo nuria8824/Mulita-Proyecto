@@ -12,8 +12,14 @@ export default function EditarPerfilPage() {
 
   const [biografia, setBiografia] = useState("");
   const [imagen, setImagen] = useState<File | string | null>(null);
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [passwordActual, setPasswordActual] = useState("");
+  const [passwordNueva, setPasswordNueva] = useState("");
+  const [passwordConfirmar, setPasswordConfirmar] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [erroresForm, setErroresForm] = useState<Record<string, string>>({});
 
   // Cargar perfil existente
   useEffect(() => {
@@ -25,6 +31,8 @@ export default function EditarPerfilPage() {
 
         setBiografia(data.perfil.biografia || "");
         setImagen(data.perfil.imagen || null);
+        setNombre(data.perfil.usuario.nombre || "");
+        setApellido(data.perfil.usuario.apellido || "");
       } catch (err) {
         console.error(err);
       } finally {
@@ -37,11 +45,53 @@ export default function EditarPerfilPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Limpiar errores anteriores
+    setErroresForm({});
+    const nuevosErrores: Record<string, string> = {};
+
+    // Validaciones
+    if (!nombre.trim()) {
+      nuevosErrores.nombre = "El nombre es requerido";
+    }
+    if (!apellido.trim()) {
+      nuevosErrores.apellido = "El apellido es requerido";
+    }
+
+    // Validar contraseña si está intentando cambiarla
+    if (passwordNueva || passwordActual) {
+      if (!passwordActual) {
+        nuevosErrores.passwordActual = "Debes ingresar tu contraseña actual";
+      }
+      if (!passwordNueva) {
+        nuevosErrores.passwordNueva = "Debes ingresar una contraseña nueva";
+      }
+      if (passwordNueva && passwordNueva.length < 6) {
+        nuevosErrores.passwordNueva = "La contraseña debe tener al menos 6 caracteres";
+      }
+      if (passwordNueva && passwordConfirmar && passwordNueva !== passwordConfirmar) {
+        nuevosErrores.passwordConfirmar = "Las contraseñas no coinciden";
+      }
+    }
+
+    // Si hay errores, mostrarlos
+    if (Object.keys(nuevosErrores).length > 0) {
+      setErroresForm(nuevosErrores);
+      toast.error("Por favor corrige los errores en el formulario");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
       const formData = new FormData();
       formData.append("biografia", biografia);
+      formData.append("nombre", nombre.trim());
+      formData.append("apellido", apellido.trim());
+      if (passwordNueva) {
+        formData.append("passwordActual", passwordActual);
+        formData.append("passwordNueva", passwordNueva);
+      }
       if (imagen instanceof File) formData.append("imagen", imagen);
 
       const res = await fetch(`/api/perfil/${params.id}`, {
@@ -50,13 +100,35 @@ export default function EditarPerfilPage() {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Error actualizando el perfil");
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Mostrar mensaje de error específico
+        if (data.error.includes("Contraseña actual incorrecta")) {
+          setErroresForm({ passwordActual: "La contraseña actual es incorrecta" });
+          toast.error("La contraseña actual es incorrecta");
+        } else if (data.error.includes("contraseña")) {
+          toast.error(data.error);
+        } else {
+          toast.error(data.error || "Error actualizando el perfil");
+        }
+        return;
+      }
 
       toast.success("Perfil actualizado exitosamente");
-      router.push(`/perfil/${params.id}`);
+      
+      // Si cambió la contraseña, redirigir a login
+      if (passwordNueva) {
+        toast.success("Contraseña actualizada. Por favor inicia sesión nuevamente");
+        setTimeout(() => {
+          router.push("/auth/login");
+        }, 1500);
+      } else {
+        router.push(`/perfil/${params.id}`);
+      }
     } catch (err) {
       console.error("Error en fetch:", err);
-      toast.error("Error actualizando el perfil");
+      toast.error(err instanceof Error ? err.message : "Error actualizando el perfil");
     } finally {
       setSubmitting(false);
     }
@@ -83,6 +155,35 @@ export default function EditarPerfilPage() {
           onSubmit={handleSubmit}
           className="flex flex-col gap-6 bg-white p-6 rounded-lg shadow-md border border-gray-200"
         >
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-lg font-semibold mb-2">Nombre</label>
+              <input
+                type="text"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className={`w-full border rounded-md px-4 py-2 focus:ring-2 focus:outline-none ${
+                  erroresForm.nombre ? "border-red-500 focus:ring-red-400" : "border-gray-300 focus:ring-blue-400"
+                }`}
+                placeholder="Tu nombre"
+              />
+              {erroresForm.nombre && <p className="text-red-500 text-sm mt-1">{erroresForm.nombre}</p>}
+            </div>
+            <div>
+              <label className="block text-lg font-semibold mb-2">Apellido</label>
+              <input
+                type="text"
+                value={apellido}
+                onChange={(e) => setApellido(e.target.value)}
+                className={`w-full border rounded-md px-4 py-2 focus:ring-2 focus:outline-none ${
+                  erroresForm.apellido ? "border-red-500 focus:ring-red-400" : "border-gray-300 focus:ring-blue-400"
+                }`}
+                placeholder="Tu apellido"
+              />
+              {erroresForm.apellido && <p className="text-red-500 text-sm mt-1">{erroresForm.apellido}</p>}
+            </div>
+          </div>
+
           <div>
             <label className="block text-lg font-semibold mb-2">Biografía</label>
             <textarea
@@ -109,6 +210,51 @@ export default function EditarPerfilPage() {
               className="w-full border border-gray-300 rounded-md px-4 py-2 cursor-pointer text-gray-600"
               accept="image/*"
             />
+          </div>
+
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-4">Cambiar contraseña (opcional)</h3>
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-base font-semibold mb-2">Contraseña actual</label>
+                <input
+                  type="password"
+                  value={passwordActual}
+                  onChange={(e) => setPasswordActual(e.target.value)}
+                  className={`w-full border rounded-md px-4 py-2 focus:ring-2 focus:outline-none ${
+                    erroresForm.passwordActual ? "border-red-500 focus:ring-red-400" : "border-gray-300 focus:ring-blue-400"
+                  }`}
+                  placeholder="Tu contraseña actual"
+                />
+                {erroresForm.passwordActual && <p className="text-red-500 text-sm mt-1">{erroresForm.passwordActual}</p>}
+              </div>
+              <div>
+                <label className="block text-base font-semibold mb-2">Contraseña nueva</label>
+                <input
+                  type="password"
+                  value={passwordNueva}
+                  onChange={(e) => setPasswordNueva(e.target.value)}
+                  className={`w-full border rounded-md px-4 py-2 focus:ring-2 focus:outline-none ${
+                    erroresForm.passwordNueva ? "border-red-500 focus:ring-red-400" : "border-gray-300 focus:ring-blue-400"
+                  }`}
+                  placeholder="Tu contraseña nueva"
+                />
+                {erroresForm.passwordNueva && <p className="text-red-500 text-sm mt-1">{erroresForm.passwordNueva}</p>}
+              </div>
+              <div>
+                <label className="block text-base font-semibold mb-2">Confirmar contraseña</label>
+                <input
+                  type="password"
+                  value={passwordConfirmar}
+                  onChange={(e) => setPasswordConfirmar(e.target.value)}
+                  className={`w-full border rounded-md px-4 py-2 focus:ring-2 focus:outline-none ${
+                    erroresForm.passwordConfirmar ? "border-red-500 focus:ring-red-400" : "border-gray-300 focus:ring-blue-400"
+                  }`}
+                  placeholder="Confirma tu contraseña nueva"
+                />
+                {erroresForm.passwordConfirmar && <p className="text-red-500 text-sm mt-1">{erroresForm.passwordConfirmar}</p>}
+              </div>
+            </div>
           </div>
 
           <div className="flex w-full gap-4 pt-4">
