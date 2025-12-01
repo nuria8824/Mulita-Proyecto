@@ -56,7 +56,7 @@ export async function PATCH(req: NextRequest) {
       descripcion,
       id_usuario: user.id,
       fecha_modificacion: new Date(),
-      id_seccion: 1 // ajustar según tu sección
+      id_seccion: 2
     })
     .select()
     .single();

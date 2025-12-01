@@ -65,5 +65,10 @@ const cards = [
     href: "/dashboard/gestionLanding/gestionInicio/gestionProductos",
     title: "Gestión Productos",
     desc: "Gestiona los productos visibles en la página de inicio",
+  },
+  {
+    href: "/dashboard/gestionLanding/gestionInicio/gestionDocumentacion",
+    title: "Gestión Documentación",
+    desc: "Gestiona la documentación de Mulita visible en la página de inicio",
   }
 ];
