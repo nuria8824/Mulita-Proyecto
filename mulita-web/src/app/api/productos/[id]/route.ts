@@ -65,7 +65,7 @@ export async function PATCH(
   }
 
   const body = await req.json();
-  const { nombre, descripcion, precio, archivosNuevos, archivosExistentes } = body;
+  const { nombre, descripcion, precio, archivosNuevos, archivosExistentes, tipo_producto } = body;
 
   // Obtener producto
   const { data: producto, error: productoError } = await supabase
@@ -80,7 +80,7 @@ export async function PATCH(
   // Actualizar producto
   const { data, error: updateError } = await supabase
     .from("producto")
-    .update({ nombre, descripcion, precio })
+    .update({ nombre, descripcion, precio, tipo_producto: tipo_producto || null })
     .eq("id", id)
     .select()
     .single();

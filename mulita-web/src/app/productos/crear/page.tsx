@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { uploadFile } from "@/lib/subirArchivos";
 import { toast } from "react-hot-toast"
+
+interface TipoProducto {
+  id: string;
+  nombre: string;
+}
 
 interface ErroresFormulario {
   nombre?: string;
@@ -18,12 +23,20 @@ interface ArchivoSubido {
   type: string;
 }
 
+// Tipos de productos disponibles (sin usar tabla de categorías)
+const TIPOS_PRODUCTOS: TipoProducto[] = [
+  { id: "kit", nombre: "Kit" },
+  { id: "pieza", nombre: "Pieza" },
+  { id: "capacitacion", nombre: "Capacitación" }
+];
+
 export default function CrearProductoPage() {
   const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [precio, setPrecio] = useState("");
   const [imagenes, setImagenes] = useState<File[]>([]);
+  const [tipoSeleccionado, setTipoSeleccionado] = useState("");
   const [errores, setErrores] = useState<ErroresFormulario>({});
 
   // Manejo de imagenes
@@ -98,6 +111,7 @@ export default function CrearProductoPage() {
           descripcion,
           precio,
           imagenes: archivosSubidos,
+          tipo_producto: tipoSeleccionado || null,
         }),
         credentials: "include",
       });
@@ -189,6 +203,23 @@ export default function CrearProductoPage() {
             {errores.precio && (
               <p className="text-red-500 text-sm mt-1">{errores.precio}</p>
             )}
+          </div>
+
+          {/* Tipo de Producto */}
+          <div>
+            <label className="block text-lg font-semibold mb-2">Tipo de Producto</label>
+            <select
+              value={tipoSeleccionado}
+              onChange={(e) => setTipoSeleccionado(e.target.value)}
+              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            >
+              <option value="">Seleccionar tipo...</option>
+              {TIPOS_PRODUCTOS.map((tipo) => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Imagenes */}

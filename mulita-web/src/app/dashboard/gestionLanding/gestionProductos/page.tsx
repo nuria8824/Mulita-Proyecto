@@ -10,19 +10,33 @@ import MenuAccionesProductos from "@/components/ui/tienda/MenuAccionesProductos"
 interface Producto {
   id: number;
   nombre: string;
+  tipo_producto?: string;
 }
+
+// Tipos de productos disponibles
+const TIPOS_PRODUCTOS = [
+  { id: "kit", nombre: "Kit" },
+  { id: "pieza", nombre: "Pieza" },
+  { id: "capacitacion", nombre: "Capacitación" }
+];
 
 export default function GestionproductosPage() {
   const { user, isLoading: isUserLoading } = useUser();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loadingProductos, setLoadingProductos] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [tipoSeleccionado, setTipoSeleccionado] = useState("");
 
   // Traer productos desde la API
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const res = await fetch("/api/productos");
+        setLoadingProductos(true);
+        let url = "/api/productos";
+        if (tipoSeleccionado) {
+          url += `?tipo_producto=${tipoSeleccionado}`;
+        }
+        const res = await fetch(url);
         const data = await res.json();
         const productosArray = Array.isArray(data) ? data : (data?.productos || []);
         setProductos(productosArray.reverse()); // Las más recientes primero
@@ -34,7 +48,7 @@ export default function GestionproductosPage() {
       }
     };
     fetchProductos();
-  }, []);
+  }, [tipoSeleccionado]);
 
   const handleEliminar = async (id: number) => {
     try {
@@ -72,7 +86,7 @@ export default function GestionproductosPage() {
       />
       <div className="w-full min-h-screen relative overflow-hidden flex flex-col items-center px-4 sm:px-6 pb-10 box-border font-inter">
       {/* Header + botón agregar */}
-      <div className="w-full max-w-[1103px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-6">
+      <div className="w-full max-w-[1103px] flex flex-col gap-4 mt-6">
         <div className="flex flex-col text-[28px] sm:text-[32px] md:text-[36px]">
           <h1 className="leading-tight font-extrabold text-black">
             Gestión productos
@@ -82,14 +96,31 @@ export default function GestionproductosPage() {
           </p>
         </div>
 
-        {(user?.rol === "admin" || user?.rol === "superAdmin") && (
-          <Link
-            href="/productos/crear"
-            className="shadow-md rounded-md bg-[#f8faff] border border-[#e0e0e0] py-2 px-4 text-sm text-black font-semibold hover:bg-[#eef2ff] transition self-start sm:self-auto"
+        {/* Filtro y botón agregar */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          {/* Selector de tipo de producto */}
+          <select
+            value={tipoSeleccionado}
+            onChange={(e) => setTipoSeleccionado(e.target.value)}
+            className="w-full sm:w-64 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
           >
-            + Agregar
-          </Link>
-        )}
+            <option value="">Todos los tipos</option>
+            {TIPOS_PRODUCTOS.map((tipo) => (
+              <option key={tipo.id} value={tipo.id}>
+                {tipo.nombre}
+              </option>
+            ))}
+          </select>
+
+          {(user?.rol === "admin" || user?.rol === "superAdmin") && (
+            <Link
+              href="/productos/crear"
+              className="shadow-md rounded-md bg-[#f8faff] border border-[#e0e0e0] py-2 px-4 text-sm text-black font-semibold hover:bg-[#eef2ff] transition self-start sm:self-auto"
+            >
+              + Agregar
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Lista de productos */}
@@ -104,8 +135,17 @@ export default function GestionproductosPage() {
               key={producto.id}
               className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-6 bg-white border border-[#e1e4ed] rounded-lg shadow-sm hover:shadow-md transition"
             >
-              <div className="text-base sm:text-lg font-semibold text-black break-words">
-                {producto.nombre}
+              <div className="flex-1">
+                <div className="text-base sm:text-lg font-semibold text-black break-words">
+                  {producto.nombre}
+                </div>
+                {producto.tipo_producto && (
+                  <div className="mt-2">
+                    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                      {TIPOS_PRODUCTOS.find(t => t.id === producto.tipo_producto)?.nombre || producto.tipo_producto}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {(user?.rol === "admin" || user?.rol === "superAdmin") && (

@@ -5,6 +5,11 @@ import { useRouter, useParams } from "next/navigation";
 import { uploadFile } from "@/lib/subirArchivos";
 import { toast } from "react-hot-toast"
 
+interface TipoProducto {
+  id: string;
+  nombre: string;
+}
+
 interface ArchivoExistente {
   archivo_url: string;
   nombre: string;
@@ -24,6 +29,12 @@ interface ArchivoSubido {
   type: string;
 }
 
+// Tipos de productos disponibles
+const TIPOS_PRODUCTOS: TipoProducto[] = [
+  { id: "kit", nombre: "Kit" },
+  { id: "pieza", nombre: "Pieza" },
+  { id: "capacitacion", nombre: "Capacitación" }
+];
 
 export default function EditarProductoPage() {
   const router = useRouter();
@@ -35,6 +46,7 @@ export default function EditarProductoPage() {
 
   const [archivosNuevos, setArchivosNuevos] = useState<File[]>([]);
   const [archivosExistentes, setArchivosExistentes] = useState<ArchivoExistente[]>([]);
+  const [tipoSeleccionado, setTipoSeleccionado] = useState("");
   const [loading, setLoading] = useState(true);
   const [errores, setErrores] = useState<ErroresFormulario>({});
 
@@ -61,6 +73,11 @@ export default function EditarProductoPage() {
             nombre: a.archivo_url.split("/").pop(),
           }))
         );
+
+        // Cargar tipo de producto seleccionado
+        if (data.tipo_producto) {
+          setTipoSeleccionado(data.tipo_producto);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -147,6 +164,7 @@ export default function EditarProductoPage() {
           precio,
           archivosNuevos: archivosSubidos,
           archivosExistentes: urlsExistentes,
+          tipo_producto: tipoSeleccionado || null,
         }),
         credentials: "include",
       });
@@ -231,6 +249,23 @@ export default function EditarProductoPage() {
               placeholder="Precio"
             />
             {errores.precio && <p className="text-red-500 text-sm">{errores.precio}</p>}
+          </div>
+
+          {/* Tipo de Producto */}
+          <div>
+            <label className="block text-lg font-semibold mb-2">Tipo de Producto</label>
+            <select
+              value={tipoSeleccionado}
+              onChange={(e) => setTipoSeleccionado(e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            >
+              <option value="">Seleccionar tipo...</option>
+              {TIPOS_PRODUCTOS.map((tipo) => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Archivos existentes */}
