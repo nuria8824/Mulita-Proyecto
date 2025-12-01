@@ -2,23 +2,32 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { uploadFile } from "@/lib/subirArchivos";
+import { toast } from "react-hot-toast";
+
+interface MiembroEquipo {
+  nombre: string;
+  rol: string;
+  imagen: File | string | null;
+}
+
+interface ErroresMiembro {
+  nombre?: string;
+  rol?: string;
+  imagen?: string;
+}
 
 export default function GestionQuienesSomosPage() {
   const router = useRouter();
 
-  const [titulo1, setTitulo1] = useState("");
-  const [titulo2, setTitulo2] = useState("");
-  const [titulo3, setTitulo3] = useState("");
-  const [descripcion1, setDescripcion1] = useState("");
-  const [descripcion2, setDescripcion2] = useState("");
-  const [descripcion3, setDescripcion3] = useState("");
-  const [imagen1, setImagen1] = useState<File | string | null>(null);
-  const [imagen2, setImagen2] = useState<File | string | null>(null);
-
+  const [titulo, setTitulo] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [equipo, setEquipo] = useState<MiembroEquipo[]>([]);
+  const [erroresMiembros, setErroresMiembros] = useState<ErroresMiembro[]>([]);
+  const [erroresGenerales, setErroresGenerales] = useState<{ titulo?: string; descripcion?: string }>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Obtener datos actuales
   useEffect(() => {
     const fetchQuienesSomos = async () => {
       try {
@@ -26,58 +35,151 @@ export default function GestionQuienesSomosPage() {
         if (!res.ok) throw new Error("No se pudo obtener la información");
         const data = await res.json();
 
-        setTitulo1(data.titulo1);
-        setTitulo2(data.titulo2);
-        setTitulo3(data.titulo3);
-        setDescripcion1(data.descripcion1);
-        setDescripcion2(data.descripcion2);
-        setDescripcion3(data.descripcion3);
-        setImagen1(data.imagen1);
-        setImagen2(data.imagen2);
+        setTitulo(data.titulo || "");
+        setDescripcion(data.descripcion || "");
+        setEquipo(data.equipo?.map((m: any) => ({
+          nombre: m.nombre || "",
+          rol: m.rol || "",
+          imagen: m.imagen || null
+        })) || []);
+        setErroresMiembros((data.equipo || []).map(() => ({})));
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchQuienesSomos();
   }, []);
+
+  const sanitizeFileName = (fileName: string) =>
+    fileName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.\-_]/g, "_");
+
+  const handleMiembroChange = (index: number, field: keyof MiembroEquipo, value: string | File | null) => {
+    const nuevoEquipo = [...equipo];
+    nuevoEquipo[index] = { ...nuevoEquipo[index], [field]: value };
+    setEquipo(nuevoEquipo);
+
+    // Limpiar el error del campo específico
+    const nuevosErrores = [...erroresMiembros];
+    if (nuevosErrores[index]?.[field]) {
+      nuevosErrores[index] = { ...nuevosErrores[index], [field]: undefined };
+      setErroresMiembros(nuevosErrores);
+    }
+  };
+
+  // Limpiar errores de título y descripción al escribir
+  const handleTituloChange = (value: string) => {
+    setTitulo(value);
+    if (erroresGenerales.titulo) {
+      setErroresGenerales({ ...erroresGenerales, titulo: undefined });
+    }
+  };
+
+  const handleDescripcionChange = (value: string) => {
+    setDescripcion(value);
+    if (erroresGenerales.descripcion) {
+      setErroresGenerales({ ...erroresGenerales, descripcion: undefined });
+    }
+  };
+
+  const agregarMiembro = () => {
+    setEquipo([...equipo, { nombre: "", rol: "", imagen: null }]);
+    setErroresMiembros([...erroresMiembros, {}]);
+  };
+
+  const eliminarMiembro = (index: number) => {
+    setEquipo(equipo.filter((_, i) => i !== index));
+    setErroresMiembros(erroresMiembros.filter((_, i) => i !== index));
+  };
+
+  const validarFormulario = () => {
+    let valido = true;
+    const errores: ErroresMiembro[] = [];
+    const erroresGen: { titulo?: string; descripcion?: string } = {};
+
+    if (!titulo.trim()) {
+      erroresGen.titulo = "El título principal es obligatorio";
+      valido = false;
+    }
+
+    if (!descripcion.trim()) {
+      erroresGen.descripcion = "La descripción principal es obligatoria";
+      valido = false;
+    }
+
+    equipo.forEach((miembro, index) => {
+      const error: ErroresMiembro = {};
+      if (!miembro.nombre.trim()) {
+        error.nombre = "Nombre obligatorio";
+        valido = false;
+      }
+      if (!miembro.rol.trim()) {
+        error.rol = "Rol obligatorio";
+        valido = false;
+      }
+      if (!miembro.imagen) {
+        error.imagen = "Imagen obligatoria";
+        valido = false;
+      }
+      errores.push(error);
+    });
+
+    setErroresMiembros(errores);
+    setErroresGenerales(erroresGen);
+
+    return valido;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
-    try {
-      const formData = new FormData();
-      formData.append("titulo1", titulo1);
-      formData.append("titulo2", titulo2);
-      formData.append("titulo3", titulo3);
-      formData.append("descripcion1", descripcion1);
-      formData.append("descripcion2", descripcion2);
-      formData.append("descripcion3", descripcion3);
+    if (!validarFormulario()) {
+      setSubmitting(false);
+      return;
+    }
 
-      if (imagen1 instanceof File) formData.append("imagen1", imagen1);
-      if (imagen2 instanceof File) formData.append("imagen2", imagen2);
+    try {
+      const equipoSubido: MiembroEquipo[] = [];
+
+      for (let i = 0; i < equipo.length; i++) {
+        const miembro = equipo[i];
+        let imagenURL = "";
+
+        if (miembro.imagen instanceof File) {
+          const sanitizedFileName = sanitizeFileName(miembro.imagen.name);
+          const filePath = `quienes_somos/miembros/${Date.now()}_${sanitizedFileName}`;
+          imagenURL = await uploadFile(miembro.imagen, filePath);
+        } else if (typeof miembro.imagen === "string") {
+          imagenURL = miembro.imagen;
+        }
+
+        equipoSubido.push({ nombre: miembro.nombre, rol: miembro.rol, imagen: imagenURL });
+      }
 
       const res = await fetch("/api/sobreNosotros/quienesSomos", {
         method: "PATCH",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          titulo,
+          descripcion,
+          equipo: equipoSubido,
+        }),
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Error al actualizar el contenido");
+      if (!res.ok) throw new Error("Error actualizando Quiénes Somos");
 
+      toast.success("Se actualizó correctamente");
       router.push("/dashboard/gestionLanding/gestionSobreNosotros");
     } catch (err) {
       console.error(err);
-      alert("Error al actualizar Quiénes Somos");
+      toast.error("Error al actualizar Quiénes Somos");
     } finally {
       setSubmitting(false);
     }
   };
-
-  const handleCancel = () => router.push("/dashboard/gestionLanding/gestionSobreNosotros");
 
   if (loading) return <p className="text-center mt-10">Cargando datos...</p>;
 
@@ -86,110 +188,119 @@ export default function GestionQuienesSomosPage() {
       <div className="w-full max-w-4xl flex flex-col gap-6">
         <h1 className="text-2xl font-semibold text-black text-center">Gestión - ¿Quiénes Somos?</h1>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-6 bg-white p-6 rounded-lg shadow-md border border-gray-200"
-        >
-          {/* Bloque 1 */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          {/* Título principal */}
           <div>
             <label className="block text-lg font-semibold mb-2">Título principal</label>
             <input
-              aria-label="titulo1"
+              aria-label="titulo"
               type="text"
-              value={titulo1}
-              onChange={(e) => setTitulo1(e.target.value)}
+              value={titulo}
+              onChange={(e) => handleTituloChange(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-              required
             />
+            {erroresGenerales.titulo && <p className="text-red-500 text-sm">{erroresGenerales.titulo}</p>}
           </div>
 
+          {/* Descripción principal */}
           <div>
             <label className="block text-lg font-semibold mb-2">Descripción principal</label>
             <textarea
-              aria-label="descripcion1"
-              value={descripcion1}
-              onChange={(e) => setDescripcion1(e.target.value)}
+              aria-label="descripcion"
+              value={descripcion}
+              onChange={(e) => handleDescripcionChange(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-4 py-2 h-32 resize-none focus:ring-2 focus:ring-blue-400 focus:outline-none"
-              required
             />
+            {erroresGenerales.descripcion && <p className="text-red-500 text-sm">{erroresGenerales.descripcion}</p>}
           </div>
 
-          {/* Bloque 2 */}
-          <div className="border-t border-gray-300 pt-6">
-            <h2 className="text-xl font-semibold mb-4">Bloque Equipo 1</h2>
+          {/* Miembros del equipo */}
+          <div className="border-t border-gray-300 pt-6 flex flex-col gap-6">
+            <h2 className="text-xl font-semibold mb-4">Equipo</h2>
 
-            <label className="block text-lg font-semibold mb-2">Título</label>
-            <input
-              aria-label="titulo2"
-              type="text"
-              value={titulo2}
-              onChange={(e) => setTitulo2(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-4 py-2"
-              required
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {equipo.map((miembro, index) => (
+                <div key={index} className="border p-4 rounded-md relative">
+                  <button
+                    type="button"
+                    onClick={() => eliminarMiembro(index)}
+                    className="absolute top-2 right-2 text-red-500 font-bold"
+                  >
+                    ×
+                  </button>
 
-            <label className="block text-lg font-semibold mt-4 mb-2">Descripción</label>
-            <textarea
-              aria-label="descripcion2"
-              value={descripcion2}
-              onChange={(e) => setDescripcion2(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 h-24 resize-none"
-              required
-            />
+                  <label className="block text-lg font-semibold mb-2">Nombre</label>
+                  <input
+                    aria-label="nombre"
+                    type="text"
+                    value={miembro.nombre || ""}
+                    onChange={(e) => handleMiembroChange(index, "nombre", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2"
+                  />
+                  {erroresMiembros[index]?.nombre && <p className="text-red-500 text-sm">{erroresMiembros[index].nombre}</p>}
 
-            <label className="block text-lg font-semibold mt-4 mb-2">Imagen</label>
-            {typeof imagen1 === "string" && (
-              <img src={imagen1} alt="Imagen 1 actual" className="w-full h-48 object-cover rounded mb-2" />
-            )}
-            <input
-              type="file"
-              placeholder="Imagen 1"
-              onChange={(e) => setImagen1(e.target.files?.[0] || null)}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 cursor-pointer text-gray-600"
-              accept="image/*"
-            />
-          </div>
+                  <label className="block text-lg font-semibold mt-4 mb-2">Rol</label>
+                  <input
+                    aria-label="rol"
+                    type="text"
+                    value={miembro.rol || ""}
+                    onChange={(e) => handleMiembroChange(index, "rol", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2"
+                  />
+                  {erroresMiembros[index]?.rol && <p className="text-red-500 text-sm">{erroresMiembros[index].rol}</p>}
 
-          {/* Bloque 3 */}
-          <div className="border-t border-gray-300 pt-6">
-            <h2 className="text-xl font-semibold mb-4">Bloque Equipo 2</h2>
+                  {/* Imagen */}
+                  <label className="block text-lg font-semibold mt-4 mb-2">Imagen</label>
+                  <div className="flex flex-col gap-2">
+                    {/* Previsualización */}
+                    {miembro.imagen && typeof miembro.imagen === "string" && (
+                      <div className="w-full h-64 md:h-72 lg:h-80 overflow-hidden rounded">
+                        <img
+                          src={miembro.imagen}
+                          alt={`Imagen ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    {miembro.imagen instanceof File && (
+                      <div className="w-full h-64 md:h-72 lg:h-80 overflow-hidden rounded">
+                        <img
+                          src={URL.createObjectURL(miembro.imagen)}
+                          alt={`Previsualización ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
 
-            <label className="block text-lg font-semibold mb-2">Título</label>
-            <input
-              aria-label="titulo3"
-              type="text"
-              value={titulo3}
-              onChange={(e) => setTitulo3(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-4 py-2"
-              required
-            />
+                    {/* Input de archivo */}
+                    <input
+                      aria-label="imagen"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleMiembroChange(index, "imagen", e.target.files?.[0] || null)}
+                      className="w-full border border-gray-300 rounded-md px-4 py-2 cursor-pointer text-gray-600"
+                    />
+                  </div>
+                  {erroresMiembros[index]?.imagen && (
+                    <p className="text-red-500 text-sm">{erroresMiembros[index].imagen}</p>
+                  )}
+                </div>
+              ))}
+            </div>
 
-            <label className="block text-lg font-semibold mt-4 mb-2">Descripción</label>
-            <textarea
-              aria-label="descripcion3"
-              value={descripcion3}
-              onChange={(e) => setDescripcion3(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 h-24 resize-none"
-              required
-            />
-
-            <label className="block text-lg font-semibold mt-4 mb-2">Imagen</label>
-            {typeof imagen2 === "string" && (
-              <img src={imagen2} alt="Imagen 2 actual" className="w-full h-48 object-cover rounded mb-2" />
-            )}
-            <input
-              placeholder="Imagen 2"
-              type="file"
-              onChange={(e) => setImagen2(e.target.files?.[0] || null)}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 cursor-pointer text-gray-600"
-              accept="image/*"
-            />
+            <button
+              type="button"
+              onClick={agregarMiembro}
+              className="w-full h-12 bg-green-500 text-white font-semibold rounded-md shadow-md hover:bg-green-600 transition mt-4"
+            >
+              + Agregar miembro
+            </button>
           </div>
 
           <div className="flex w-full gap-4 pt-4">
             <button
               type="button"
-              onClick={handleCancel}
+              onClick={() => router.push("/dashboard/gestionLanding/gestionSobreNosotros")}
               className="w-1/2 h-12 bg-gray-300 text-[#003c71] font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
             >
               Cancelar
