@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { useUser } from "@/hooks/queries";
 
 interface Categoria {
@@ -17,6 +18,7 @@ export default function GestionCategoriasPage() {
   const [tipo, setTipo] = useState<"curso" | "dificultad" | "materia">("curso");
   const [busqueda, setBusqueda] = useState("");
   const [filtroTipo, setFiltroTipo] = useState<"" | "curso" | "dificultad" | "materia">("");
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   // Traer categorías desde la API
   useEffect(() => {
@@ -56,7 +58,6 @@ export default function GestionCategoriasPage() {
   };
 
   const handleEliminar = async (id: string) => {
-    if (!confirm("¿Seguro que quieres eliminar esta categoría?")) return;
     try {
       const res = await fetch(`/api/categorias`, {
         method: "DELETE",
@@ -65,6 +66,7 @@ export default function GestionCategoriasPage() {
       });
       if (!res.ok) throw new Error("Error al eliminar categoría");
       setCategorias((prev) => prev.filter((c) => c.id !== id));
+      setConfirmDelete(null);
     } catch (err) {
       console.error("Error eliminando categoría:", err);
     }
@@ -75,9 +77,22 @@ export default function GestionCategoriasPage() {
   }
 
   return (
-    <div className="w-full min-h-screen relative overflow-hidden flex flex-col items-center px-4 sm:px-6 pb-10 box-border font-inter">
-      {/* Header + botón agregar */}
-      <div className="w-full max-w-[1103px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-6">
+    <>
+      <ConfirmDialog
+        isOpen={confirmDelete !== null}
+        onClose={() => setConfirmDelete(null)}
+        title="Eliminar categoría"
+        message="¿Estás seguro de que deseas eliminar esta categoría? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={() => {
+          if (confirmDelete !== null) handleEliminar(confirmDelete);
+        }}
+      />
+      <div className="w-full min-h-screen relative overflow-hidden flex flex-col items-center px-4 sm:px-6 pb-10 box-border font-inter">
+        {/* Header + botón agregar */}
+        <div className="w-full max-w-[1103px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-6">
         <div className="flex flex-col text-[28px] sm:text-[32px] md:text-[36px]">
           <h1 className="leading-tight font-extrabold text-black">
             Gestión de Categorías
@@ -182,7 +197,7 @@ export default function GestionCategoriasPage() {
 
                 {(user?.rol === "admin" || user?.rol === "superAdmin") && (
                   <button
-                    onClick={() => handleEliminar(categoria.id)}
+                    onClick={() => setConfirmDelete(categoria.id)}
                     className="self-end sm:self-auto bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold hover:bg-red-700 transition"
                   >
                     Eliminar
@@ -192,6 +207,7 @@ export default function GestionCategoriasPage() {
             ))
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

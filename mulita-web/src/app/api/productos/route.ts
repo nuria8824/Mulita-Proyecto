@@ -100,8 +100,11 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (productoError) {
-      console.log("Error insertando producto:", productoError);
-      return NextResponse.json({ error: productoError.message }, { status: 400 });
+      console.error("Error insertando producto:", productoError);
+      return NextResponse.json({ 
+        error: productoError.message,
+        details: productoError
+      }, { status: 400 });
     }
   
     // Guardar las URLs, nombres y tipos en producto_archivos

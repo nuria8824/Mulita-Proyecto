@@ -26,10 +26,10 @@ export default function BackButton() {
   return (
     <button
       onClick={handleBack}
-      className="inline-flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+      className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200 mt-2"
       title="Volver"
     >
-      <ChevronLeft className="w-5 h-5" />
+      <ChevronLeft className="w-6 h-6" />
     </button>
   );
 }

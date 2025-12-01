@@ -15,9 +15,9 @@ interface Producto {
 
 // Tipos de productos disponibles
 const TIPOS_PRODUCTOS = [
-  { id: "kit", nombre: "Kit" },
-  { id: "pieza", nombre: "Pieza" },
-  { id: "capacitacion", nombre: "Capacitación" }
+  { id: "kit", nombre: "Kit", color: "text-blue-800", bgColor: "bg-blue-100" },
+  { id: "pieza", nombre: "Pieza", color: "text-green-800", bgColor: "bg-green-100" },
+  { id: "capacitacion", nombre: "Capacitación", color: "text-purple-800", bgColor: "bg-purple-100" }
 ];
 
 export default function GestionproductosPage() {
@@ -141,7 +141,7 @@ export default function GestionproductosPage() {
                 </div>
                 {producto.tipo_producto && (
                   <div className="mt-2">
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${TIPOS_PRODUCTOS.find(t => t.id === producto.tipo_producto)?.bgColor} ${TIPOS_PRODUCTOS.find(t => t.id === producto.tipo_producto)?.color}`}>
                       {TIPOS_PRODUCTOS.find(t => t.id === producto.tipo_producto)?.nombre || producto.tipo_producto}
                     </span>
                   </div>

@@ -132,11 +132,11 @@ export default function CompraModal({ open, onClose, items, source = "cart" }: C
     Mi pedido es
 
     ${items.map((i) => 
-      `• ${i.cantidad}x *${i.nombre}*: $${i.precio_unitario}`
+      `• ${i.cantidad}x *${i.nombre}*: $${i.precio_unitario.toFixed(2).toLocaleString("es-AR")}`
     )
     .join("\n")}
 
-    *TOTAL: $${total}*
+    *TOTAL: $${total.toFixed(2).toLocaleString("es-AR")}*
 
     _Espero tu confirmación y los datos bancarios para el pago. ¡Gracias!_
     `;
@@ -354,13 +354,14 @@ export default function CompraModal({ open, onClose, items, source = "cart" }: C
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/40 z-50 overflow-y-auto flex flex-col justify-start pt-4"
       onClick={onClose}
     >
       <div
-      className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg"
-      onClick={(e) => e.stopPropagation()}
-    >
+        className="bg-white rounded-xl shadow-xl w-full max-w-lg m-auto mb-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6">
 
         {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
@@ -427,7 +428,7 @@ export default function CompraModal({ open, onClose, items, source = "cart" }: C
         {/* TOTAL DEL PEDIDO */}
         <div className="text-right mb-4 mt-4">
           <p className="text-lg font-semibold">
-            Total: ${total}
+            Total: ${total.toFixed(2).toLocaleString("es-AR")}
           </p>
         </div>
 
@@ -448,6 +449,7 @@ export default function CompraModal({ open, onClose, items, source = "cart" }: C
         >
           Confirmar compra
         </button>
+        </div>
       </div>
     </div>
   );
