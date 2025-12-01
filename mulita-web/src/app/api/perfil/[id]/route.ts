@@ -80,8 +80,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
 
     // Actualizar la contraseña
     const { error: updateError } = await supabaseServer.auth.updateUser(
-      { password: passwordNueva },
-      { validatorToken: access_token }
+      { password: passwordNueva }
     );
 
     if (updateError) {
