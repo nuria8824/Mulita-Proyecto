@@ -4,6 +4,19 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ProductosWrapper from "@/components/ui/tienda/ProductosWrapper";
 
+interface TipoProducto {
+  id: string;
+  nombre: string;
+  color: string;
+  bgColor: string;
+}
+
+const TIPOS_PRODUCTOS: TipoProducto[] = [
+  { id: "kit", nombre: "Kit", color: "text-blue-800", bgColor: "bg-blue-100" },
+  { id: "pieza", nombre: "Pieza", color: "text-green-800", bgColor: "bg-green-100" },
+  { id: "capacitacion", nombre: "Capacitación", color: "text-purple-800", bgColor: "bg-purple-100" }
+];
+
 function TiendaContent() {
   const searchParams = useSearchParams();
   const productIdFromUrl = searchParams.get("productId");
@@ -13,13 +26,18 @@ function TiendaContent() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [tipoSeleccionado, setTipoSeleccionado] = useState("");
   const limit = 12;
 
   const fetchProductos = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/productos?page=${page}&limit=${limit}`);
+      let url = `/api/productos?page=${page}&limit=${limit}`;
+      if (tipoSeleccionado) {
+        url += `&tipo_producto=${tipoSeleccionado}`;
+      }
+      const res = await fetch(url);
       const data = await res.json();
 
       setProductos(data?.productos || []);
@@ -35,7 +53,7 @@ function TiendaContent() {
 
   useEffect(() => {
     fetchProductos();
-  }, [page]);
+  }, [page, tipoSeleccionado]);
 
   const totalPages = Math.ceil(total / limit);
 
@@ -48,6 +66,25 @@ function TiendaContent() {
           Lorem ipsum dolor sit amet consectetur adipiscing elit tortor eu 
           egestas morbi sem vulputate etiam facilisis.
         </p>
+      </div>
+
+      {/* Filtro de tipos */}
+      <div className="mb-8 flex justify-center">
+        <select
+          value={tipoSeleccionado}
+          onChange={(e) => {
+            setTipoSeleccionado(e.target.value);
+            setPage(1); // Reiniciar paginación al cambiar filtro
+          }}
+          className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:outline-none"
+        >
+          <option value="">Todos los tipos</option>
+          {TIPOS_PRODUCTOS.map((tipo) => (
+            <option key={tipo.id} value={tipo.id}>
+              {tipo.nombre}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Productos con skeleton integrado */}

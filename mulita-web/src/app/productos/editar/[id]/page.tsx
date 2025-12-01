@@ -5,6 +5,13 @@ import { useRouter, useParams } from "next/navigation";
 import { uploadFile } from "@/lib/subirArchivos";
 import { toast } from "react-hot-toast"
 
+interface TipoProducto {
+  id: string;
+  nombre: string;
+  color: string;
+  bgColor: string;
+}
+
 interface ArchivoExistente {
   archivo_url: string;
   nombre: string;
@@ -24,6 +31,12 @@ interface ArchivoSubido {
   type: string;
 }
 
+// Tipos de productos disponibles
+const TIPOS_PRODUCTOS: TipoProducto[] = [
+  { id: "kit", nombre: "Kit", color: "text-blue-800", bgColor: "bg-blue-100" },
+  { id: "pieza", nombre: "Pieza", color: "text-green-800", bgColor: "bg-green-100" },
+  { id: "capacitacion", nombre: "Capacitación", color: "text-purple-800", bgColor: "bg-purple-100" }
+];
 
 export default function EditarProductoPage() {
   const router = useRouter();
@@ -35,6 +48,7 @@ export default function EditarProductoPage() {
 
   const [archivosNuevos, setArchivosNuevos] = useState<File[]>([]);
   const [archivosExistentes, setArchivosExistentes] = useState<ArchivoExistente[]>([]);
+  const [tipoSeleccionado, setTipoSeleccionado] = useState("");
   const [loading, setLoading] = useState(true);
   const [errores, setErrores] = useState<ErroresFormulario>({});
 
@@ -61,6 +75,11 @@ export default function EditarProductoPage() {
             nombre: a.archivo_url.split("/").pop(),
           }))
         );
+
+        // Cargar tipo de producto seleccionado
+        if (data.tipo_producto) {
+          setTipoSeleccionado(data.tipo_producto);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -147,14 +166,16 @@ export default function EditarProductoPage() {
           precio,
           archivosNuevos: archivosSubidos,
           archivosExistentes: urlsExistentes,
+          tipo_producto: tipoSeleccionado || null,
         }),
         credentials: "include",
       });
 
       if (!res.ok) {
         const error = await res.json();
-        console.error(error);
-        toast.error("Error al actualizar el producto");
+        console.error("Error response:", error);
+        const errorMsg = error.error || error.detail || error.message || "Error al actualizar el producto";
+        toast.error(errorMsg);
         return;
       }
 
@@ -194,12 +215,12 @@ export default function EditarProductoPage() {
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className={`w-full border rounded-md px-4 py-2 ${
+              className={`w-full border rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none ${
                 errores.nombre ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Nombre del producto"
             />
-            {errores.nombre && <p className="text-red-500 text-sm">{errores.nombre}</p>}
+            {errores.nombre && <p className="text-red-500 text-sm mt-1">{errores.nombre}</p>}
           </div>
 
           {/* Descripción */}
@@ -208,13 +229,13 @@ export default function EditarProductoPage() {
             <textarea
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
-              className={`w-full border rounded-md px-4 py-2 h-36 resize-none ${
+              className={`w-full border rounded-md shadow-sm px-4 py-2 h-36 resize-none focus:ring-2 focus:ring-blue-400 focus:outline-none ${
                 errores.descripcion ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Descripción"
             />
             {errores.descripcion && (
-              <p className="text-red-500 text-sm">{errores.descripcion}</p>
+              <p className="text-red-500 text-sm mt-1">{errores.descripcion}</p>
             )}
           </div>
 
@@ -223,14 +244,43 @@ export default function EditarProductoPage() {
             <label className="block text-lg font-semibold mb-2">Precio *</label>
             <input
               type="number"
+              step="0.01"
               value={precio}
-              onChange={(e) => setPrecio(e.target.value)}
-              className={`w-full border rounded-md px-4 py-2 ${
+              onChange={(e) => {
+                let valor = e.target.value;
+                // Limitar a 2 decimales
+                if (valor && valor.includes('.')) {
+                  const partes = valor.split('.');
+                  if (partes[1].length > 2) {
+                    valor = partes[0] + '.' + partes[1].slice(0, 2);
+                  }
+                }
+                setPrecio(valor);
+                if (errores.precio) setErrores({ ...errores, precio: undefined });
+              }}
+              className={`w-full border rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none ${
                 errores.precio ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Precio"
             />
-            {errores.precio && <p className="text-red-500 text-sm">{errores.precio}</p>}
+            {errores.precio && <p className="text-red-500 text-sm mt-1">{errores.precio}</p>}
+          </div>
+
+          {/* Tipo de Producto */}
+          <div>
+            <label className="block text-lg font-semibold mb-2">Tipo de Producto</label>
+            <select
+              value={tipoSeleccionado}
+              onChange={(e) => setTipoSeleccionado(e.target.value)}
+              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            >
+              <option value="">Seleccionar tipo...</option>
+              {TIPOS_PRODUCTOS.map((tipo) => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Archivos existentes */}
@@ -293,20 +343,20 @@ export default function EditarProductoPage() {
           </div>
 
           {/* BOTONES */}
-          <div className="flex gap-4">
-            <button
-              type="submit"
-              className="flex-1 bg-blue-600 text-white rounded-md py-2 hover:bg-blue-700"
-            >
-              Guardar cambios
-            </button>
-
+          <div className="flex w-full gap-4">
             <button
               type="button"
               onClick={handleCancel}
-              className="flex-1 bg-gray-200 rounded-md py-2 hover:bg-gray-300"
+              className="w-1/2 h-12 bg-gray-300 text-[#003c71] font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
             >
               Cancelar
+            </button>
+
+            <button
+              type="submit"
+              className="w-1/2 h-12 bg-[#003c71] text-white font-semibold rounded-md shadow-md hover:bg-[#00264d] transition"
+            >
+              Guardar cambios
             </button>
           </div>
         </form>

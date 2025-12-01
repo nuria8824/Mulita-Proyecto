@@ -6,18 +6,26 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 12;
+  const tipo_producto = searchParams.get("tipo_producto");
 
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
   // 1) Traer productos paginados
-  const { data, error } = await supabase
+  let query = supabase
     .from("producto")
     .select(`
       *,
       producto_archivos (archivo_url, nombre)
       `, { count: "exact" })
-    .eq("eliminado", false)
+    .eq("eliminado", false);
+
+  // Filtrar por tipo de producto si se proporciona
+  if (tipo_producto) {
+    query = query.eq("tipo_producto", tipo_producto);
+  }
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -71,9 +79,9 @@ export async function POST(req: NextRequest) {
 
     // Leer datos JSON
     const body = await req.json();
-    const { nombre, descripcion, precio, imagenes } = body;
+    const { nombre, descripcion, precio, imagenes, tipo_producto } = body;
 
-    console.log({ nombre, descripcion, precio, imagenes });
+    console.log({ nombre, descripcion, precio, imagenes, tipo_producto });
 
     if (!nombre || !descripcion || !precio || !imagenes || imagenes.length === 0) {
       return NextResponse.json({ error: "Campos faltantes" }, { status: 400 });
@@ -86,13 +94,17 @@ export async function POST(req: NextRequest) {
         nombre,
         descripcion,
         precio: parseFloat(precio),
+        tipo_producto: tipo_producto || null,
       })
       .select()
       .single();
 
     if (productoError) {
-      console.log("Error insertando producto:", productoError);
-      return NextResponse.json({ error: productoError.message }, { status: 400 });
+      console.error("Error insertando producto:", productoError);
+      return NextResponse.json({ 
+        error: productoError.message,
+        details: productoError
+      }, { status: 400 });
     }
   
     // Guardar las URLs, nombres y tipos en producto_archivos

@@ -22,22 +22,22 @@ export default function ModalImagenActividades({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-6"
+      className="fixed inset-0 bg-gray-900/60 z-50 overflow-y-auto flex flex-col justify-center items-center py-4 px-4"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-5xl mx-auto"
+        className="relative w-full max-w-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <img
           src={images[currentIndex]}
           alt={`Imagen ${currentIndex + 1}`}
-          className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
+          className="w-full max-w-xl h-auto max-h-[70vh] object-contain rounded-lg shadow-lg"
         />
         {/* Botón de cerrar */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-white text-3xl font-bold"
+          className="absolute top-1 right-4 text-white text-4xl font-black hover:text-gray-300 -translate-y-1/4"
         >
           ⨉
         </button>
@@ -47,13 +47,13 @@ export default function ModalImagenActividades({
           <>
             <button
               onClick={prevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-4xl font-bold"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-5xl font-black hover:text-gray-300"
             >
               ‹
             </button>
             <button
               onClick={nextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-4xl font-bold"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-5xl font-black hover:text-gray-300"
             >
               ›
             </button>

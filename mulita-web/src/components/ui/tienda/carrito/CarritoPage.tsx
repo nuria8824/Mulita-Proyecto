@@ -229,7 +229,7 @@ export function CarritoPage() {
                     <div className="w-28 text-right">
                       <p className="text-sm text-gray-600 mb-1">Subtotal</p>
                       <p className="text-lg font-bold text-gray-900">
-                        ${(item.precio * item.cantidad).toLocaleString("es-AR")}
+                        ${(item.precio * item.cantidad).toFixed(2).toLocaleString("es-AR")}
                       </p>
                     </div>
 
@@ -267,7 +267,7 @@ export function CarritoPage() {
                 <div className="flex justify-between mb-6">
                   <span className="text-lg font-bold text-gray-900">Total</span>
                   <span className="text-2xl font-bold text-blue-600">
-                    ${getTotalPrice().toLocaleString("es-AR")}
+                    ${getTotalPrice().toFixed(2).toLocaleString("es-AR")}
                   </span>
                 </div>
 

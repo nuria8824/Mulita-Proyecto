@@ -15,10 +15,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="flex flex-col flex-1 ml-0 md:ml-60 transition-all duration-300">
         <HeaderDashboard onMenuClick={() => setMenuOpen(true)} />
         <main className="flex-1 p-4 md:p-8">
-          <div className="mb-6">
+          <div className="flex items-start gap-4 mb-6">
             <BackButton />
+            <div className="flex-1">{children}</div>
           </div>
-          {children}
         </main>
       </div>
     </div>

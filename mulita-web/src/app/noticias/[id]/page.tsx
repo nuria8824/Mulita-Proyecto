@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import BackButton from "@/components/ui/dashboard/BackButton";
 import SkeletonNoticiaDetalle from "@/components/ui/noticias/skeletons/SkeletonNoticiaDetalle";
 
 interface Noticia {
@@ -53,6 +54,9 @@ export default function NoticiaDetalle() {
 
   return (
     <div className="w-full max-w-5xl mx-auto py-8 px-4 md:px-16 flex flex-col gap-6">
+      <div className="mb-4">
+        <BackButton />
+      </div>
       <div className="shador-lg border border-gray-200 overflow-hidden flex flex-col gap-6 p-6 rounded-lg bg-white">
         <h1 className="text-4xl font-bold text-[#003c71]">{noticia.titulo}</h1>
         <p className="text-sm text-[#6d758f]">

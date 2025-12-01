@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { uploadFile } from "@/lib/subirArchivos";
 import { toast } from "react-hot-toast"
+
+interface TipoProducto {
+  id: string;
+  nombre: string;
+  color: string;
+  bgColor: string;
+}
 
 interface ErroresFormulario {
   nombre?: string;
@@ -18,12 +25,20 @@ interface ArchivoSubido {
   type: string;
 }
 
+// Tipos de productos disponibles (sin usar tabla de categorías)
+const TIPOS_PRODUCTOS: TipoProducto[] = [
+  { id: "kit", nombre: "Kit", color: "text-blue-800", bgColor: "bg-blue-100" },
+  { id: "pieza", nombre: "Pieza", color: "text-green-800", bgColor: "bg-green-100" },
+  { id: "capacitacion", nombre: "Capacitación", color: "text-purple-800", bgColor: "bg-purple-100" }
+];
+
 export default function CrearProductoPage() {
   const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [precio, setPrecio] = useState("");
   const [imagenes, setImagenes] = useState<File[]>([]);
+  const [tipoSeleccionado, setTipoSeleccionado] = useState("");
   const [errores, setErrores] = useState<ErroresFormulario>({});
 
   // Manejo de imagenes
@@ -98,14 +113,16 @@ export default function CrearProductoPage() {
           descripcion,
           precio,
           imagenes: archivosSubidos,
+          tipo_producto: tipoSeleccionado || null,
         }),
         credentials: "include",
       });
 
       if (!res.ok) {
         const error = await res.json();
-        console.error(error.detail || error.message);
-        toast.error("Error creando producto");
+        console.error("Error response:", error);
+        const errorMsg = error.error || error.detail || error.message || "Error creando producto";
+        toast.error(errorMsg);
         return;
       }
 
@@ -174,11 +191,19 @@ export default function CrearProductoPage() {
           <div>
             <label className="block text-lg font-semibold mb-2">Precio *</label>
             <input
-              type="text"
+              type="number"
+              step="0.01"
               value={precio}
               onChange={(e) => {
-                const normalizado = e.target.value.replace(/,/g, '.');
-                setPrecio(normalizado);
+                let valor = e.target.value;
+                // Limitar a 2 decimales
+                if (valor && valor.includes('.')) {
+                  const partes = valor.split('.');
+                  if (partes[1].length > 2) {
+                    valor = partes[0] + '.' + partes[1].slice(0, 2);
+                  }
+                }
+                setPrecio(valor);
                 if (errores.precio) setErrores({ ...errores, precio: undefined });
               }}
               className={`w-full border rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none ${
@@ -189,6 +214,23 @@ export default function CrearProductoPage() {
             {errores.precio && (
               <p className="text-red-500 text-sm mt-1">{errores.precio}</p>
             )}
+          </div>
+
+          {/* Tipo de Producto */}
+          <div>
+            <label className="block text-lg font-semibold mb-2">Tipo de Producto</label>
+            <select
+              value={tipoSeleccionado}
+              onChange={(e) => setTipoSeleccionado(e.target.value)}
+              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            >
+              <option value="">Seleccionar tipo...</option>
+              {TIPOS_PRODUCTOS.map((tipo) => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Imagenes */}

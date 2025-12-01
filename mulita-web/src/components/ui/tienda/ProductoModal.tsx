@@ -78,13 +78,21 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
   const hasMultiple = producto.imagenes.length > 1;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+    <div 
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start justify-center z-50 px-4 py-20 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div
         className="
           relative bg-white rounded-lg flex justify-between items-center 
           overflow-hidden w-full max-w-[1100px] h-[612px] 
           p-[80px_0] gap-5 text-center text-[12px] text-[#6d758f] font-inter
         "
+        onClick={(e) => e.stopPropagation()}
       >
         {/* BOTÓN CERRAR */}
         <button
