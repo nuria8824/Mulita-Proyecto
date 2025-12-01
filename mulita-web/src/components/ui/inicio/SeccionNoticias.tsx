@@ -51,6 +51,7 @@ export function SeccionNoticias() {
         <p className="text-center text-gray-500 text-muted-foreground mt-2">
           Comunidad, experiencias en escuelas y mejoras de la plataforma.
         </p>
+        <div className="w-16 h-1 bg-yellow-400 mx-auto mt-4 rounded-full"></div>
 
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {noticias.map((noticia) => (

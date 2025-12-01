@@ -3,12 +3,14 @@
 import { Hero } from "@/components/ui/inicio/Hero";
 import { SeccionNoticias } from "@/components/ui/inicio/SeccionNoticias";
 import { SeccionProductos } from "@/components/ui/inicio/SeccionProductos";
+import { Documentacion } from "@/components/ui/inicio/Documentacion";
 import { useEffect, useState } from "react";
 
 const COMPONENTS_MAP: Record<string, React.FC> = {
   Hero,
   SeccionNoticias,
   SeccionProductos,
+  Documentacion,
 };
 
 export default function HomePage() {

@@ -224,7 +224,7 @@ export default function GestionQuienesSomosPage() {
                   <button
                     type="button"
                     onClick={() => eliminarMiembro(index)}
-                    className="absolute top-2 right-2 text-red-500 font-bold"
+                    className="absolute top-0 right-2 text-4xl text-red-500 font-bold leading-none hover:text-red-800 transition"
                   >
                     ×
                   </button>

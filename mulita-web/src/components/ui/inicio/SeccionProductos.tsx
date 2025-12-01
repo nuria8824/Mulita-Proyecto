@@ -115,6 +115,7 @@ export function SeccionProductos() {
           <p className="text-gray-500 max-w-xl mx-auto mt-4">
             Herramientas y recursos ideales para tu institución.
           </p>
+          <div className="w-16 h-1 bg-yellow-400 mx-auto mt-4 rounded-full"></div>
         </div>
 
         {/* GRID */}
