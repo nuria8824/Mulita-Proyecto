@@ -220,6 +220,7 @@ export default function CrearProductoPage() {
           <div>
             <label className="block text-lg font-semibold mb-2">Tipo de Producto</label>
             <select
+              aria-label="tipo"
               value={tipoSeleccionado}
               onChange={(e) => setTipoSeleccionado(e.target.value)}
               className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
