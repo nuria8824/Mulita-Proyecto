@@ -49,24 +49,11 @@ export async function PATCH(req: NextRequest) {
   const id_seccion = seccion.id;
   console.log("id_seccion obtenido desde DB:", id_seccion);
 
-  const formData = await req.formData();
-  const id = Number(formData.get("id"));
-  const titulo1 = formData.get("titulo1")?.toString();
-  const titulo2 = formData.get("titulo2")?.toString();
-  const descripcion1 = formData.get("descripcion1")?.toString();
-  const descripcion2 = formData.get("descripcion2")?.toString();
+  const body = await req.json();
+  const { titulo1, titulo2, descripcion1, descripcion2, imagen1, imagen2 } = body;
 
-  let imagen1_url = formData.get("imagen1");
-  let imagen2_url = formData.get("imagen2");
-
-  console.log("Datos para upsert:");
-  console.log("titulo:", titulo1);
-  console.log("titulo:", titulo2);
-  console.log("descripcion:", descripcion1);
-  console.log("descripcion:", descripcion2);
-  console.log("id_usuario:", user.id);
-  console.log("id_seccion:", id_seccion);
-  console.log("fecha_modificacion:", new Date());
+  let imagen_url1;
+  let imagen_url2;
 
   // Obtener imagen actual
   const { data: misionVisionActual } = await supabase
@@ -75,35 +62,21 @@ export async function PATCH(req: NextRequest) {
     .eq("id", 1)
     .single();
 
-  if (imagen1_url instanceof File) {
-    const file = imagen1_url;
-    const { data, error } = await supabase.storage
-      .from("mulita-files")
-      .upload(`sobreNosotros/mision-vision/${Date.now()}_${file.name}`, file);
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    imagen1_url = supabase.storage.from("mulita-files").getPublicUrl(data.path).data.publicUrl;
+  if (imagen1 === null) {
+    imagen_url1 = misionVisionActual?.imagen1;
   } else {
-    imagen1_url = misionVisionActual?.imagen1;
+    imagen_url1 = imagen1
   }
 
-  console.log("imagen1_url:", imagen1_url);
+  console.log("imagen1_url:", imagen_url1);
 
-  if (imagen2_url instanceof File) {
-    const file = imagen2_url;
-    const { data, error } = await supabase.storage
-      .from("mulita-files")
-      .upload(`sobreNosotros/mision-vision/${Date.now()}_${file.name}`, file);
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    imagen2_url = supabase.storage.from("mulita-files").getPublicUrl(data.path).data.publicUrl;
+  if (imagen2 === null) {
+    imagen_url2 = misionVisionActual?.imagen2;
   } else {
-    imagen2_url = misionVisionActual?.imagen2;
+    imagen_url2 = imagen2
   }
 
-  console.log("imagen2_url:", imagen2_url);
+  console.log("imagen1_url:", imagen_url2);
 
   const { data, error } = await supabase
     .from("mision_vision")
@@ -113,8 +86,8 @@ export async function PATCH(req: NextRequest) {
       titulo2,
       descripcion1,
       descripcion2,
-      imagen1: imagen1_url,
-      imagen2: imagen2_url,
+      imagen1: imagen_url1,
+      imagen2: imagen_url2,
       id_usuario: user.id,
       id_seccion,
       fecha_modificacion: new Date(),

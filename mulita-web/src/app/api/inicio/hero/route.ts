@@ -50,18 +50,10 @@ export async function PATCH(req: NextRequest) {
   const id_seccion = seccion.id;
   console.log("id_seccion obtenido desde DB:", id_seccion);
 
-  const formData = await req.formData();
-  const titulo = formData.get("titulo")?.toString();
-  const descripcion = formData.get("descripcion")?.toString();
+  const body = await req.json();
+  const { titulo, descripcion, imagen } = body;
 
-  let imagen_url = formData.get("imagen");
-
-  console.log("Datos para upsert:");
-  console.log("titulo:", titulo);
-  console.log("descripcion:", descripcion);
-  console.log("id_usuario:", user.id);
-  console.log("id_seccion:", id_seccion);
-  console.log("fecha_modificacion:", new Date());
+  let imagen_url;
 
  // Obtener imagen actual
   const { data: heroActual } = await supabase
@@ -70,21 +62,13 @@ export async function PATCH(req: NextRequest) {
     .eq("id", 1)
     .single();
 
-  if (imagen_url instanceof File) {
-    const file = imagen_url;
-    const { data, error } = await supabase.storage
-      .from("mulita-files")
-      .upload(`inicio/hero/${Date.now()}_${file.name}`, file);
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    imagen_url = supabase.storage.from("mulita-files").getPublicUrl(data.path).data.publicUrl;
-  } else {
+  if (imagen === null) {
     imagen_url = heroActual?.imagen;
+  } else {
+    imagen_url = imagen
   }
   
   console.log("imagen_url:", imagen_url);
-  
 
   const { data, error } = await supabase
     .from("hero")

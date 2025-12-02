@@ -37,7 +37,6 @@ export default function CrearNoticiaPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("Llegue a /noticias/crear/page");
     e.preventDefault();
 
     const nuevosErrores: ErroresFormulario = {};

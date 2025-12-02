@@ -5,6 +5,7 @@ import { supabaseServer } from "@/lib/supabase-server";
 // Definimos rutas especiales
 const comunidadPaths = ["/comunidad"];
 const adminOnlyPaths = ["/dashboard", "/dashboard/gestionUsuarios"];
+const authRequiredPaths = ["/perfil"]
 
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
@@ -100,6 +101,14 @@ async function checkPermissions(req: NextRequest, res: NextResponse, user: any, 
       }
     }
 
+    if (authRequiredPaths.some((p) => url.pathname.startsWith(p))) {
+      if (!access_token) {
+        url.pathname = "/";
+        url.searchParams.set("mensaje", "Tenés que iniciar sesión");
+        return NextResponse.redirect(url);
+      }
+    }
+
     // Dashboard: solo admins y superAdmins
     if (adminOnlyPaths.some((p) => url.pathname.startsWith(p))) {
       if (usuario.rol !== "admin" && usuario.rol !== "superAdmin") {
@@ -123,6 +132,7 @@ async function checkPermissions(req: NextRequest, res: NextResponse, user: any, 
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/perfil/:path*"
   ],
 };
 

@@ -2,6 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import SkeletonHero from "@/components/ui/dashboard/skeletons/SkeletonHero";
+import { uploadFile } from "@/lib/subirArchivos";
+import toast from "react-hot-toast"
+
+interface ArchivoSubido {
+  url: string;
+  name: string;
+  type: string;
+}
 
 export default function GestionHeroSobreNosotros() {
   const router = useRouter();
@@ -34,35 +43,76 @@ export default function GestionHeroSobreNosotros() {
     fetchHero();
   }, []);
 
+  function sanitizeFileName(fileName: string) {
+    return fileName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append("titulo", titulo);
-      formData.append("descripcion", descripcion);
-      
-      if (imagen instanceof File) formData.append("imagen", imagen);
+      const archivoSubido: ArchivoSubido[] = [];
+
+      if (imagen instanceof File) {
+        try {
+          const sanitizedFileName = sanitizeFileName(imagen.name);
+          const filePath = `sobreNosotros/hero/${Date.now()}_${sanitizedFileName}`;
+          
+          // Subir archivo usando la función uploadFile
+          const url = await uploadFile(imagen, filePath);
+          
+          archivoSubido.push({
+            url,
+            name: imagen.name,
+            type: imagen.type,
+          });
+        } catch (error) {
+          console.error(`Error subiendo ${imagen.name}:`, error);
+        }
+      }
+
+      const nuevaUrlImagen =
+      archivoSubido.length > 0
+        ? archivoSubido[0].url
+        : typeof imagen === "string"
+        ? imagen
+        : null;
 
       const res = await fetch("/api/sobreNosotros/hero", {
         method: "PATCH",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          titulo,
+          descripcion,
+          imagen: nuevaUrlImagen,
+        }),
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Error actualizando el hero");
+      if (!res.ok) {
+        toast.error("Error actualizando hero")
+        throw new Error("Error actualizando el hero");
+      }
 
+      toast.success("Hero actualizado exitosamente")
       router.push("/dashboard/gestionLanding/gestionSobreNosotros");
     } catch (err) {
       console.log("Error en fetch:", err);
-      alert("Error actualizando Hero");
+      toast.error("Error actualizando hero")
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleCancel = () => router.push("/dashboard/gestionLanding/gestionSobreNosotros");
+
+  if (loading) return <SkeletonHero />;
 
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">

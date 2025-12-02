@@ -50,10 +50,10 @@ export async function PATCH(req: NextRequest) {
 
   const id_seccion = seccion.id;
 
-  const formData = await req.formData();
-  const titulo = formData.get("titulo")?.toString();
-  const descripcion = formData.get("descripcion")?.toString();
-  let imagen_url = formData.get("imagen");
+  const body = await req.json();
+  const { titulo, descripcion, imagen } = body;
+
+  let imagen_url;
 
   // Obtener imagen actual
   const { data: heroActual } = await supabase
@@ -62,17 +62,10 @@ export async function PATCH(req: NextRequest) {
     .eq("id", 1)
     .single();
 
-  if (imagen_url instanceof File) {
-    const file = imagen_url;
-    const { data, error } = await supabase.storage
-      .from("mulita-files")
-      .upload(`sobreNosotros/hero/${Date.now()}_${file.name}`, file);
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    imagen_url = supabase.storage.from("mulita-files").getPublicUrl(data.path).data.publicUrl;
-  } else {
+  if (imagen === null) {
     imagen_url = heroActual?.imagen;
+  } else {
+    imagen_url = imagen
   }
 
   const { data, error } = await supabase
