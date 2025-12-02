@@ -143,7 +143,7 @@ export default function ModalColecciones({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center p-4"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999] flex justify-center items-center p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();

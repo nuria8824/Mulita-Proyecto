@@ -26,6 +26,20 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
   const { user } = useUser();
   const router = useRouter();
 
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  if (!open) return null;
+
   const handleComprar = () => {
     if (!user) {
       toast.error("Debes iniciar sesión para poder comprar");
@@ -53,20 +67,6 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
     },
   };
 
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  if (!open) return null;
-
   const prev = () => {
     setCurrentIndex((i) => (i === 0 ? producto.imagenes.length - 1 : i - 1));
   };
@@ -79,12 +79,8 @@ export default function ProductoModal({ open, onClose, producto }: ProductoModal
 
   return (
     <div 
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start justify-center z-50 px-4 py-20 overflow-y-auto"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] px-4 py-20"
+      onClick={onClose}
     >
       <div
         className="

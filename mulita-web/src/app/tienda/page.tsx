@@ -71,6 +71,7 @@ function TiendaContent() {
       {/* Filtro de tipos */}
       <div className="mb-8 flex justify-center">
         <select
+          aria-label="tipo"
           value={tipoSeleccionado}
           onChange={(e) => {
             setTipoSeleccionado(e.target.value);

@@ -15,7 +15,8 @@ export default function Header() {
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/noticias/crear") ||
-    pathname.startsWith("/noticias/editar")
+    pathname.startsWith("/noticias/editar") || 
+    pathname.startsWith("/perfil/editar")
   ) {
     return null;
   }

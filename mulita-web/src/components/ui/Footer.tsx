@@ -16,6 +16,7 @@ export function Footer() {
     pathname.startsWith("/perfil") ||
     pathname.startsWith("/colecciones") ||
     pathname.startsWith("/productos") ||
+    pathname.startsWith("/tienda/carrito") ||
     pathname.startsWith("/auth")
   ) {
     return null;

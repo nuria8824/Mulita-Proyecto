@@ -382,7 +382,7 @@ export default function ActividadesUsuario({
         </div>
       </div>
 
-      <div className="flex flex-col gap-8 max-w-2xl w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl mx-auto">
         {actividades.map((act) => {
           const imagenesAct = act.actividad_archivos.filter((a) => a.tipo.startsWith("image/"));
           const otrosArchivos = act.actividad_archivos.filter((a) => !a.tipo.startsWith("image/"));
