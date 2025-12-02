@@ -132,11 +132,11 @@ export default function CompraModal({ open, onClose, items, source = "cart" }: C
     Mi pedido es
 
     ${items.map((i) => 
-      `• ${i.cantidad}x *${i.nombre}*: $${i.precio_unitario.toFixed(2).toLocaleString()}`
+      `• ${i.cantidad}x *${i.nombre}*: $${(i.precio_unitario).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
     )
     .join("\n")}
 
-    *TOTAL: $${total.toFixed(2).toLocaleString()}*
+    *TOTAL: $${(total).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}*
 
     _Espero tu confirmación y los datos bancarios para el pago. ¡Gracias!_
     `;
@@ -428,7 +428,7 @@ export default function CompraModal({ open, onClose, items, source = "cart" }: C
         {/* TOTAL DEL PEDIDO */}
         <div className="text-right mb-4 mt-4">
           <p className="text-lg font-semibold">
-            Total: ${total.toFixed(2).toLocaleString()}
+            Total: ${(total).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
           </p>
         </div>
 
