@@ -6,7 +6,7 @@ import { useUser } from "@/hooks/queries";
 import UserRoleBadge from "@/components/ui/dashboard/UserRoleBadge";
 
 export default function DashboardPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isLoading: userLoading } = useUser();
   const [stats, setStats] = useState({
     usuarios: { total: 0, nuevos: 0 },
     actividades: { total: 0, nuevas: 0 },
