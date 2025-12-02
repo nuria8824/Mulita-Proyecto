@@ -125,7 +125,7 @@ export default function GestionproductosPage() {
       </div>
 
       {/* Lista de productos */}
-      <div className="flex-1 w-full max-w-[1100px] mt-6 flex flex-col gap-4">
+      <div className="flex-1 w-full max-w-[1100px] mt-6 flex flex-col gap-4 mb-8">
         {productos.length === 0 ? (
           <p className="text-center text-gray-500 mt-10">
             No hay productos disponibles.
