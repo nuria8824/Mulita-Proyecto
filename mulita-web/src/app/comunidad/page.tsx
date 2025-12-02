@@ -3,7 +3,7 @@ import Comunidad from "@/components/ui/comunidad/Comunidad";
 
 export default function ComunidadPage() {
   return (
-    <Suspense fallback={<div>Cargando comunidad...</div>}>
+    <Suspense>
       <Comunidad />
     </Suspense>
   );

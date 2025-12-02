@@ -47,15 +47,14 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     return NextResponse.json({ error: "No podés modificar el perfil de otro usuario" }, { status: 403 });
   }
 
-  const formData = await req.formData();
-  const biografia = formData.get("biografia")?.toString() || "";
-  const nombre = formData.get("nombre")?.toString() || "";
-  const apellido = formData.get("apellido")?.toString() || "";
-  const passwordActual = formData.get("passwordActual")?.toString();
-  const passwordNueva = formData.get("passwordNueva")?.toString();
-  let imagen_url = formData.get("imagen");
+  // Leer datos JSON
+  const body = await req.json();
+  const { biografia, nombre, apellido, passwordActual, passwordNueva, imagen } = body;
 
-  console.log("Datos recibidos para actualizar perfil:", { biografia, nombre, apellido });
+  let imagen_url;
+
+  console.log("Datos recibidos para actualizar:", { biografia, nombre, apellido });
+  console.log("imagen url", imagen);
 
   // Validar que nombre y apellido no estén vacíos
   if (!nombre.trim() || !apellido.trim()) {
@@ -92,25 +91,15 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
   const { data: perfilActual } = await supabaseServer
     .from("perfil")
     .select("imagen")
-    .eq("id", user.id)
+    .eq("id", params.id)
     .single();
 
-  if (imagen_url instanceof File) {
-    const file = imagen_url;
-    const { data, error } = await supabaseServer.storage
-      .from("mulita-files")
-      .upload(`perfiles/${user.id}/${Date.now()}_${file.name}`, file);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    imagen_url = supabaseServer.storage.from("mulita-files").getPublicUrl(data.path).data.publicUrl;
-  } else {
+  // Subir imagen_principal si es un File
+  if (imagen === null) {
     imagen_url = perfilActual?.imagen;
+  } else {
+    imagen_url = imagen
   }
-
-  console.log("imagen_url final para actualizar:", imagen_url);
 
   // Actualizar perfil
   const { data: perfil, error } = await supabaseServer
