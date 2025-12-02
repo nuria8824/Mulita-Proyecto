@@ -201,6 +201,7 @@ export default function RegisterPage() {
                 options={countryOptions}
                 value={countryOptions.find((o) => o.value === selectedCountry)}
                 onChange={(option: any) => handleCountryChange({ target: { value: option.value } } as any)}
+                placeholder="País"
               />
 
               {/* Seleccionar provincia según país */}
@@ -209,7 +210,7 @@ export default function RegisterPage() {
                   options={ListaProvincias.map(p => ({ value: p.name, label: p.name }))}
                   onChange={(option: any) => handleStateChange(option.value)}
                   value={selectedState ? { value: selectedState, label: selectedState } : null}
-                  placeholder="Selecciona una provincia"
+                  placeholder="Provincia"
                 />
               ) : (
                 <input
