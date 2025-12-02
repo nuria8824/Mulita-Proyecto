@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import BackButton from "@/components/ui/dashboard/BackButton";
 
 export default function EditarPerfilPage() {
   console.log("Rendering EditarPerfilPage");
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [biografia, setBiografia] = useState("");
   const [imagen, setImagen] = useState<File | string | null>(null);
@@ -116,6 +118,9 @@ export default function EditarPerfilPage() {
       }
 
       toast.success("Perfil actualizado exitosamente");
+      
+      // Refrescar datos del usuario en todas partes
+      await queryClient.invalidateQueries({ queryKey: ["user"] });
       
       // Si cambió la contraseña, redirigir a login
       if (passwordNueva) {
