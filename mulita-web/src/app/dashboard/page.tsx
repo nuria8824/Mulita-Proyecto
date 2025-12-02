@@ -2,8 +2,11 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useUser } from "@/hooks/queries";
+import UserRoleBadge from "@/components/ui/dashboard/UserRoleBadge";
 
 export default function DashboardPage() {
+  const { user, loading: userLoading } = useUser();
   const [stats, setStats] = useState({
     usuarios: { total: 0, nuevos: 0 },
     actividades: { total: 0, nuevas: 0 },
@@ -37,13 +40,45 @@ export default function DashboardPage() {
   return (
     <div className="w-full flex flex-col items-center px-4 sm:px-6 lg:px-10 pb-10 text-center text-xs text-[#6d758f] font-inter">
       
-      {/* Headings */}
+      {/* Headings con información del usuario */}
       <div className="w-full max-w-5xl flex flex-col items-start text-[28px] sm:text-[36px]">
         <div className="font-extrabold text-black">Dashboard</div>
         <div className="text-left text-base leading-6 mt-2">
           Resumen del estado actual de la página Mulita
         </div>
       </div>
+
+      {/* Tarjeta de bienvenida con rol del usuario */}
+      {!userLoading && user && (
+        <div className="w-full max-w-5xl mt-8 bg-gradient-to-r from-[#003C71] to-[#005a9f] rounded-lg p-8 text-white shadow-lg relative">
+          <div className="flex flex-col items-center justify-center gap-6 text-center">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">
+                ¡Bienvenido, {user.nombre}!
+              </h2>
+              <p className="text-blue-100 mb-4">
+                Aquí puedes gestionar todos los aspectos de Mulita
+              </p>
+              <div className="flex justify-center">
+                <UserRoleBadge />
+              </div>
+            </div>
+          </div>
+          {user.imagen && (
+            <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+              <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden flex items-center justify-center">
+                <Image
+                  src={user.imagen}
+                  alt={user.nombre}
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Grid de cards */}
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-5xl">
