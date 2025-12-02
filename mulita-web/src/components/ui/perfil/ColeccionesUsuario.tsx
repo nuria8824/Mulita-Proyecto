@@ -42,7 +42,15 @@ export default function ColeccionesUsuario({ userPerfilId }: ColeccionesUsuarioP
         const data = await res.json();
 
         if (!res.ok) throw new Error(data.error || "Error al obtener colecciones");
-        setColecciones(data);
+
+      const coleccionesOrdenadas = data.sort((a: Coleccion, b: Coleccion) => {
+        if (a.tipo === "favoritos") return -1;
+        if (b.tipo === "favoritos") return 1;
+
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+
+        setColecciones(coleccionesOrdenadas);
       } catch (err: any) {
         setError(err.message);
       } finally {
