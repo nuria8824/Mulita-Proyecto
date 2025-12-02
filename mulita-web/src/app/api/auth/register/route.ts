@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 import { supabaseServer } from "@/lib/supabase-server";
 import { z } from "zod";
 
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
     // }
 
     // 1. Crear usuario en Supabase Auth
-    const { data: authData, error: authError } = await supabaseServer.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.contrasena,
     });
@@ -77,7 +78,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Insertar en tabla usuario
-    const { error: userError } = await supabaseServer.from("usuario").insert([
+    const { error: userError } = await supabaseServer.from("usuario").update([
       {
         id: userId,
         nombre: data.nombre,
@@ -87,6 +88,7 @@ export async function POST(req: Request) {
         rol: data.rol,
       },
     ])
+    .eq("id", userId);
 
     if (userError) {
       console.log("Error inserting into usuario table:", userError);
