@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import SkeletonHero from "@/components/ui/dashboard/skeletons/SkeletonHero";
 import { uploadFile } from "@/lib/subirArchivos";
 import toast from "react-hot-toast"
 
@@ -110,6 +111,8 @@ export default function GestionHeroPage() {
   };
 
   const handleCancel = () => router.push("/dashboard/gestionLanding/gestionInicio");
+
+  if (loading) return <SkeletonHero />;
 
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">

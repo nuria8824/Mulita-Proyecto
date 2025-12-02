@@ -62,7 +62,6 @@ export async function PATCH(req: NextRequest) {
     .eq("id", 1)
     .single();
 
-  // Subir imagen_principal si es un File
   if (imagen === null) {
     imagen_url = heroActual?.imagen;
   } else {
