@@ -93,7 +93,7 @@ export default function GestionNoticiasPage() {
       </div>
 
       {/* Lista de noticias */}
-      <div className="flex-1 w-full max-w-[1100px] mt-6 flex flex-col gap-4">
+      <div className="flex-1 w-full max-w-[1100px] mt-6 flex flex-col gap-4 mb-8">
         {noticias.length === 0 ? (
           <p className="text-center text-gray-500 mt-10">
             No hay noticias disponibles.
