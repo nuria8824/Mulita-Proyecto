@@ -6,12 +6,6 @@ import SkeletonMisionVision from "@/components/ui/dashboard/skeletons/SkeletonMi
 import { uploadFile } from "@/lib/subirArchivos";
 import toast from "react-hot-toast"
 
-interface ArchivoSubido {
-  url: string;
-  name: string;
-  type: string;
-}
-
 export default function GestionMisionVisionPage() {
   const router = useRouter();
 
@@ -61,7 +55,8 @@ export default function GestionMisionVisionPage() {
     setSubmitting(true);
 
     try {
-      const archivoSubido: ArchivoSubido[] = [];
+      let nuevaUrlImagen1: string | null = typeof imagen1 === "string" ? imagen1 : null;
+      let nuevaUrlImagen2: string | null = typeof imagen2 === "string" ? imagen2 : null;
       
       if (imagen1 instanceof File) {
         try {
@@ -71,22 +66,11 @@ export default function GestionMisionVisionPage() {
           // Subir archivo usando la función uploadFile
           const url = await uploadFile(imagen1, filePath);
           
-          archivoSubido.push({
-            url,
-            name: imagen1.name,
-            type: imagen1.type,
-          });
+          nuevaUrlImagen1 = url;
         } catch (error) {
           console.error(`Error subiendo ${imagen1.name}:`, error);
         }
       }
-
-      const nuevaUrlImagen1 =
-      archivoSubido.length > 0
-        ? archivoSubido[0].url
-        : typeof imagen1 === "string"
-        ? imagen1
-        : null;
 
       if (imagen2 instanceof File) {
         try {
@@ -96,22 +80,11 @@ export default function GestionMisionVisionPage() {
           // Subir archivo usando la función uploadFile
           const url = await uploadFile(imagen2, filePath);
           
-          archivoSubido.push({
-            url,
-            name: imagen2.name,
-            type: imagen2.type,
-          });
+          nuevaUrlImagen2 = url;
         } catch (error) {
           console.error(`Error subiendo ${imagen2.name}:`, error);
         }
       }
-
-      const nuevaUrlImagen2 =
-      archivoSubido.length > 0
-        ? archivoSubido[1].url
-        : typeof imagen2 === "string"
-        ? imagen2
-        : null;
 
       const res = await fetch("/api/sobreNosotros/misionVision", {
         method: "PATCH",
