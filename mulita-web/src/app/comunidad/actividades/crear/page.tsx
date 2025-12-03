@@ -48,9 +48,31 @@ export default function CrearActividadPage() {
   }, []);
 
   const handleCategoriaChange = (id: string) => {
-    setCategoriasSeleccionadas((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
+    const categoriaPulsada = categorias.find((c) => c.id === id);
+    if (!categoriaPulsada) return;
+
+    setCategoriasSeleccionadas((prev) => {
+      // Si ya está seleccionada, desseleccionar
+      if (prev.includes(id)) {
+        return prev.filter((c) => c !== id);
+      }
+
+      // Si no está seleccionada, buscar si ya hay una del mismo tipo
+      const categoriasDelMismoTipo = prev.filter(
+        (cId) => categorias.find((c) => c.id === cId)?.tipo === categoriaPulsada.tipo
+      );
+
+      // Si ya hay una del mismo tipo, reemplazarla; si no, agregar
+      if (categoriasDelMismoTipo.length > 0) {
+        // Reemplazar la anterior por la nueva
+        return prev
+          .filter((cId) => categorias.find((c) => c.id === cId)?.tipo !== categoriaPulsada.tipo)
+          .concat(id);
+      }
+
+      // Si no hay ninguna del mismo tipo, agregar
+      return [...prev, id];
+    });
   };
 
   // Manejo de archivos
