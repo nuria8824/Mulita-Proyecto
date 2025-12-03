@@ -248,7 +248,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
           {/* GALERÍA DE IMÁGENES */}
           {imagenesAct?.length > 0 && (
             <div className="grid grid-cols-3 gap-2 mb-4 overflow-hidden">
-              {imagenesAct.map((img: any, i: number) => (
+              {imagenesAct.slice(0, 2).map((img: any, i: number) => (
                 <button
                   key={i}
                   onClick={() => {
@@ -264,6 +264,18 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
                   />
                 </button>
               ))}
+              {/* Indicador de más imágenes */}
+              {imagenesAct.length > 2 && (
+                <button
+                  onClick={() => {
+                    setIndexImagen(2);
+                    setModalImagenes(true);
+                  }}
+                  className="aspect-square rounded-md flex items-center justify-center text-gray-700 text-2xl font-bold transition relative overflow-hidden bg-gray-200"
+                >
+                  <span className="relative z-10">+{imagenesAct.length - 2}</span>
+                </button>
+              )}
             </div>
           )}
         </div>

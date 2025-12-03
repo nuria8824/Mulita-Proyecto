@@ -352,7 +352,7 @@ export default function CrearActividadPage() {
               <div>
                 {/* Vista previa de archivos */}
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {archivos.slice(0, 3).map((archivo, index) => (
+                  {archivos.map((archivo, index) => (
                     <div key={index} className="relative group">
                       {/* Mostrar preview si es imagen */}
                       {archivo.type.startsWith("image/") ? (
@@ -377,16 +377,6 @@ export default function CrearActividadPage() {
                       </button>
                     </div>
                   ))}
-
-                  {/* Indicador de más archivos */}
-                  {archivos.length > 3 && (
-                    <div className="w-24 h-24 bg-blue-100 rounded-md border-2 border-blue-300 flex items-center justify-center cursor-default">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">+{archivos.length - 3}</div>
-                        <div className="text-xs text-blue-600">más</div>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Lista completa de archivos */}

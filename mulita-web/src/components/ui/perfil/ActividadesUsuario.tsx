@@ -475,7 +475,7 @@ export default function ActividadesUsuario({
                 {/* Galería de imágenes */}
                 {imagenesAct.length > 0 && (
                   <div className="px-4 pb-4 grid grid-cols-3 gap-2">
-                    {imagenesAct.map((img, i) => (
+                    {imagenesAct.slice(0, 2).map((img, i) => (
                       <button
                         key={i}
                         onClick={() => toggleModal(imagenesAct, i)}
@@ -488,6 +488,15 @@ export default function ActividadesUsuario({
                         />
                       </button>
                     ))}
+                    {/* Indicador de más imágenes */}
+                    {imagenesAct.length > 2 && (
+                      <button
+                        onClick={() => toggleModal(imagenesAct, 2)}
+                        className="w-full aspect-square rounded-md flex items-center justify-center text-gray-700 text-2xl font-bold transition relative overflow-hidden bg-gray-200"
+                      >
+                        <span className="relative z-10">+{imagenesAct.length - 2}</span>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
