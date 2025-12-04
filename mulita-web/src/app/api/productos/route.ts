@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 12;
   const tipo_producto = searchParams.get("tipo_producto");
+  const busqueda = searchParams.get("busqueda");
 
   const from = (page - 1) * limit;
   const to = from + limit - 1;
@@ -23,6 +24,11 @@ export async function GET(req: NextRequest) {
   // Filtrar por tipo de producto si se proporciona
   if (tipo_producto) {
     query = query.eq("tipo_producto", tipo_producto);
+  }
+
+  // Filtrar por búsqueda en nombre o descripción
+  if (busqueda && busqueda.trim()) {
+    query = query.or(`nombre.ilike.%${busqueda.trim()}%,descripcion.ilike.%${busqueda.trim()}%`);
   }
 
   const { data, error } = await query

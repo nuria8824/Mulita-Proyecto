@@ -48,9 +48,31 @@ export default function CrearActividadPage() {
   }, []);
 
   const handleCategoriaChange = (id: string) => {
-    setCategoriasSeleccionadas((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
+    const categoriaPulsada = categorias.find((c) => c.id === id);
+    if (!categoriaPulsada) return;
+
+    setCategoriasSeleccionadas((prev) => {
+      // Si ya está seleccionada, desseleccionar
+      if (prev.includes(id)) {
+        return prev.filter((c) => c !== id);
+      }
+
+      // Si no está seleccionada, buscar si ya hay una del mismo tipo
+      const categoriasDelMismoTipo = prev.filter(
+        (cId) => categorias.find((c) => c.id === cId)?.tipo === categoriaPulsada.tipo
+      );
+
+      // Si ya hay una del mismo tipo, reemplazarla; si no, agregar
+      if (categoriasDelMismoTipo.length > 0) {
+        // Reemplazar la anterior por la nueva
+        return prev
+          .filter((cId) => categorias.find((c) => c.id === cId)?.tipo !== categoriaPulsada.tipo)
+          .concat(id);
+      }
+
+      // Si no hay ninguna del mismo tipo, agregar
+      return [...prev, id];
+    });
   };
 
   // Manejo de archivos
@@ -327,23 +349,55 @@ export default function CrearActividadPage() {
             </label>
 
             {archivos.length > 0 && (
-              <ul className="mt-2 space-y-1 text-sm">
-                {archivos.map((archivo, index) => (
-                  <li
-                    key={index}
-                    className="flex justify-between items-center border rounded-md px-3 py-1 bg-gray-50"
-                  >
-                    <span className="truncate">{archivo.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleEliminarArchivo(index)}
-                      className="text-red-500 hover:text-red-700 text-sm font-semibold"
+              <div>
+                {/* Vista previa de archivos */}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {archivos.map((archivo, index) => (
+                    <div key={index} className="relative group">
+                      {/* Mostrar preview si es imagen */}
+                      {archivo.type.startsWith("image/") ? (
+                        <img
+                          src={URL.createObjectURL(archivo)}
+                          alt={archivo.name}
+                          className="w-24 h-24 object-cover rounded-md border border-gray-300"
+                          title={archivo.name}
+                        />
+                      ) : (
+                        <div className="w-24 h-24 bg-gray-200 rounded-md border border-gray-300 flex items-center justify-center text-xs text-center p-2">
+                          {archivo.name.split(".").pop()?.toUpperCase()}
+                        </div>
+                      )}
+                      {/* Botón eliminar */}
+                      <button
+                        type="button"
+                        onClick={() => handleEliminarArchivo(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-sm font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Lista completa de archivos */}
+                <ul className="mt-3 space-y-1 text-sm border-t pt-2">
+                  {archivos.map((archivo, index) => (
+                    <li
+                      key={index}
+                      className="flex justify-between items-center border rounded-md px-3 py-2 bg-gray-50 hover:bg-gray-100 transition"
                     >
-                      ✕
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                      <span className="truncate text-xs">{archivo.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleEliminarArchivo(index)}
+                        className="text-red-500 hover:text-red-700 text-lg font-semibold ml-2"
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
 

@@ -27,6 +27,7 @@ function TiendaContent() {
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [tipoSeleccionado, setTipoSeleccionado] = useState("");
+  const [busqueda, setBusqueda] = useState("");
   const limit = 12;
 
   const fetchProductos = async () => {
@@ -36,6 +37,9 @@ function TiendaContent() {
       let url = `/api/productos?page=${page}&limit=${limit}`;
       if (tipoSeleccionado) {
         url += `&tipo_producto=${tipoSeleccionado}`;
+      }
+      if (busqueda.trim()) {
+        url += `&busqueda=${encodeURIComponent(busqueda.trim())}`;
       }
       const res = await fetch(url);
       const data = await res.json();
@@ -53,7 +57,7 @@ function TiendaContent() {
 
   useEffect(() => {
     fetchProductos();
-  }, [page, tipoSeleccionado]);
+  }, [page, tipoSeleccionado, busqueda]);
 
   const totalPages = Math.ceil(total / limit);
 
@@ -69,23 +73,38 @@ function TiendaContent() {
       </div>
 
       {/* Filtro de tipos */}
-      <div className="mb-8 flex justify-center">
-        <select
-          aria-label="tipo"
-          value={tipoSeleccionado}
-          onChange={(e) => {
-            setTipoSeleccionado(e.target.value);
-            setPage(1); // Reiniciar paginación al cambiar filtro
-          }}
-          className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:outline-none"
-        >
-          <option value="">Todos los tipos</option>
-          {TIPOS_PRODUCTOS.map((tipo) => (
-            <option key={tipo.id} value={tipo.id}>
-              {tipo.nombre}
-            </option>
-          ))}
-        </select>
+      <div className="mb-8 flex flex-col gap-4 items-center justify-center">
+        {/* Barra de búsqueda y filtro */}
+        <div className="flex flex-col md:flex-row gap-4 w-full max-w-2xl">
+          {/* Barra de búsqueda */}
+          <input
+            type="text"
+            placeholder="Buscar productos por nombre..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPage(1); // Reiniciar paginación al buscar
+            }}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:outline-none"
+          />
+
+          {/* Filtro de tipos */}
+          <select
+            value={tipoSeleccionado}
+            onChange={(e) => {
+              setTipoSeleccionado(e.target.value);
+              setPage(1); // Reiniciar paginación al cambiar filtro
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:outline-none md:w-auto"
+          >
+            <option value="">Todos los tipos</option>
+            {TIPOS_PRODUCTOS.map((tipo) => (
+              <option key={tipo.id} value={tipo.id}>
+                {tipo.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Productos con skeleton integrado */}

@@ -8,17 +8,14 @@ export default function BackButton() {
   const pathname = usePathname();
 
   const handleBack = () => {
-    // Si estamos en una página anidada de gestión, volver a la sección anterior
-    // Ejemplo: /dashboard/gestionLanding/gestionCategorias -> /dashboard/gestionLanding
-    if (pathname.includes("/dashboard/gestionLanding/")) {
-      router.push("/dashboard/gestionLanding");
-    } 
-    // Si estamos en gestionLanding o gestionUsuarios, volver a /dashboard
-    else if (pathname.includes("/dashboard/gestion")) {
-      router.push("/dashboard");
-    } 
-    // Para otras páginas del dashboard, usar historial
-    else {
+    // Extraer segmentos de la ruta
+    const segments = pathname.split("/").filter(Boolean);
+    
+    // Siempre volver un nivel arriba en la ruta
+    if (segments.length > 1) {
+      const parentPath = "/" + segments.slice(0, segments.length - 1).join("/");
+      router.push(parentPath);
+    } else {
       router.back();
     }
   };
