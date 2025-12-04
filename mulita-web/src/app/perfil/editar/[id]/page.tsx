@@ -5,9 +5,16 @@ import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import BackButton from "@/components/ui/dashboard/BackButton";
+import { uploadFile } from "@/lib/subirArchivos";
+
+interface ArchivoSubido {
+  url: string;
+  name: string;
+  type: string;
+}
+
 
 export default function EditarPerfilPage() {
-  console.log("Rendering EditarPerfilPage");
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -22,6 +29,14 @@ export default function EditarPerfilPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [erroresForm, setErroresForm] = useState<Record<string, string>>({});
+
+   // Función para limpiar nombres de archivo
+  function sanitizeFileName(fileName: string) {
+    return fileName
+      .normalize("NFD") // separa letras y acentos
+      .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // reemplaza cualquier caracter no válido
+  }
 
   // Cargar perfil existente
   useEffect(() => {
@@ -86,22 +101,48 @@ export default function EditarPerfilPage() {
     setSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append("biografia", biografia);
-      formData.append("nombre", nombre.trim());
-      formData.append("apellido", apellido.trim());
-      if (passwordNueva) {
-        formData.append("passwordActual", passwordActual);
-        formData.append("passwordNueva", passwordNueva);
+      const archivoSubido: ArchivoSubido[] = []
+
+      if (imagen instanceof File) {
+        try {
+          const sanitizedFileName = sanitizeFileName(imagen.name);
+          const filePath = `perfiles/${params.id}/${Date.now()}_${sanitizedFileName}`;
+
+          // Subir archivo usando la función uploadFile
+          const url = await uploadFile(imagen, filePath);
+
+          archivoSubido.push({
+            url,
+            name: imagen.name,
+            type: imagen.type,
+          });
+        } catch (error) {
+          console.error(`Error subiendo ${imagen.name}:`, error);
+        }
       }
-      if (imagen instanceof File) formData.append("imagen", imagen);
+
+      const nuevaUrlImagen =
+      archivoSubido.length > 0
+        ? archivoSubido[0].url
+        : typeof imagen === "string"
+        ? imagen
+        : null;
 
       const res = await fetch(`/api/perfil/${params.id}`, {
         method: "PATCH",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          biografia,
+          nombre,
+          apellido,
+          passwordActual,
+          passwordNueva,
+          imagen: nuevaUrlImagen,
+        }),
         credentials: "include",
       });
-
       const data = await res.json();
 
       if (!res.ok) {

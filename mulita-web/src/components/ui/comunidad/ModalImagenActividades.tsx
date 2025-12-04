@@ -22,7 +22,7 @@ export default function ModalImagenActividades({
 
   return (
     <div
-      className="fixed inset-0 bg-gray-900/60 z-50 overflow-y-auto flex flex-col justify-center items-center py-4 px-4"
+      className="fixed inset-0 bg-gray-900/60 z-[9999] flex flex-col justify-center items-center py-4 px-4"
       onClick={onClose}
     >
       <div
@@ -37,9 +37,10 @@ export default function ModalImagenActividades({
         {/* Botón de cerrar */}
         <button
           onClick={onClose}
-          className="absolute top-1 right-4 text-white text-4xl font-black hover:text-gray-300 -translate-y-1/4"
+          className="fixed top-6 right-90 z-[60] flex items-center justify-center w-10 h-10 rounded-full bg-black/70 text-white text-2xl hover:bg-black/90 transition-colors"
+          aria-label="Cerrar"
         >
-          ⨉
+          ✕
         </button>
 
         {/* Navegación entre imágenes */}
@@ -47,13 +48,13 @@ export default function ModalImagenActividades({
           <>
             <button
               onClick={prevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-5xl font-black hover:text-gray-300"
+              className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-black/70 text-white text-xl hover:bg-black/90 transition-colors"
             >
               ‹
             </button>
             <button
               onClick={nextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-5xl font-black hover:text-gray-300"
+              className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-black/70 text-white text-xl hover:bg-black/90 transition-colors"
             >
               ›
             </button>

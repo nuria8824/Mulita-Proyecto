@@ -6,7 +6,7 @@ import { uploadFile } from "@/lib/subirArchivos";
 import { toast } from "react-hot-toast";
 import Select from "react-select";
 
-// --- TIPOS ---
+// TIPOS
 
 type TipoDocumento = "link" | "archivo" | "imagen";
 
@@ -33,7 +33,7 @@ const opcionesTipo = [
   { value: "imagen", label: "Imagen" },
 ];
 
-// --- COMPONENTE PRINCIPAL ---
+// COMPONENTE PRINCIPAL
 
 export default function GestionDocumentacion() {
   const router = useRouter();
@@ -46,7 +46,7 @@ export default function GestionDocumentacion() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // 1. CARGA DE DATOS (useEffect)
+  // CARGA DE DATOS
   useEffect(() => {
     const fetchDocumentacion = async () => {
       try {
@@ -84,7 +84,7 @@ export default function GestionDocumentacion() {
     fetchDocumentacion();
   }, []);
 
-  // --- VALIDACIÓN DE FORMULARIO ---
+  // VALIDACIÓN DE FORMULARIO
   const validarFormulario = () => {
     let valido = true;
 
@@ -148,7 +148,7 @@ export default function GestionDocumentacion() {
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-zA-Z0-9.\-_]/g, "_");
 
-  // 2. MANEJO DE CAMBIOS
+  // MANEJO DE CAMBIOS
   const handleDocChange = (index: number, field: keyof Documento, value: any) => {
     const nuevosDocs = [...documentos];
     const nuevosErrores = [...erroresDocs];
@@ -207,7 +207,7 @@ export default function GestionDocumentacion() {
     setErroresDocs(erroresDocs.filter((_, i) => i !== index));
   };
   
-  // 3. MANEJO DE SUBMIT (PATCH)
+  // MANEJO DE SUBMIT (PATCH)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);

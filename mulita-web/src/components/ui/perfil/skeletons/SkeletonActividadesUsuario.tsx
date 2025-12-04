@@ -5,8 +5,8 @@ export function SkeletonActividadesUsuario() {
         Cargando actividades...
       </h2>
 
-      <div className="flex flex-col gap-8 max-w-2xl w-full">
-        {[1, 2, 3].map((i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl mx-auto">
+        {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
             className="w-full bg-white rounded-2xl shadow border border-gray-200 p-5 flex flex-col gap-4"

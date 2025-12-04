@@ -163,7 +163,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 flex items-start justify-center z-50 px-4 py-20 overflow-y-auto"
+      className="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[9999] px-4 py-6"
       onClick={(e) => {
         // Cerrar solo si se hace clic en el fondo, no en el modal
         if (e.target === e.currentTarget) {
@@ -174,14 +174,14 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
       {/* Botón de cierre con fondo circular */}
       <button
         onClick={onClose}
-        className="fixed top-6 right-6 z-[60] flex items-center justify-center w-10 h-10 rounded-full bg-black/70 text-white text-2xl hover:bg-black/90 transition-colors"
+        className="fixed top-6 right-70 z-[60] flex items-center justify-center w-10 h-10 rounded-full bg-black/70 text-white text-2xl hover:bg-black/90 transition-colors"
         aria-label="Cerrar"
       >
         ✕
       </button>
 
       {/* Contenedor del modal */}
-      <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl w-full max-w-2xl relative shadow-lg flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl w-full max-w-2xl relative shadow-lg flex flex-col max-h-[90vh] overflow-y-auto">
         {/* SECCIÓN SUPERIOR FIJA (CABECERA, DESCRIPCIÓN, GALERÍA) */}
         <div className="mb-4 pb-4 border-b border-gray-200 flex-shrink-0">
           {/* CABECERA */}
@@ -333,7 +333,7 @@ export default function ComentariosModal({ actividad, onClose, onActualizarComen
         />
 
         {/* COMENTARIOS - SECCIÓN DESPLAZABLE */}
-        <div className="border-t border-gray-200 pt-3 overflow-y-auto flex-1 min-h-0">
+        <div className="border-t border-gray-200 pt-3 flex-1 min-h-0">
           <h3 className="text-sm font-medium mb-2 text-black pb-2">Comentarios</h3>
 
           {loading ? (

@@ -67,7 +67,7 @@ export default function GestionProductosPage() {
             Gestión Productos
           </h1>
           <p className="mt-2 text-left text-sm sm:text-base leading-6 text-[#6d758f]">
-            Gestiona las productos creadas o crea una nueva.
+            Gestiona los productos que serán visibles en el incio.
           </p>
         </div>
       </div>

@@ -65,6 +65,7 @@ export default function GestionUsuariosPage() {
         
         <div className="sm:w-40">
           <select
+            aria-label="filtro"
             value={rolFilter}
             onChange={(e) => {
               setRolFilter(e.target.value);

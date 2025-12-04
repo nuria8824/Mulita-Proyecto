@@ -108,6 +108,7 @@ export default function GestionCategoriasPage() {
             className="flex gap-2 shadow-md rounded-md bg-[#f8faff] border border-[#e0e0e0] p-2"
           >
             <select
+              aria-label="categoria"
               value={tipo}
               onChange={(e) => setTipo(e.target.value as "curso" | "dificultad" | "materia")}
               className="px-2 py-1 border border-[#ccc] rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
@@ -143,6 +144,7 @@ export default function GestionCategoriasPage() {
           className="flex-1 px-4 py-3 border border-[#ccc] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
         <select
+          aria-label="categoria"
           value={filtroTipo}
           onChange={(e) => setFiltroTipo(e.target.value as "" | "curso" | "dificultad" | "materia")}
           className="sm:w-48 px-4 py-3 border border-[#ccc] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"

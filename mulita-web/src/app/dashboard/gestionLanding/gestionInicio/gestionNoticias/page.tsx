@@ -67,7 +67,7 @@ export default function GestionNoticiasPage() {
             Gestión Noticias
           </h1>
           <p className="mt-2 text-left text-sm sm:text-base leading-6 text-[#6d758f]">
-            Gestiona las noticias creadas o crea una nueva.
+            Gestiona las noticias que serán visibles en el inicio.
           </p>
         </div>
       </div>

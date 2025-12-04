@@ -58,7 +58,7 @@ export function MisionVision() {
 
         {/* Visión */}
         <div className="flex flex-col bg-white border border-gray-200 rounded-lg shadow-sm p-6 w-full lg:w-1/2">
-          <div className="w-full rounded-lg mt-2 relative overflow-hidden">
+          <div className="w-full h-[250px] rounded-lg mt-2 relative overflow-hidden">
             <img
               className="object-cover w-full h-full"
               src={misionVision.imagen2}

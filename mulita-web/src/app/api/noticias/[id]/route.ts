@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
   let imagen_principal_url;
 
   // Obtener imagen actual
-  const { data: noticiActual } = await supabase
+  const { data: noticiaActual } = await supabase
     .from("noticia")
     .select("imagen_principal")
     .eq("id", params.id)
@@ -50,7 +50,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
 
   // Subir imagen_principal si es un File
   if (imagen_principal === null) {
-    imagen_principal_url = noticiActual?.imagen_principal;
+    imagen_principal_url = noticiaActual?.imagen_principal;
   } else {
     imagen_principal_url = imagen_principal
   }

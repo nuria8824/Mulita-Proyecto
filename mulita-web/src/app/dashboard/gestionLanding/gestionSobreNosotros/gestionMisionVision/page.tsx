@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import SkeletonMisionVision from "@/components/ui/dashboard/skeletons/SkeletonMisionVision";
+import { uploadFile } from "@/lib/subirArchivos";
+import toast from "react-hot-toast"
 
 export default function GestionMisionVisionPage() {
   const router = useRouter();
@@ -40,32 +43,75 @@ export default function GestionMisionVisionPage() {
     fetchMisionVision();
   }, []);
 
+  function sanitizeFileName(fileName: string) {
+    return fileName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append("titulo1", titulo1);
-      formData.append("titulo2", titulo2);
-      formData.append("descripcion1", descripcion1);
-      formData.append("descripcion2", descripcion2);
+      let nuevaUrlImagen1: string | null = typeof imagen1 === "string" ? imagen1 : null;
+      let nuevaUrlImagen2: string | null = typeof imagen2 === "string" ? imagen2 : null;
+      
+      if (imagen1 instanceof File) {
+        try {
+          const sanitizedFileName = sanitizeFileName(imagen1.name);
+          const filePath = `sobreNosotros/mision-vision/${Date.now()}_${sanitizedFileName}`;
+          
+          // Subir archivo usando la función uploadFile
+          const url = await uploadFile(imagen1, filePath);
+          
+          nuevaUrlImagen1 = url;
+        } catch (error) {
+          console.error(`Error subiendo ${imagen1.name}:`, error);
+        }
+      }
 
-      if (imagen1 instanceof File) formData.append("imagen1", imagen1);
-      if (imagen2 instanceof File) formData.append("imagen2", imagen2);
+      if (imagen2 instanceof File) {
+        try {
+          const sanitizedFileName = sanitizeFileName(imagen2.name);
+          const filePath = `sobreNosotros/mision-vision/${Date.now()}_${sanitizedFileName}`;
+          
+          // Subir archivo usando la función uploadFile
+          const url = await uploadFile(imagen2, filePath);
+          
+          nuevaUrlImagen2 = url;
+        } catch (error) {
+          console.error(`Error subiendo ${imagen2.name}:`, error);
+        }
+      }
 
       const res = await fetch("/api/sobreNosotros/misionVision", {
         method: "PATCH",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          titulo1,
+          titulo2,
+          descripcion1,
+          descripcion2,
+          imagen1: nuevaUrlImagen1,
+          imagen2: nuevaUrlImagen2,
+        }),
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Error al actualizar el contenido");
+      if (!res.ok) {
+        toast.error("Error actualizando Misión y Visión")
+        throw new Error("Error actualizando misión visión");
+      }
 
+      toast.success("Misión y Visión actualizadas exitosamente")
       router.push("/dashboard/gestionLanding/gestionSobreNosotros");
     } catch (err) {
       console.error(err);
-      alert("Error al actualizar Mision Vision");
+      toast.error("Error actualizando Misión y Visión")
     } finally {
       setSubmitting(false);
     }
@@ -73,7 +119,7 @@ export default function GestionMisionVisionPage() {
 
   const handleCancel = () => router.push("/dashboard/gestionLanding/gestionSobreNosotros");
 
-  if (loading) return <p className="text-center mt-10">Cargando datos...</p>;
+  if (loading) return <SkeletonMisionVision />;
 
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">

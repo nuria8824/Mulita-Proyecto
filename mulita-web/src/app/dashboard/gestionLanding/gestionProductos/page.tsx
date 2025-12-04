@@ -100,6 +100,7 @@ export default function GestionproductosPage() {
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           {/* Selector de tipo de producto */}
           <select
+            aria-label="tipo"
             value={tipoSeleccionado}
             onChange={(e) => setTipoSeleccionado(e.target.value)}
             className="w-full sm:w-64 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
@@ -124,7 +125,7 @@ export default function GestionproductosPage() {
       </div>
 
       {/* Lista de productos */}
-      <div className="flex-1 w-full max-w-[1100px] mt-6 flex flex-col gap-4">
+      <div className="flex-1 w-full max-w-[1100px] mt-6 flex flex-col gap-4 mb-8">
         {productos.length === 0 ? (
           <p className="text-center text-gray-500 mt-10">
             No hay productos disponibles.
