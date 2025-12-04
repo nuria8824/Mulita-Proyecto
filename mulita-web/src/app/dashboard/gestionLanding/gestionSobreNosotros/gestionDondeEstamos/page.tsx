@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function GestionMisionVisionPage() {
   const router = useRouter();
 
   const [titulo, setTitulo] = useState("");
+  const [contenido, setContenido] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Obtener datos actuales
   useEffect(() => {
@@ -20,6 +23,7 @@ export default function GestionMisionVisionPage() {
         const data = await res.json();
 
         setTitulo(data.titulo);
+        setContenido(data.contenido ?? ""); // <-- Cargar descripción
       } catch (err) {
         console.error(err);
       } finally {
@@ -37,6 +41,7 @@ export default function GestionMisionVisionPage() {
     try {
       const formData = new FormData();
       formData.append("titulo", titulo);
+      formData.append("contenido", contenido);
 
       const res = await fetch("/api/sobreNosotros/dondeEstamos", {
         method: "PATCH",
@@ -55,19 +60,27 @@ export default function GestionMisionVisionPage() {
     }
   };
 
-  const handleCancel = () => router.push("/dashboard/gestionLanding/gestionSobreNosotros");
+  const handleCancel = () =>
+    router.push("/dashboard/gestionLanding/gestionSobreNosotros");
 
   if (loading) return <p className="text-center mt-10">Cargando datos...</p>;
 
   return (
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">
       <div className="w-full max-w-3xl flex flex-col gap-6">
-        <h1 className="text-2xl font-semibold text-black text-center">Gestión - ¿Dónde Estamos?</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h1 className="text-2xl font-semibold text-black text-center">
+          Gestión - ¿Dónde Estamos?
+        </h1>
+
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-6 bg-white p-6 rounded-lg shadow-md border border-gray-200"
+        >
+          {/* TÍTULO */}
           <div>
             <label className="block text-lg font-semibold mb-2">Título</label>
             <input
-             aria-label="Título"
+              aria-label="Título"
               type="text"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
@@ -75,7 +88,54 @@ export default function GestionMisionVisionPage() {
               required
             />
           </div>
-          
+
+          {/* DESCRIPCIÓN (textarea) */}
+          <div>
+            <label className="block text-lg font-semibold mb-2">
+              Descripción
+            </label>
+            <textarea
+              ref={textAreaRef}
+              aria-label="Descripción"
+              value={contenido}
+              onChange={(e) => setContenido(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Tab") {
+                  e.preventDefault();
+
+                  const textarea = textAreaRef.current;
+                  if (!textarea) return;
+
+                  const start = textarea.selectionStart;
+                  const end = textarea.selectionEnd;
+
+                  // Insertar bullet point
+                  const bullet = "• ";
+
+                  const updatedText =
+                    contenido.substring(0, start) + bullet + contenido.substring(end);
+
+                  setContenido(updatedText);
+
+                  // Mover cursor después del bullet
+                  requestAnimationFrame(() => {
+                    if (textAreaRef.current) {
+                      const pos = start + bullet.length;
+                      textAreaRef.current.selectionStart = pos;
+                      textAreaRef.current.selectionEnd = pos;
+                    }
+                  });
+                }
+              }}
+
+              className="w-full border border-gray-300 rounded-md px-4 py-2 h-32 resize-none focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              placeholder="Escriba una descripción..."
+              required
+            />
+
+          </div>
+
+          {/* Botones */}
           <div className="flex w-full gap-4 pt-4">
             <button
               type="button"
@@ -84,6 +144,7 @@ export default function GestionMisionVisionPage() {
             >
               Cancelar
             </button>
+
             <button
               type="submit"
               disabled={submitting}

@@ -50,14 +50,15 @@ export async function PATCH(req: NextRequest) {
   console.log("id_seccion obtenido desde DB:", id_seccion);
 
   const formData = await req.formData();
-  const id = Number(formData.get("id"));
   const titulo = formData.get("titulo")?.toString();
+  const contenido = formData.get("contenido")?.toString();
 
   const { data, error } = await supabase
     .from("donde_estamos")
     .upsert({
       id: 1,
       titulo,
+      contenido,
       id_usuario: user.id,
       id_seccion,
       fecha_modificacion: new Date(),

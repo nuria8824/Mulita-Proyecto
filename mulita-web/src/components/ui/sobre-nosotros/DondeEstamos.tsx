@@ -11,7 +11,7 @@ const Mapa = dynamic(() => import("@/components/ui/sobre-nosotros/Mapa"), {
 interface DondeEstamosData {
   id: number;
   titulo: string;
-  descripcion: string;
+  contenido: string;
 }
 
 export function DondeEstamos() {
@@ -58,43 +58,11 @@ export function DondeEstamos() {
           <Mapa />
         </div>
 
-        {/* TEXTO + LISTA */}
+        {/* CONTENIDO */}
         <div className="flex flex-col justify-center">
-          <h4 className="text-xl font-bold text-[#003c71] mb-4">
-            Nuestra oficina central
-          </h4>
-
-          <p className="text-gray-700 leading-7 mb-6">
-            Se encuentra en{" "}
-            <span className="font-semibold">
-              Universidad Adventista del Plata, Libertador San Martín,
-              Entre Ríos, Argentina.
-            </span>
-            <br />
-            <br />
-            Pero también puedes encontrar a la Mulita en:
+          <p className="text-gray-700 leading-7 mb-6 whitespace-pre-line">
+            {dondeEstamos.contenido}
           </p>
-
-          <ul className="list-disc list-inside space-y-2 text-gray-800">
-            <li>
-              <strong>Chile:</strong> Universidad Adventista de Chile
-            </li>
-            <li>
-              <strong>Perú:</strong> Universidad Peruana Unión
-            </li>
-            <li>
-              <strong>Bolivia:</strong> Universidad Adventista de Bolivia
-            </li>
-            <li>
-              <strong>Colombia:</strong> Corporación Universitaria Adventista
-            </li>
-            <li>
-              <strong>México:</strong> Universidad Linda Vista
-            </li>
-            <li>
-              <strong>Puerto Rico:</strong> Antillean Adventist University
-            </li>
-          </ul>
         </div>
       </div>
     </section>
