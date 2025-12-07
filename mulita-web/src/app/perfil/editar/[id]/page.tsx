@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import BackButton from "@/components/ui/dashboard/BackButton";
+import { ChevronLeft } from "lucide-react";
 import { uploadFile } from "@/lib/subirArchivos";
 
 interface ArchivoSubido {
@@ -193,7 +193,13 @@ export default function EditarPerfilPage() {
     <div className="w-full bg-white min-h-screen flex flex-col items-center py-12 px-4 text-[#003c71]">
       <div className="w-full max-w-3xl flex flex-col gap-6">
         <div className="flex items-center gap-2">
-          <BackButton />
+          <button
+            onClick={() => router.back()}
+            className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            title="Volver"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
           <h1 className="text-2xl font-semibold text-black">Editar Perfil</h1>
         </div>
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@/hooks/queries";
 import { motion, AnimatePresence } from "framer-motion";
-import BackButton from "@/components/ui/dashboard/BackButton";
+import { ChevronLeft } from "lucide-react";
 import ActividadesUsuario from "@/components/ui/perfil/ActividadesUsuario";
 import ColeccionesUsuario from "@/components/ui/perfil/ColeccionesUsuario";
 import SkeletonPerfil from "@/components/ui/perfil/skeletons/SkeletonPerfil";
@@ -111,10 +111,16 @@ export default function PerfilPage() {
     <div className="w-full min-h-screen bg-white flex flex-col items-center justify-start text-xs text-[#6d758f] font-inter">
       {/* Sección superior del perfil */}
       <div className="w-full flex flex-col items-center text-center p-[30px_170px] relative">
-        <div className="flex items-start justify-center gap-10 text-left text-2xl text-black font-roboto">
+        <div className="flex items-start gap-10 text-left text-2xl text-black font-roboto">
           {/* Flecha al costado del avatar */}
           <div className="flex items-start">
-            <BackButton />
+            <button
+              onClick={() => router.back()}
+              className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              title="Volver"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
           </div>
 
           {/* Avatar */}
