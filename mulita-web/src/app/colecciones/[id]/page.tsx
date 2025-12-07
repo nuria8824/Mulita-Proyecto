@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import MenuAccionesActividades from "@/components/ui//comunidad/MenuAccionesActividades";
 import ModalImagenActividades from "@/components/ui/comunidad/ModalImagenActividades";
 import ComentarioInput from "@/components/ui/comunidad/ComentarioInput";
@@ -8,7 +10,6 @@ import ComentariosModal from "@/components/ui/comunidad/ComentariosModal";
 import ModalColecciones from "@/components/ui/comunidad/ModalColecciones";
 import { useUser } from "@/hooks/queries";
 import { useParams } from "next/navigation";
-import BackButton from "@/components/ui/dashboard/BackButton";
 import SkeletonColeccionDetalle from "@/components/ui/perfil/skeletons/SkeletonColeccionDetalle";
 
 type Archivo = { archivo_url: string; tipo: string; nombre: string };
@@ -28,6 +29,7 @@ type Actividad = {
 };
 
 export default function ColeccionDetallePage() {
+  const router = useRouter();
   const { id } = useParams();
   if (!id) return null;
 
@@ -150,7 +152,13 @@ export default function ColeccionDetallePage() {
     return (
       <div className="p-4 max-w-3xl mx-auto">
         <div className="flex items-center gap-2 mb-4">
-          <BackButton />
+          <button
+            onClick={() => router.back()}
+            className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            title="Volver"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
           <p className="text-red-500">Error: {error}</p>
         </div>
       </div>
@@ -159,7 +167,13 @@ export default function ColeccionDetallePage() {
     return (
       <div className="p-4 max-w-3xl mx-auto">
         <div className="flex items-center gap-2 mb-4">
-          <BackButton />
+          <button
+            onClick={() => router.back()}
+            className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            title="Volver"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
           <p className="text-gray-400">No hay actividades en esta colección.</p>
         </div>
       </div>
@@ -175,7 +189,13 @@ export default function ColeccionDetallePage() {
   return (
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center gap-2 mb-4">
-        <BackButton />
+        <button
+          onClick={() => router.back()}
+          className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+          title="Volver"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
         <h2 className="text-2xl font-semibold text-[#003c71]">
           {`Actividades de "${nombreColeccion}"`}
         </h2>
